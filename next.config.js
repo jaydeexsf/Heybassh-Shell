@@ -18,14 +18,7 @@ const nextConfig = {
     return config;
   },
   // Set output to standalone for better compatibility
-  output: 'standalone',
-  
-  // API configuration
-  api: {
-    bodyParser: {
-      sizeLimit: '2mb'
-    }
-  }
+  output: 'standalone'
 };
 
 export default nextConfig;
