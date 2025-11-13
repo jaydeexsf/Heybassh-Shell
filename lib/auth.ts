@@ -1,15 +1,14 @@
 
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import { prisma } from "./prisma"
-import bcrypt from "bcryptjs"
 import { z } from "zod"
 
-// Use a dynamic import for Prisma to avoid Edge Runtime issues
-const prismaClient = prisma
-
+// This is a lightweight auth config that defers to API routes for heavy operations
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
+  // Use JWT strategy for better performance and compatibility
+  session: { 
+    strategy: 'jwt',
+  },
   trustHost: true,
   providers: [
     Credentials({
@@ -28,23 +27,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (!parsed.success) return null
           
           const { email, password } = parsed.data
-          const user = await prismaClient.user.findUnique({ 
-            where: { email } 
-          })
           
-          if (!user) return null
+          // Call our API route for authentication
+          const response = await fetch(`${process.env.NEXTAUTH_URL}/api/auth/callback/credentials`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+          });
           
-          const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
-          if (!isPasswordValid) return null
+          if (!response.ok) return null;
           
-          return { 
-            id: user.id, 
-            email: user.email, 
-            name: user.name ?? user.email 
-          }
+          const user = await response.json();
+          return user;
+          
         } catch (error) {
-          console.error('Authorization error:', error)
-          return null
+          console.error('Authorization error:', error);
+          return null;
         }
       }
     })
@@ -52,20 +52,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.user = user
+        token.user = user;
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
       if (token.user) {
-        session.user = token.user as any
+        session.user = token.user as any;
       }
-      return session
+      return session;
     }
   },
   secret: process.env.AUTH_SECRET,
   // Disable Edge Runtime for auth routes
   experimental: {
     enableWebAuthn: false
-  }
-})
+  },
+  // Use secure cookies in production
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
+});

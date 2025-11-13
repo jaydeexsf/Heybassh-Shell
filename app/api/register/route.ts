@@ -75,12 +75,17 @@ export async function POST(req: Request) {
       }
       throw validationError;
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Server error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
+    const errorStack = (error instanceof Error && process.env.NODE_ENV === 'development') 
+      ? error.stack 
+      : undefined;
+      
     return NextResponse.json(
       { 
-        error: error instanceof Error ? error.message : 'Internal server error',
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        error: errorMessage,
+        stack: errorStack
       }, 
       { status: 500 }
     );

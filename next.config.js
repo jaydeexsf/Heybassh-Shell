@@ -1,9 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverActions: { bodySizeLimit: '2mb' }
+    serverActions: { 
+      bodySizeLimit: '2mb' 
+    }
   },
-  // Disable Edge Runtime for API routes
+  // Configure webpack to handle Node.js modules
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
@@ -15,14 +17,18 @@ const nextConfig = {
     }
     return config;
   },
-  // Ensure API routes don't use Edge Runtime
+  // Set output to standalone for better compatibility
+  output: 'standalone'
+};
+
+// Configure API route body parser size limit
+module.exports = nextConfig;
+
+// Add body parser configuration for API routes
+export const config = {
   api: {
     bodyParser: {
       sizeLimit: '2mb'
     }
-  },
-  // Disable static optimization to avoid Edge Runtime issues
-  output: 'standalone'
+  }
 };
-
-module.exports = nextConfig;
