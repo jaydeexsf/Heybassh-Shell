@@ -18,17 +18,14 @@ const nextConfig = {
     return config;
   },
   // Set output to standalone for better compatibility
-  output: 'standalone'
-};
-
-// Configure API route body parser size limit
-module.exports = nextConfig;
-
-// Add body parser configuration for API routes
-export const config = {
+  output: 'standalone',
+  
+  // API configuration
   api: {
     bodyParser: {
       sizeLimit: '2mb'
     }
   }
 };
+
+export default nextConfig;
