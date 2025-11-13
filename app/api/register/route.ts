@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
 
+// Disable Edge Runtime for this route
+// This is needed because bcryptjs uses Node.js APIs not available in Edge Runtime
+export const runtime = 'nodejs';
+
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
