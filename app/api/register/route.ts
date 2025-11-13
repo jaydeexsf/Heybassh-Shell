@@ -31,10 +31,11 @@ export async function POST(req: Request) {
 
     try {
       const { email, password, name } = schema.parse(body);
-      console.log('Validated input:', { email, name: name || 'not provided' });
+      const normalizedEmail = email.trim().toLowerCase();
+      console.log('Validated input:', { email: normalizedEmail, name: name || 'not provided' });
 
       console.log('Checking if user exists...');
-      const exists = await prisma.user.findUnique({ where: { email } });
+      const exists = await prisma.user.findUnique({ where: { email: normalizedEmail } });
       if (exists) {
         console.log('User already exists:', email);
         return NextResponse.json(
@@ -49,7 +50,7 @@ export async function POST(req: Request) {
       console.log('Creating user...');
       const user = await prisma.user.create({ 
         data: { 
-          email, 
+          email: normalizedEmail, 
           name, 
           passwordHash 
         } 

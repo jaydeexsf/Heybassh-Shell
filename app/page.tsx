@@ -19,6 +19,7 @@ export default function Home() {
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const [loading, setLoading] = useState(false)
   const [forgotStatus, setForgotStatus] = useState<"idle" | "sending" | "sent">("idle")
+  const [showPassword, setShowPassword] = useState(false)
 
   function resetUi() {
     setFormErrors({})
@@ -83,18 +84,58 @@ export default function Home() {
     setFeedback(null)
     setForgotStatus("idle")
     try {
-      const result = await signIn("credentials", { email: email.trim(), password: password.trim(), redirect: false })
-      if (result?.ok) {
-        setFeedback({ type: "success", message: "Signed in successfully. Redirecting..." })
-        window.location.href = "/dashboard"
+      // First validate with our custom endpoint for specific error messages
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password: password.trim() }),
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        // Show specific error message based on error type
+        let errorMessage = "Unable to sign in. Please try again."
+        
+        if (data.error === "EMAIL_NOT_FOUND") {
+          errorMessage = "No account found with this email address. Please check your email or create a new account."
+        } else if (data.error === "INVALID_PASSWORD") {
+          errorMessage = "The password you entered is incorrect. Please try again or use 'Forgot password?' to reset it."
+        } else if (data.error === "VALIDATION_ERROR") {
+          errorMessage = "Please enter a valid email address and password."
+        } else if (data.message) {
+          errorMessage = data.message
+        }
+        
+        setFeedback({ type: "error", message: errorMessage })
         return
       }
+
+      // If validation passed, create the session with NextAuth
+      const result = await signIn("credentials", { 
+        email: email.trim(), 
+        password: password.trim(), 
+        redirect: false 
+      })
+      
+      if (result?.ok) {
+        setFeedback({ type: "success", message: "Signed in successfully. Redirecting..." })
+        setTimeout(() => {
+          window.location.href = "/dashboard"
+        }, 500)
+        return
+      }
+      
       setFeedback({
         type: "error",
-        message: "We couldn't match that email and password. Please double-check your credentials.",
+        message: "Authentication failed. Please try again.",
       })
-    } catch {
-      setFeedback({ type: "error", message: "Unable to sign in right now. Please try again shortly." })
+    } catch (error) {
+      console.error("Login error:", error)
+      setFeedback({ 
+        type: "error", 
+        message: "Unable to sign in right now. Please try again shortly." 
+      })
     } finally {
       setLoading(false)
     }
@@ -236,16 +277,35 @@ export default function Home() {
                     {forgotStatus === "sent" ? "Reset link sent" : "Forgot password?"}
                   </button>
                 </div>
-                <input
-                  id="password"
-                  className={`input placeholder:text-blue-200/50 rounded-lg ${formErrors.password ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
-                  placeholder={mode === "login" ? "Your password" : "At least 6 characters"}
-                  type="password"
-                  value={password}
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  onChange={(event) => setPassword(event.target.value)}
-                  aria-invalid={Boolean(formErrors.password)}
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    className={`input placeholder:text-blue-200/50 rounded-lg pr-12 ${formErrors.password ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    placeholder={mode === "login" ? "Your password" : "At least 6 characters"}
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    onChange={(event) => setPassword(event.target.value)}
+                    aria-invalid={Boolean(formErrors.password)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-blue-300 hover:text-white transition-colors focus:outline-none"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.29 3.29m0 0A9.97 9.97 0 015 12c0 1.657.338 3.23.94 4.66M3 3l18 18" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 {formErrors.password && <p className="text-xs font-medium text-rose-300">{formErrors.password}</p>}
               </div>
 
@@ -264,13 +324,18 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={loading}
+                aria-busy={loading}
                 className="btn btn-primary flex w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
               >
-                <span>{loading ? "Working..." : mode === "login" ? "Sign in securely" : "Create account"}</span>
+                {loading ? (
+                  <span className="spinner" role="status" aria-label="Processing request" />
+                ) : (
+                  <span>{mode === "login" ? "Sign in" : "Create account"}</span>
+                )}
               </button>
             </form>
 
-            <p className="text-xs text-blue-200/60">
+            {/* <p className="text-xs text-blue-200/60">
               By continuing, you agree to the Heybassh Shell Terms and acknowledge the Privacy Policy. Need assistance?{" "}
               <a
                 className="font-medium text-[#5dd4ff] underline-offset-4 hover:underline"
@@ -279,7 +344,7 @@ export default function Home() {
                 Contact support
               </a>
               .
-            </p>
+            </p> */}
           </div>
         </div>
       </section>

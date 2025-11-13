@@ -13,5 +13,6 @@ body { @apply min-h-screen bg-gradient-to-b from-[#090f1f] to-[#0b1020] text-[#e
 .input { @apply rounded-xl border border-[#1a2446] bg-[#0e1630] px-3 py-2 text-sm transition-all duration-200 focus:border-transparent; }
 .input:focus { @apply outline-none ring-2 ring-[#3ab0ff]/60; }
 .input:disabled { @apply cursor-not-allowed opacity-60; }
+.spinner { @apply inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white; }
 .th { @apply px-4 py-3 text-left text-xs uppercase tracking-wide text-blue-300; }
 .td { @apply px-4 py-3; }

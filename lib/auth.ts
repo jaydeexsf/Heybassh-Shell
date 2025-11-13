@@ -19,21 +19,41 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           const parsed = z.object({
             email: z.string().email(),
-            password: z.string().min(6)
+            password: z.string().min(1)
           }).safeParse(creds)
-          if (!parsed.success) return null
+          
+          if (!parsed.success) {
+            throw new Error("INVALID_FORMAT")
+          }
+          
           const { email, password } = parsed.data
+          const normalizedEmail = email.trim().toLowerCase()
 
-          const user = await prisma.user.findUnique({ where: { email } })
-          if (!user) return null
+          // Check if user exists
+          const user = await prisma.user.findUnique({ 
+            where: { email: normalizedEmail } 
+          })
+          
+          if (!user) {
+            throw new Error("EMAIL_NOT_FOUND")
+          }
 
-          const ok = await bcrypt.compare(password, user.passwordHash)
-          if (!ok) return null
+          // Verify password
+          const passwordMatch = await bcrypt.compare(password, user.passwordHash)
+          
+          if (!passwordMatch) {
+            throw new Error("INVALID_PASSWORD")
+          }
 
+          // Credentials are valid
           return { id: user.id, email: user.email, name: user.name ?? user.email }
         } catch (err) {
+          // Re-throw our custom errors
+          if (err instanceof Error && ["EMAIL_NOT_FOUND", "INVALID_PASSWORD", "INVALID_FORMAT"].includes(err.message)) {
+            throw err
+          }
           console.error("Credentials authorize error:", err)
-          return null
+          throw new Error("AUTH_ERROR")
         }
       }
     })
