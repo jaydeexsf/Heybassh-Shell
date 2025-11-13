@@ -7,16 +7,109 @@ type NavChild = { id: string; label: string }
 type NavItem = {
   id: string
   label: string
-  icon: string
+  icon: ReactNode
   children?: NavChild[]
 }
 
+const iconClass = "h-5 w-5"
+
+const OverviewIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="m14.121 9.879-1.02 3.058a1 1 0 0 1-.642.643l-3.059 1.02 1.02-3.059a1 1 0 0 1 .643-.642l3.058-1.02Z" />
+  </svg>
+)
+
+const UsersIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.6"
+      d="M9 13a4 4 0 1 1 0-8 4 4 0 0 1 0 8ZM15 12.9a4 4 0 1 0-1.89-7.55M4 19a5 5 0 0 1 10 0M14 19a5 5 0 0 1 6-4.9"
+    />
+  </svg>
+)
+
+const BoxIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M21 7L12 3 3 7l9 4 9-4Z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M3 7v10l9 4 9-4V7" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="m3 17 9-4 9 4" />
+  </svg>
+)
+
+const CardIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <rect width="18" height="12" x="3" y="6" rx="2" ry="2" strokeWidth="1.6" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M3 10h18M7 14h3" />
+  </svg>
+)
+
+const TasksIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M9 11.5 11 13l4-4" />
+    <rect width="18" height="14" x="3" y="5" rx="3" ry="3" strokeWidth="1.6" />
+  </svg>
+)
+
+const ReportsIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M8 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2h-1" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M14 3v4a1 1 0 0 0 1 1h4M10 17v-4m4 4v-7" />
+  </svg>
+)
+
+const AutomateIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M6.75 4.5 4.5 7.5l2.25 3" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M17.25 4.5 19.5 7.5l-2.25 3" />
+    <rect width="6" height="6" x="9" y="9" strokeWidth="1.6" rx="1" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M4.5 7.5H9m6 0h4.5M4.5 16.5h15" />
+  </svg>
+)
+
+const PeopleIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M16 13a4 4 0 1 0-8 0" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M12 17a6 6 0 0 0-6 6M12 17a6 6 0 0 1 6 6" />
+    <circle cx="12" cy="7" r="3.5" strokeWidth="1.6" />
+  </svg>
+)
+
+const ShieldIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.6"
+      d="M12 3 4.5 6v6c0 6.075 4.5 9 7.5 9s7.5-2.925 7.5-9V6L12 3Z"
+    />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="m9 12 2 2 4-4" />
+  </svg>
+)
+
+const BriefcaseIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M5 7h14a2 2 0 0 1 2 2v9H3V9a2 2 0 0 1 2-2Z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M3 13h18" />
+  </svg>
+)
+
+const BuildingIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M4 21h16M5 21V5.5a1.5 1.5 0 0 1 1.5-1.5H17A1.5 1.5 0 0 1 18.5 5.5V21" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" d="M9 21v-6h6v6M8.75 8h.5M8.75 11h.5M8.75 14h.5M14.75 8h.5M14.75 11h.5M14.75 14h.5" />
+  </svg>
+)
+
 const navigation: NavItem[] = [
-  { id: "overview", label: "Overview", icon: "🧭" },
+  { id: "overview", label: "Overview", icon: <OverviewIcon /> },
   {
     id: "customers",
     label: "Customers",
-    icon: "👥",
+    icon: <UsersIcon />,
     children: [
       { id: "customers_contacts", label: "Contacts" },
       { id: "customers_companies", label: "Companies" },
@@ -29,21 +122,21 @@ const navigation: NavItem[] = [
   {
     id: "products",
     label: "Products",
-    icon: "📦",
+    icon: <BoxIcon />,
     children: [
       { id: "products_listing", label: "Product Listing" },
       { id: "products_inventory", label: "Inventory" },
       { id: "products_supply", label: "Supply" },
     ],
   },
-  { id: "billing", label: "Billing Lite", icon: "💳" },
-  { id: "tasks", label: "Tasks", icon: "✅" },
-  { id: "reports", label: "Reports & Data", icon: "📊" },
-  { id: "automate", label: "Automate", icon: "⚙️" },
-  { id: "hr", label: "HR / People", icon: "🧑‍🤝‍🧑" },
-  { id: "admin", label: "IT / Admin", icon: "🛡️" },
-  { id: "finance", label: "Finance", icon: "💼" },
-  { id: "executive", label: "Executive", icon: "🏛️" },
+  { id: "billing", label: "Billing Lite", icon: <CardIcon /> },
+  { id: "tasks", label: "Tasks", icon: <TasksIcon /> },
+  { id: "reports", label: "Reports & Data", icon: <ReportsIcon /> },
+  { id: "automate", label: "Automate", icon: <AutomateIcon /> },
+  { id: "hr", label: "HR / People", icon: <PeopleIcon /> },
+  { id: "admin", label: "IT / Admin", icon: <ShieldIcon /> },
+  { id: "finance", label: "Finance", icon: <BriefcaseIcon /> },
+  { id: "executive", label: "Executive", icon: <BuildingIcon /> },
 ]
 
 function Pill({ children }: { children: ReactNode }) {
@@ -122,9 +215,11 @@ export default function Dashboard() {
                       : "border-transparent text-blue-100 hover:bg-[#101733]"
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <span className="text-base">{item.icon}</span>
-                    <span>{item.label}</span>
+                  <span className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#121c3d] text-[#7ed0ff]">
+                      {item.icon}
+                    </span>
+                    <span className="font-medium">{item.label}</span>
                   </span>
                   {hasChildren && (
                     <span
