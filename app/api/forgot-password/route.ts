@@ -49,6 +49,10 @@ const getTransporter = () => {
     connectionTimeout: 15000, // 15 seconds
     greetingTimeout: 15000,
     socketTimeout: 15000,
+    // Gmail specific settings
+    tls: {
+      rejectUnauthorized: false // Allow self-signed certificates (for some SMTP servers)
+    },
     // Enable debug for troubleshooting (set to true if needed)
     debug: false,
     logger: false,
@@ -142,17 +146,22 @@ export async function POST(req: Request) {
         console.warn(`⚠️  [FORGOT PASSWORD] SMTP verification failed, but attempting to send anyway...`)
       }
 
+      // Get the from address - must match the authenticated Gmail account
+      const smtpUser = process.env.SMTP_USER || 'jaydeexsf0@gmail.com'
+      const fromAddress = process.env.SMTP_FROM || smtpUser
+      
       console.log(`📤 [FORGOT PASSWORD] Attempting to send password reset email...`)
       console.log(`   To: ${normalizedEmail}`)
-      console.log(`   From: ${process.env.SMTP_FROM || process.env.SMTP_USER}`)
+      console.log(`   From: ${fromAddress}`)
+      console.log(`   Authenticated as: ${smtpUser}`)
       console.log(`   Subject: Password Reset Request`)
       console.log(`   Reset URL: ${resetUrl}`)
       
       try {
         const emailInfo = await transporter.sendMail({
-          from: process.env.SMTP_FROM || process.env.SMTP_USER,
+          from: `Heybassh Shell <${fromAddress}>`, // Format: Name <email>
           to: normalizedEmail,
-          subject: "Password Reset Request",
+          subject: "Password Reset Request - Heybassh Shell",
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h2 style="color: #3ab0ff;">Password Reset Request</h2>
@@ -174,14 +183,19 @@ export async function POST(req: Request) {
         console.log(`   Response: ${emailInfo.response || 'No response'}`)
         console.log(`   Accepted: ${emailInfo.accepted?.join(', ') || 'N/A'}`)
         console.log(`   Rejected: ${emailInfo.rejected?.join(', ') || 'None'}`)
+        console.log(`   Envelope:`, emailInfo.envelope)
         console.log(`📧 [FORGOT PASSWORD] Password reset email has been sent to ${normalizedEmail}`)
+        console.log(`⚠️  [IMPORTANT] If email not received, check:`)
+        console.log(`   1. Spam/Junk folder`)
+        console.log(`   2. Gmail might be blocking it - check Gmail security settings`)
+        console.log(`   3. Email might be delayed (wait 1-2 minutes)`)
         console.log("=".repeat(60))
         
         // Return success with email sent confirmation
         return NextResponse.json({
           success: true,
           emailSent: true,
-          message: `✅ Password reset email has been sent successfully to ${normalizedEmail}. Please check your inbox (and spam folder) for the reset link.`,
+          message: `Password reset email has sent, Please check your inbox (and spam folder).`,
           details: {
             to: normalizedEmail,
             messageId: emailInfo.messageId,

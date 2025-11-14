@@ -237,7 +237,7 @@ export default function Home() {
         setForgotStatus("sent")
         setFeedback({
           type: "success",
-          message: data.message || `✅ Password reset email has been sent successfully to ${trimmedEmail}. Please check your inbox (and spam folder).`
+          message: data.message || `Password reset email has been sent successfully to ${trimmedEmail}. Please check your inbox (and spam folder).`
         })
       } else {
         console.log("⚠️ [CLIENT] User not found or email not sent")

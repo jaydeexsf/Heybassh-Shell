@@ -31,7 +31,7 @@ export default function ForgotPassword() {
       if (response.ok && data.success) {
         if (data.emailSent) {
           console.log("✅ [CLIENT] Email sent successfully!");
-          setMessage(data.message || `✅ Password reset email has been sent successfully to ${email}. Please check your inbox (and spam folder).`);
+          setMessage(data.message || `✅ Password reset email has been sent successfully`);
         } else {
           console.log("⚠️ [CLIENT] User not found or email not sent");
           setMessage(data.message || "If an account exists with this email, a password reset link has been sent. Please check your inbox.");
