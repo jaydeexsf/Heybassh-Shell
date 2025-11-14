@@ -201,14 +201,37 @@ export default function Home() {
     setForgotStatus("sending")
     setFeedback(null)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1200))
+      const response = await fetch("/api/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setFeedback({
+          type: "error",
+          message: data.message || "Failed to send reset email. Please try again."
+        })
+        setForgotStatus("idle")
+        return
+      }
+
       setForgotStatus("sent")
       setFeedback({
         type: "success",
-        message: "Feature Coming Soon ",
+        message: data.message || "If an account exists with this email, a password reset link has been sent."
       })
+    } catch (error) {
+      console.error("Forgot password error:", error)
+      setFeedback({
+        type: "error",
+        message: "Unable to send reset email. Please try again."
+      })
+      setForgotStatus("idle")
     } finally {
-      setTimeout(() => setForgotStatus("idle"), 6000)
+      setTimeout(() => setForgotStatus("idle"), 10000)
     }
   }
 
