@@ -324,7 +324,7 @@ function ContactsView() {
           <button type="submit" className="btn btn-primary w-full">
             Save
           </button>
-          <p className="text-xs text-blue-200/60">Demo only. Data is stored locally in your browser.</p>
+          <p className="text-xs text-blue-200/60">dummy data only. Data is stored locally in the  browser.</p>
         </form>
       </div>
     </div>
@@ -508,7 +508,7 @@ function ProductListingView() {
           <button type="submit" className="btn btn-primary w-full">
             Save
           </button>
-          <p className="text-xs text-blue-200/60">Demo only. Data is stored locally in your browser.</p>
+          <p className="text-xs text-blue-200/60">demo only. Data is stored locally in your browser.</p>
         </form>
       </div>
     </div>
@@ -1351,7 +1351,7 @@ export default function Dashboard() {
             <span className="text-lg font-semibold text-white">Heybassh</span>
             <div className="text-sm text-blue-200">Shell / Cloud • Unified workspace</div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 px-4">
             <Link href="#" className="btn">
               BotOnly AI
             </Link>
