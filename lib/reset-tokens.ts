@@ -50,7 +50,16 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     `,
   };
 
-  await transporter.sendMail(mailOptions);
+  console.log('[ForgotPassword] Sending reset email', { to: email, resetUrl });
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('[ForgotPassword] Email sent successfully', { messageId: info.messageId });
+  } catch (err) {
+    console.error('[ForgotPassword] Failed to send reset email', err);
+    // Re-throw so the API route can return a proper error response
+    throw err;
+  }
 }
 
 export async function validateResetToken(token: string) {

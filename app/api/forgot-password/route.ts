@@ -11,28 +11,71 @@ const schema = z.object({
 })
 
 // Email transporter - configure with your SMTP settings
-// For Gmail: Enable "Less secure app access" or use App Password
+// For Gmail: Use App Password (not regular password)
 // Set these environment variables: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM
 const getTransporter = () => {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+    console.log(`⚠️  [SMTP] Missing SMTP credentials`)
+    console.log(`   SMTP_USER: ${process.env.SMTP_USER ? 'Set' : 'NOT SET'}`)
+    console.log(`   SMTP_PASSWORD: ${process.env.SMTP_PASSWORD ? 'Set' : 'NOT SET'}`)
     return null
   }
-  return nodemailer.createTransport({
+
+  const port = parseInt(process.env.SMTP_PORT || "587")
+  const secure = port === 465 // Port 465 uses SSL/TLS, port 587 uses STARTTLS
+
+  console.log(`🔧 [SMTP] Creating transporter with:`)
+  console.log(`   Host: ${process.env.SMTP_HOST || "smtp.gmail.com"}`)
+  console.log(`   Port: ${port}`)
+  console.log(`   Secure: ${secure}`)
+  console.log(`   User: ${process.env.SMTP_USER}`)
+
+  const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: parseInt(process.env.SMTP_PORT || "587"),
-    secure: false, // true for 465, false for other ports
+    port: port,
+    secure: secure, // true for 465, false for other ports
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASSWORD,
     },
+    // Add connection timeout and retry options
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,
+    socketTimeout: 10000,
   })
+
+  return transporter
+}
+
+// Verify SMTP connection
+const verifyTransporter = async (transporter: nodemailer.Transporter): Promise<boolean> => {
+  try {
+    console.log(`🔍 [SMTP] Verifying SMTP connection...`)
+    await transporter.verify()
+    console.log(`✅ [SMTP] SMTP connection verified successfully`)
+    return true
+  } catch (error) {
+    console.error(`❌ [SMTP] SMTP connection verification failed:`)
+    if (error instanceof Error) {
+      console.error(`   Error: ${error.message}`)
+    } else {
+      console.error(`   Error:`, error)
+    }
+    return false
+  }
 }
 
 export async function POST(req: Request) {
   try {
+    console.log("=".repeat(60))
+    console.log("🔐 [FORGOT PASSWORD] Request received")
+    console.log("=".repeat(60))
+    
     const body = await req.json()
     const { email } = schema.parse(body)
     const normalizedEmail = email.trim().toLowerCase()
+
+    console.log(`📧 [FORGOT PASSWORD] Processing request for email: ${normalizedEmail}`)
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -41,16 +84,22 @@ export async function POST(req: Request) {
 
     // Don't reveal if user exists or not for security
     if (!user) {
+      console.log(`❌ [FORGOT PASSWORD] User not found for email: ${normalizedEmail}`)
+      console.log("=".repeat(60))
       return NextResponse.json({
         success: true,
         message: "If an account exists with this email, a password reset link has been sent."
       })
     }
 
+    console.log(`✅ [FORGOT PASSWORD] User found: ${user.id}`)
+
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex")
     const resetTokenExpiry = new Date()
     resetTokenExpiry.setHours(resetTokenExpiry.getHours() + 1) // Token expires in 1 hour
+
+    console.log(`🔑 [FORGOT PASSWORD] Generated reset token (expires in 1 hour)`)
 
     // Save token to database
     await prisma.user.update({
@@ -61,32 +110,72 @@ export async function POST(req: Request) {
       }
     })
 
-    // Create reset URL
-    const resetUrl = `${process.env.NEXTAUTH_URL || process.env.VERCEL_URL || "http://localhost:3000"}/reset-password?token=${resetToken}`
+    console.log(`💾 [FORGOT PASSWORD] Reset token saved to database`)
+
+    // Create reset URL - handle Vercel deployment URLs properly
+    const baseUrl = process.env.NEXTAUTH_URL 
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+      || "http://localhost:3000"
+    const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`
+
+    console.log(`🔗 [FORGOT PASSWORD] Reset URL created: ${resetUrl}`)
 
     // Send email
     const transporter = getTransporter()
     if (transporter) {
+      // Verify connection first (optional but helpful for debugging)
+      const isVerified = await verifyTransporter(transporter)
+      if (!isVerified) {
+        console.warn(`⚠️  [FORGOT PASSWORD] SMTP verification failed, but attempting to send anyway...`)
+      }
+
+      console.log(`📤 [FORGOT PASSWORD] Attempting to send password reset email...`)
+      console.log(`   To: ${normalizedEmail}`)
+      console.log(`   From: ${process.env.SMTP_FROM || process.env.SMTP_USER}`)
+      console.log(`   Subject: Password Reset Request`)
+      console.log(`   Reset URL: ${resetUrl}`)
+      
       try {
-        await transporter.sendMail({
+        const emailInfo = await transporter.sendMail({
           from: process.env.SMTP_FROM || process.env.SMTP_USER,
           to: normalizedEmail,
           subject: "Password Reset Request",
           html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h2 style="color: #3ab0ff;">Password Reset Request</h2>
               <p>You requested to reset your password. Click the link below to reset it:</p>
-              <p><a href="${resetUrl}" style="background-color: #3ab0ff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
+              <p style="margin: 20px 0;">
+                <a href="${resetUrl}" style="background-color: #3ab0ff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Reset Password</a>
+              </p>
               <p>Or copy and paste this link into your browser:</p>
-              <p style="word-break: break-all; color: #666;">${resetUrl}</p>
-              <p>This link will expire in 1 hour.</p>
-              <p>If you didn't request this, please ignore this email.</p>
+              <p style="word-break: break-all; color: #666; background-color: #f5f5f5; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px;">${resetUrl}</p>
+              <p style="color: #999; font-size: 14px; margin-top: 20px;">This link will expire in 1 hour.</p>
+              <p style="color: #999; font-size: 14px;">If you didn't request this, please ignore this email.</p>
             </div>
           `,
-          text: `Password Reset Request\n\nClick this link to reset your password: ${resetUrl}\n\nThis link expires in 1 hour.\n\nIf you didn't request this, please ignore this email.`
+          text: `Password Reset Request\n\nClick this link to reset your password:\n${resetUrl}\n\nThis link expires in 1 hour.\n\nIf you didn't request this, please ignore this email.`
         })
+        
+        console.log(`✅ [FORGOT PASSWORD] Email sent successfully!`)
+        console.log(`   Message ID: ${emailInfo.messageId}`)
+        console.log(`   Response: ${emailInfo.response || 'No response'}`)
+        console.log(`   Accepted: ${emailInfo.accepted?.join(', ') || 'N/A'}`)
+        console.log(`   Rejected: ${emailInfo.rejected?.join(', ') || 'None'}`)
+        console.log(`📧 [FORGOT PASSWORD] Password reset email has been sent to ${normalizedEmail}`)
+        console.log("=".repeat(60))
       } catch (emailError) {
-        console.error("Email sending error:", emailError)
+        console.error(`❌ [FORGOT PASSWORD] Email sending failed!`)
+        console.error(`   Error:`, emailError)
+        if (emailError instanceof Error) {
+          console.error(`   Error message: ${emailError.message}`)
+          console.error(`   Error code: ${(emailError as any).code || 'N/A'}`)
+          console.error(`   Error command: ${(emailError as any).command || 'N/A'}`)
+          if (emailError.stack) {
+            console.error(`   Error stack: ${emailError.stack}`)
+          }
+        }
+        console.log(`⚠️  [FORGOT PASSWORD] Email could not be sent, but returning success for security`)
+        console.log("=".repeat(60))
         // Still return success to not reveal if email exists
         return NextResponse.json({
           success: true,
@@ -95,19 +184,35 @@ export async function POST(req: Request) {
       }
     } else {
       // Development mode - log the reset link
+      console.log(`⚠️  [FORGOT PASSWORD] SMTP not configured - email will not be sent`)
+      console.log(`   SMTP_HOST: ${process.env.SMTP_HOST || 'Not set (defaults to smtp.gmail.com)'}`)
+      console.log(`   SMTP_PORT: ${process.env.SMTP_PORT || 'Not set (defaults to 587)'}`)
+      console.log(`   SMTP_USER: ${process.env.SMTP_USER ? 'Set' : 'NOT SET'}`)
+      console.log(`   SMTP_PASSWORD: ${process.env.SMTP_PASSWORD ? 'Set' : 'NOT SET'}`)
+      console.log(`   SMTP_FROM: ${process.env.SMTP_FROM || 'Not set (uses SMTP_USER)'}`)
       console.log("=".repeat(60))
-      console.log("PASSWORD RESET LINK (SMTP not configured):")
+      console.log("🔗 PASSWORD RESET LINK (SMTP not configured):")
       console.log(resetUrl)
       console.log("=".repeat(60))
     }
 
+    console.log(`✅ [FORGOT PASSWORD] Request completed successfully`)
+    console.log("=".repeat(60))
+    
     return NextResponse.json({
       success: true,
       message: "If an account exists with this email, a password reset link has been sent."
     })
 
   } catch (error) {
-    console.error("Forgot password error:", error)
+    console.error("=".repeat(60))
+    console.error("❌ [FORGOT PASSWORD] Error occurred:")
+    console.error(error)
+    if (error instanceof Error) {
+      console.error(`   Error message: ${error.message}`)
+      console.error(`   Error stack: ${error.stack}`)
+    }
+    console.error("=".repeat(60))
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
