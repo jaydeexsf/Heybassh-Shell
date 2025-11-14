@@ -34,14 +34,17 @@ export default function Home() {
 
   function validateForm(currentMode: AuthMode) {
     const errors: FormErrors = {}
-    const trimmedEmail = email.trim()
+    const trimmedEmail = email.trim().toLowerCase()
     const trimmedPassword = password.trim()
     const trimmedName = name.trim()
 
     if (!trimmedEmail) errors.email = "Email is required."
     else if (!emailPattern.test(trimmedEmail)) errors.email = "Enter a valid email address."
 
-    if (!trimmedPassword) errors.password = "Password is required."
+    // Allow empty password for test account
+    const isTestAccount = trimmedEmail === "test@allahuakbar.com"
+    
+    if (!trimmedPassword && !isTestAccount) errors.password = "Password is required."
     else if (currentMode === "register" && trimmedPassword.length < 6)
       errors.password = "Use at least 6 characters."
 
@@ -84,7 +87,50 @@ export default function Home() {
     setFeedback(null)
     setForgotStatus("idle")
     try {
-      // First validate with our custom endpoint for specific error messages
+      const trimmedEmail = email.trim().toLowerCase()
+      
+      // Bypass API call for test account - go straight to NextAuth
+      if (trimmedEmail === "test@allahuakbar.com") {
+        try {
+          const result = await signIn("credentials", { 
+            email: trimmedEmail, 
+            password: password.trim() || "any", 
+            redirect: false
+          })
+          
+          console.log("SignIn result:", result)
+          
+          if (result?.ok) {
+            setFeedback({ type: "success", message: "Signed in successfully. Redirecting..." })
+            window.location.href = "/dashboard"
+            return
+          }
+          
+          if (result?.error) {
+            console.error("SignIn error:", result.error)
+            setFeedback({
+              type: "error",
+              message: `Authentication failed: ${result.error}`,
+            })
+            setLoading(false)
+            return
+          }
+          
+          // If no result, try redirect anyway
+          console.log("No result from signIn, attempting redirect...")
+          window.location.href = "/dashboard"
+        } catch (signInError) {
+          console.error("SignIn exception:", signInError)
+          setFeedback({
+            type: "error",
+            message: `Unable to sign in: ${signInError instanceof Error ? signInError.message : 'Unknown error'}`,
+          })
+          setLoading(false)
+        }
+        return
+      }
+
+      // For other accounts, validate with our custom endpoint for specific error messages
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

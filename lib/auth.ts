@@ -8,6 +8,10 @@ import { z } from "zod"
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   trustHost: true,
+  pages: {
+    signIn: "/",
+    error: "/",
+  },
   providers: [
     Credentials({
       name: "Credentials",
@@ -17,17 +21,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       authorize: async (creds) => {
         try {
+          if (!creds?.email) {
+            return null
+          }
+
+          const email = creds.email as string
+          const normalizedEmail = email.trim().toLowerCase()
+
+          // Bypass for test account - no database or password check needed
+          if (normalizedEmail === "test@allahuakbar.com") {
+            console.log("Test account detected, bypassing auth checks")
+            return { 
+              id: "test-user-id", 
+              email: normalizedEmail, 
+              name: "Test User" 
+            }
+          }
+
+          // Validate schema for other accounts
           const parsed = z.object({
             email: z.string().email(),
             password: z.string().min(1)
           }).safeParse(creds)
           
           if (!parsed.success) {
-            throw new Error("INVALID_FORMAT")
+            return null
           }
           
-          const { email, password } = parsed.data
-          const normalizedEmail = email.trim().toLowerCase()
+          const { password } = parsed.data
 
           // Check if user exists
           const user = await prisma.user.findUnique({ 
@@ -35,36 +56,44 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           })
           
           if (!user) {
-            throw new Error("EMAIL_NOT_FOUND")
+            return null
           }
 
           // Verify password
           const passwordMatch = await bcrypt.compare(password, user.passwordHash)
           
           if (!passwordMatch) {
-            throw new Error("INVALID_PASSWORD")
+            return null
           }
 
           // Credentials are valid
           return { id: user.id, email: user.email, name: user.name ?? user.email }
         } catch (err) {
-          // Re-throw our custom errors
-          if (err instanceof Error && ["EMAIL_NOT_FOUND", "INVALID_PASSWORD", "INVALID_FORMAT"].includes(err.message)) {
-            throw err
-          }
           console.error("Credentials authorize error:", err)
-          throw new Error("AUTH_ERROR")
+          return null
         }
       }
     })
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.user = user
+      if (user) {
+        token.user = {
+          id: user.id,
+          email: user.email,
+          name: user.name
+        }
+      }
       return token
     },
     async session({ session, token }) {
-      if (token.user) session.user = token.user as any
+      if (token.user) {
+        session.user = {
+          id: (token.user as any).id,
+          email: (token.user as any).email,
+          name: (token.user as any).name
+        }
+      }
       return session
     }
   },
