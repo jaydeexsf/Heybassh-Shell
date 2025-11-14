@@ -5,6 +5,8 @@ import { prisma } from "./prisma"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 
+export const runtime = "nodejs"
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   trustHost: true,
