@@ -10,6 +10,38 @@
   --radius-box: 12px;
 }
 
+/* Custom scrollbar styling to match site theme */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0d142a;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1a2446;
+  border-radius: 5px;
+  border: 2px solid #0d142a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2a3456;
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1a2446 #0d142a;
+}
+
+/* Prevent layout shift by always reserving scrollbar space */
+html {
+  overflow-y: scroll;
+}
+
 body { @apply min-h-screen bg-gradient-to-b from-[#090f1f] to-[#0b1020] text-[#eef3ff]; }
 .btn { @apply inline-flex items-center justify-center gap-2 border border-[#1a2446] px-3 py-2 font-medium transition-all duration-200; border-radius: var(--radius-button); }
 .btn-primary { @apply border-0 bg-gradient-to-tr from-[#3ab0ff] to-[#5dd4ff] text-[#031226] font-semibold shadow-[0_12px_30px_-18px_rgba(39,172,255,0.85)]; }
