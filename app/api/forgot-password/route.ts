@@ -13,35 +13,45 @@ const schema = z.object({
 // Email transporter - configure with your SMTP settings
 // For Gmail: Use App Password (not regular password)
 // Set these environment variables: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM
+// Production credentials are set via environment variables in Vercel
 const getTransporter = () => {
+  // Use environment variables first (production), fallback to defaults if not set
+  const smtpUser = process.env.SMTP_USER || 'jaydeexsf0@gmail.com'
+  const smtpPassword = process.env.SMTP_PASSWORD || 'bgoz akel fvqb muqt'
+  const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com'
+  const smtpPort = parseInt(process.env.SMTP_PORT || '587')
+  const smtpFrom = process.env.SMTP_FROM || smtpUser
+
+  // Warn if using fallback credentials (not from env vars)
   if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-    console.log(`⚠️  [SMTP] Missing SMTP credentials`)
-    console.log(`   SMTP_USER: ${process.env.SMTP_USER ? 'Set' : 'NOT SET'}`)
-    console.log(`   SMTP_PASSWORD: ${process.env.SMTP_PASSWORD ? 'Set' : 'NOT SET'}`)
-    return null
+    console.warn(`⚠️  [SMTP] Using fallback credentials - Set SMTP_USER and SMTP_PASSWORD in Vercel for production!`)
   }
 
-  const port = parseInt(process.env.SMTP_PORT || "587")
-  const secure = port === 465 // Port 465 uses SSL/TLS, port 587 uses STARTTLS
+  const secure = smtpPort === 465 // Port 465 uses SSL/TLS, port 587 uses STARTTLS
 
   console.log(`🔧 [SMTP] Creating transporter with:`)
-  console.log(`   Host: ${process.env.SMTP_HOST || "smtp.gmail.com"}`)
-  console.log(`   Port: ${port}`)
+  console.log(`   Host: ${smtpHost}`)
+  console.log(`   Port: ${smtpPort}`)
   console.log(`   Secure: ${secure}`)
-  console.log(`   User: ${process.env.SMTP_USER}`)
+  console.log(`   User: ${smtpUser}`)
+  console.log(`   From: ${smtpFrom}`)
+  console.log(`   Using env vars: ${!!process.env.SMTP_USER && !!process.env.SMTP_PASSWORD}`)
 
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: port,
+    host: smtpHost,
+    port: smtpPort,
     secure: secure, // true for 465, false for other ports
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD,
+      user: smtpUser,
+      pass: smtpPassword,
     },
     // Add connection timeout and retry options
-    connectionTimeout: 10000, // 10 seconds
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
+    connectionTimeout: 15000, // 15 seconds
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
+    // Enable debug for troubleshooting (set to true if needed)
+    debug: false,
+    logger: false,
   })
 
   return transporter
@@ -116,13 +126,15 @@ export async function POST(req: Request) {
     // Create reset URL - handle Vercel deployment URLs properly
     const baseUrl = process.env.NEXTAUTH_URL 
       || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
-      || "http://localhost:3000"
+      || process.env.NEXT_PUBLIC_APP_URL
+      || "https://heybassh-shell.vercel.app"
     const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`
 
     console.log(`🔗 [FORGOT PASSWORD] Reset URL created: ${resetUrl}`)
 
     // Send email
     const transporter = getTransporter()
+    // Always try to send email (transporter is now always available with fallback)
     if (transporter) {
       // Verify connection first (optional but helpful for debugging)
       const isVerified = await verifyTransporter(transporter)
@@ -214,15 +226,16 @@ export async function POST(req: Request) {
       console.log("🔗 PASSWORD RESET LINK (SMTP not configured):")
       console.log(resetUrl)
       console.log("=".repeat(60))
-      
-      // Return error when SMTP is not configured
-      return NextResponse.json({
-        success: false,
-        emailSent: false,
-        message: `⚠️ Email service is not configured. Password reset link: ${resetUrl}`,
-        resetUrl: resetUrl,
-        smtpConfigured: false
-      }, { status: 500 })
+        
+        // This should not happen anymore since we have fallback credentials
+        // But keep it as a safety check
+        return NextResponse.json({
+          success: false,
+          emailSent: false,
+          message: `⚠️ Email service is not configured. Password reset link: ${resetUrl}`,
+          resetUrl: resetUrl,
+          smtpConfigured: false
+        }, { status: 500 })
     }
 
   } catch (error) {

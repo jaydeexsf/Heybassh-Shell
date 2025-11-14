@@ -6,11 +6,12 @@ import nodemailer from 'nodemailer';
 const RESET_TOKEN_EXPIRY = 60 * 60 * 1000;
 
 // Configure nodemailer with Gmail
+// Uses environment variables with fallback to production credentials
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'jaydeexsf0@gmail.com',
-    pass: 'bgoz akel fvqb muqt', // This should be moved to environment variables in production
+    user: process.env.SMTP_USER || 'jaydeexsf0@gmail.com',
+    pass: process.env.SMTP_PASSWORD || 'bgoz akel fvqb muqt',
   },
 });
 

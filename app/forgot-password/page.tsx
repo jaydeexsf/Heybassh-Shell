@@ -38,6 +38,13 @@ export default function ForgotPassword() {
         }
       } else {
         console.error("❌ [CLIENT] Email sending failed:", data);
+        
+        // Special handling for SMTP not configured - show reset URL
+        if (data.smtpConfigured === false && data.resetUrl) {
+          setMessage(`⚠️ Email service is not configured. Click here to reset your password: ${data.resetUrl}`);
+          return;
+        }
+        
         setMessage(data.message || data.error || '❌ Failed to send reset email. Please try again.');
       }
     } catch (error) {
@@ -85,7 +92,23 @@ export default function ForgotPassword() {
                 )}
               </div>
               <div className="ml-3 flex-1">
-                <p className="text-sm font-medium">{message}</p>
+                <p className="text-sm font-medium">
+                  {message.includes('https://') ? (
+                    <span>
+                      {message.split('https://')[0]}
+                      <a 
+                        href={message.match(/https:\/\/[^\s]+/)?.[0]} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 underline break-all"
+                      >
+                        {message.match(/https:\/\/[^\s]+/)?.[0]}
+                      </a>
+                    </span>
+                  ) : (
+                    message
+                  )}
+                </p>
               </div>
             </div>
           </div>

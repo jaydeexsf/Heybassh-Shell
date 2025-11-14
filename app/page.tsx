@@ -213,6 +213,17 @@ export default function Home() {
 
       if (!response.ok || !data.success) {
         console.error("❌ [CLIENT] Email sending failed:", data)
+        
+        // Special handling for SMTP not configured - show reset URL
+        if (data.smtpConfigured === false && data.resetUrl) {
+          setFeedback({
+            type: "error",
+            message: `⚠️ Email service is not configured. Click here to reset your password: ${data.resetUrl}`
+          })
+          setForgotStatus("idle")
+          return
+        }
+        
         setFeedback({
           type: "error",
           message: data.message || "❌ Failed to send reset email. Please try again."
@@ -411,7 +422,23 @@ export default function Home() {
                     {feedback.type === "info" && (
                       <span className="text-yellow-300">⚠️</span>
                     )}
-                    <span className="flex-1">{feedback.message}</span>
+                    <span className="flex-1">
+                      {feedback.message.includes('https://') ? (
+                        <span>
+                          {feedback.message.split('https://')[0]}
+                          <a 
+                            href={feedback.message.match(/https:\/\/[^\s]+/)?.[0]} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 underline break-all"
+                          >
+                            {feedback.message.match(/https:\/\/[^\s]+/)?.[0]}
+                          </a>
+                        </span>
+                      ) : (
+                        feedback.message
+                      )}
+                    </span>
                   </div>
                 </div>
               )}
