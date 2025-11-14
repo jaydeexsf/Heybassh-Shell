@@ -88,7 +88,8 @@ export async function POST(req: Request) {
       console.log("=".repeat(60))
       return NextResponse.json({
         success: true,
-        message: "If an account exists with this email, a password reset link has been sent."
+        emailSent: false,
+        message: "If an account exists with this email, a password reset link has been sent. Please check your inbox."
       })
     }
 
@@ -163,24 +164,43 @@ export async function POST(req: Request) {
         console.log(`   Rejected: ${emailInfo.rejected?.join(', ') || 'None'}`)
         console.log(`📧 [FORGOT PASSWORD] Password reset email has been sent to ${normalizedEmail}`)
         console.log("=".repeat(60))
+        
+        // Return success with email sent confirmation
+        return NextResponse.json({
+          success: true,
+          emailSent: true,
+          message: `✅ Password reset email has been sent successfully to ${normalizedEmail}. Please check your inbox (and spam folder) for the reset link.`,
+          details: {
+            to: normalizedEmail,
+            messageId: emailInfo.messageId,
+            accepted: emailInfo.accepted || [],
+            rejected: emailInfo.rejected || []
+          }
+        })
       } catch (emailError) {
         console.error(`❌ [FORGOT PASSWORD] Email sending failed!`)
         console.error(`   Error:`, emailError)
+        const errorMessage = emailError instanceof Error ? emailError.message : 'Unknown error'
+        const errorCode = (emailError as any)?.code || 'UNKNOWN'
+        
         if (emailError instanceof Error) {
-          console.error(`   Error message: ${emailError.message}`)
-          console.error(`   Error code: ${(emailError as any).code || 'N/A'}`)
+          console.error(`   Error message: ${errorMessage}`)
+          console.error(`   Error code: ${errorCode}`)
           console.error(`   Error command: ${(emailError as any).command || 'N/A'}`)
           if (emailError.stack) {
             console.error(`   Error stack: ${emailError.stack}`)
           }
         }
-        console.log(`⚠️  [FORGOT PASSWORD] Email could not be sent, but returning success for security`)
         console.log("=".repeat(60))
-        // Still return success to not reveal if email exists
+        
+        // Return error response so user knows email wasn't sent
         return NextResponse.json({
-          success: true,
-          message: "If an account exists with this email, a password reset link has been sent."
-        })
+          success: false,
+          emailSent: false,
+          message: `❌ Failed to send password reset email. Error: ${errorMessage}. Please check your email settings or try again later.`,
+          error: errorMessage,
+          errorCode: errorCode
+        }, { status: 500 })
       }
     } else {
       // Development mode - log the reset link
@@ -194,15 +214,16 @@ export async function POST(req: Request) {
       console.log("🔗 PASSWORD RESET LINK (SMTP not configured):")
       console.log(resetUrl)
       console.log("=".repeat(60))
+      
+      // Return error when SMTP is not configured
+      return NextResponse.json({
+        success: false,
+        emailSent: false,
+        message: `⚠️ Email service is not configured. Password reset link: ${resetUrl}`,
+        resetUrl: resetUrl,
+        smtpConfigured: false
+      }, { status: 500 })
     }
-
-    console.log(`✅ [FORGOT PASSWORD] Request completed successfully`)
-    console.log("=".repeat(60))
-    
-    return NextResponse.json({
-      success: true,
-      message: "If an account exists with this email, a password reset link has been sent."
-    })
 
   } catch (error) {
     console.error("=".repeat(60))

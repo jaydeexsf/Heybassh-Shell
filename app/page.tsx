@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react"
 import { FormEvent, useState } from "react"
 
 type AuthMode = "login" | "register"
-type Feedback = { type: "success" | "error"; message: string }
+type Feedback = { type: "success" | "error" | "info"; message: string }
 type FormErrors = Partial<Record<"email" | "password" | "name", string>>
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -200,6 +200,7 @@ export default function Home() {
     }
     setForgotStatus("sending")
     setFeedback(null)
+    console.log("📧 [CLIENT] Sending password reset request for:", trimmedEmail)
     try {
       const response = await fetch("/api/forgot-password", {
         method: "POST",
@@ -208,26 +209,38 @@ export default function Home() {
       })
 
       const data = await response.json()
+      console.log("📧 [CLIENT] Response received:", data)
 
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
+        console.error("❌ [CLIENT] Email sending failed:", data)
         setFeedback({
           type: "error",
-          message: data.message || "Failed to send reset email. Please try again."
+          message: data.message || "❌ Failed to send reset email. Please try again."
         })
         setForgotStatus("idle")
         return
       }
 
-      setForgotStatus("sent")
-      setFeedback({
-        type: "success",
-        message: data.message || "If an account exists with this email, a password reset link has been sent."
-      })
+      if (data.emailSent) {
+        console.log("✅ [CLIENT] Email sent successfully!")
+        setForgotStatus("sent")
+        setFeedback({
+          type: "success",
+          message: data.message || `✅ Password reset email has been sent successfully to ${trimmedEmail}. Please check your inbox (and spam folder).`
+        })
+      } else {
+        console.log("⚠️ [CLIENT] User not found or email not sent")
+        setForgotStatus("sent")
+        setFeedback({
+          type: "info",
+          message: data.message || "If an account exists with this email, a password reset link has been sent. Please check your inbox."
+        })
+      }
     } catch (error) {
-      console.error("Forgot password error:", error)
+      console.error("❌ [CLIENT] Forgot password error:", error)
       setFeedback({
         type: "error",
-        message: "Unable to send reset email. Please try again."
+        message: "❌ Unable to send reset email. Please check your connection and try again."
       })
       setForgotStatus("idle")
     } finally {
@@ -383,10 +396,23 @@ export default function Home() {
                   className={`rounded-lg border px-4 py-3 text-sm ${
                     feedback.type === "success"
                       ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
-                      : "border-rose-500/40 bg-rose-500/10 text-rose-200"
+                      : feedback.type === "error"
+                      ? "border-rose-500/40 bg-rose-500/10 text-rose-200"
+                      : "border-yellow-400/40 bg-yellow-400/10 text-yellow-200"
                   }`}
                 >
-                  {feedback.message}
+                  <div className="flex items-start gap-2">
+                    {feedback.type === "success" && (
+                      <span className="text-emerald-300">✅</span>
+                    )}
+                    {feedback.type === "error" && (
+                      <span className="text-rose-300">❌</span>
+                    )}
+                    {feedback.type === "info" && (
+                      <span className="text-yellow-300">⚠️</span>
+                    )}
+                    <span className="flex-1">{feedback.message}</span>
+                  </div>
                 </div>
               )}
 
