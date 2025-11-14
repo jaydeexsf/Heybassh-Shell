@@ -1367,8 +1367,8 @@ export default function Dashboard() {
             >
               Book a Service
             </button>
-            <Link href="/api/auth/signout" className="btn btn-primary">
-              Sign in
+            <Link href="/api/auth/signout" className="btn">
+              Sign out
             </Link>
           </div>
         </header>
