@@ -29,8 +29,16 @@ export async function POST(request: Request) {
     // Create and save the reset token
     const resetToken = await createPasswordResetToken(email);
 
-    // Send the email
-    await sendPasswordResetEmail(email, resetToken.token);
+    // Try to send the email, but don't leak internal errors to the user
+    try {
+      await sendPasswordResetEmail(email, resetToken.token);
+    } catch (err) {
+      console.error('Error sending password reset email:', err);
+      return NextResponse.json(
+        { error: 'We could not send the reset email. Please try again later.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       { message: 'If an account with that email exists, you will receive a password reset link.' },
