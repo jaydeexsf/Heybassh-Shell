@@ -48,7 +48,7 @@ const getTransporter = () => {
 }
 
 // Verify SMTP connection
-const verifyTransporter = async (transporter: nodemailer.Transporter): Promise<boolean> => {
+const verifyTransporter = async (transporter: ReturnType<typeof nodemailer.createTransport>): Promise<boolean> => {
   try {
     console.log(`🔍 [SMTP] Verifying SMTP connection...`)
     await transporter.verify()
