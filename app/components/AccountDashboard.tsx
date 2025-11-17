@@ -209,8 +209,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-[260px_1fr]">
       <aside className="border-b border-[#1a2446] p-4 md:border-b-0 md:border-r">
         <div className="mb-6 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#3ab0ff]/80 text-lg font-bold text-[#061332] shadow-[0_10px_25px_-20px_rgba(16,167,255,0.75)]">
-            H
+          <div className="">
           </div>
           <div>
             <div className="text-lg font-semibold text-white">Heybassh</div>
@@ -228,7 +227,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
               <div key={item.id} className="grid gap-1">
                 <button
                   onClick={() => (hasChildren ? setOpenSections((c) => toggleSectionState(c, item.id)) : navigate(item.id))}
-                  className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm transition ${
+                  className={`flex items-center justify-between rounded-lg border px-3 py-1 text-sm transition ${
                     active
                       ? "border-[#1a2446] bg-[#111936] text-white shadow-[0_15px_35px_-25px_rgba(39,172,255,0.65)]"
                       : "border-transparent text-blue-100 hover:bg-[#101733]"

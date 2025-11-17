@@ -1282,7 +1282,7 @@ export default function Dashboard() {
               <div key={item.id} className="grid gap-1">
                 <button
                   onClick={() => (hasChildren ? toggleSection(item.id) : handleNavigate(item.id))}
-                  className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm transition ${
+                  className={`flex items-center justify-between rounded-lg border px-3 py-1 text-sm transition ${
                     active
                       ? "border-[#1a2446] bg-[#111936] text-white shadow-[0_15px_35px_-25px_rgba(39,172,255,0.65)]"
                       : "border-transparent text-blue-100 hover:bg-[#101733]"

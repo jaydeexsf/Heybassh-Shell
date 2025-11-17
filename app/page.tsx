@@ -3,6 +3,8 @@
 import { signIn } from "next-auth/react"
 import { FormEvent, useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
+import Image from "next/image"
+import logo from "../Images/heybasshlogo.png"
 
 type AuthMode = "login" | "register"
 type Feedback = { type: "success" | "error" | "info"; message: string }
@@ -368,7 +370,7 @@ function HomeInner() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-8 rounded-2xl border border-white/10 bg-black/40 p-6 shadow-[0_20px_45px_-25px_rgba(16,167,255,0.45)] sm:p-8">
+          <div className="flex flex-col gap-8 rounded-2xl border border-white/10 bg-black/40 p-6 shadow-[0_20px_45px_-25px_rgba(16,167,255,0.45)] sm:p-8 min-h-[560px] md:min-h-[600px]">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white md:text-2xl">
                 {mode === "login" ? "Welcome back" : "Create your free account"}
@@ -566,6 +568,20 @@ function HomeInner() {
               </a>
               .
             </p> */}
+
+            <div className="mt-auto flex items-center justify-between border-t border-white/10 pt-4">
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-md bg-black/60 px-2 py-1 text-xs text-blue-100 hover:bg-black/70 transition"
+                aria-label="Heybassh"
+              >
+                <span className="inline-flex items-center rounded bg-black p-1">
+                  <Image src={logo} alt="Heybassh" height={18} className="w-auto h-[18px]" />
+                </span>
+                <span>Heybassh</span>
+              </button>
+              <a href="/" className="text-xs text-blue-200 hover:text-blue-100">Privacy policy</a>
+            </div>
           </div>
         </div>
       </section>
