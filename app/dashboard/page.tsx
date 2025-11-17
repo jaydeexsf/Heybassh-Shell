@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { ReactNode, useMemo, useState, useEffect } from "react"
+import HeaderMenu from "../components/HeaderMenu"
 
 type NavChild = { id: string; label: string }
 type NavItem = {
@@ -1367,6 +1368,7 @@ export default function Dashboard() {
             >
               Book a Service
             </button>
+            <HeaderMenu inline buttonVariant="gold" />
           </div>
         </header>
         <div className="mx-auto grid max-w-[1140px] gap-4 p-4">

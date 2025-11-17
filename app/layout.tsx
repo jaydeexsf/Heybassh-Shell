@@ -2,7 +2,6 @@
 import "./globals.css"
 import { ReactNode } from "react"
 import Providers from "./providers"
-import HeaderMenu from "./components/HeaderMenu"
 
 export const metadata = { 
   title: "Heybassh Shell / Cloud", 
@@ -19,7 +18,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         <Providers>
-          <HeaderMenu />
           {children}
         </Providers>
       </body>

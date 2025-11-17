@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react"
 import { FormEvent, useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 import logo from "../Images/heybasshlogo.png"
 
 type AuthMode = "login" | "register"
@@ -358,6 +359,14 @@ function HomeInner() {
         <div className="grid w-full max-w-5xl gap-10 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-2xl lg:grid-cols-[1.05fr_0.95fr] lg:p-12">
           <div className="flex flex-col justify-between gap-10">
             <div>
+              <div className="flex items-center gap-3 text-white">
+                <span className="inline-flex items-center rounded-2xl bg-black/60 p-2 shadow-inner shadow-black/20">
+                  <Image src={logo} alt="Heybassh Shell logo" className="h-10 w-auto" priority />
+                </span>
+                <div className="text-sm uppercase tracking-[0.18em] text-blue-100/70">
+                  Heybassh Shell
+                </div>
+              </div>
               <h1 className="text-3xl font-semibold leading-snug text-white md:text-4xl">
                 Heybassh Shell Cloud
               </h1>
@@ -367,6 +376,17 @@ function HomeInner() {
               <p className="mt-4 text-sm leading-relaxed text-blue-100/80 md:text-base">
                 Sign in to continue to your cloud shell environment or create a new account in just a few clicks. Enterprise-grade security, tailored for modern teams.
               </p>
+              <div className="mt-6 flex flex-wrap items-center gap-3 text-sm">
+                <Link
+                  href="/create-account"
+                  className="btn btn-primary whitespace-nowrap rounded-full border border-[#5dd4ff]/40 bg-[#061332] px-5 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-blue-50 shadow-[0_15px_35px_-20px_rgba(39,172,255,0.65)] hover:brightness-110"
+                >
+                  Create company workspace
+                </Link>
+                <span className="text-blue-100/70">
+                  New accounts receive a 7-digit ID (e.g. /0000001/dashboard)
+                </span>
+              </div>
             </div>
           </div>
 
