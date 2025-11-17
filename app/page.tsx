@@ -1,16 +1,24 @@
 "use client"
 
 import { signIn } from "next-auth/react"
-import { FormEvent, useEffect, useState } from "react"
+import { FormEvent, useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 
 type AuthMode = "login" | "register"
 type Feedback = { type: "success" | "error" | "info"; message: string }
+
+export default function Page() {
+  return (
+    <Suspense>
+      <HomeInner />
+    </Suspense>
+  )
+}
 type FormErrors = Partial<Record<"email" | "password" | "name", string>>
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-export default function Home() {
+function HomeInner() {
   const searchParams = useSearchParams()
   const [mode, setMode] = useState<AuthMode>("login")
   const [email, setEmail] = useState("")
