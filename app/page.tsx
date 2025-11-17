@@ -4,7 +4,6 @@ import { signIn } from "next-auth/react"
 import { FormEvent, useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Image from "next/image"
-import Link from "next/link"
 import logo from "../Images/heybasshlogo.png"
 
 type AuthMode = "login" | "register"
@@ -20,6 +19,24 @@ export default function Page() {
 type FormErrors = Partial<Record<"email" | "password" | "name", string>>
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const domainPattern = /^[a-z0-9.-]+\.[a-z]{2,}$/i
+
+function extractDomainFromEmail(value: string) {
+  const domainPart = value.split("@")[1]?.toLowerCase().trim() ?? ""
+  return domainPattern.test(domainPart) ? domainPart : "example.com"
+}
+
+function deriveCompanyNameFromDomain(domain: string, fallbackEmail: string) {
+  const slug = domain.split(".")[0] || fallbackEmail.split("@")[0] || "workspace"
+  return slug.charAt(0).toUpperCase() + slug.slice(1)
+}
+
+function deriveWorkspaceDetails(email: string) {
+  const normalizedEmail = email.trim().toLowerCase()
+  const domain = extractDomainFromEmail(normalizedEmail)
+  const companyName = deriveCompanyNameFromDomain(domain, normalizedEmail)
+  return { companyName, companyDomain: domain }
+}
 
 function HomeInner() {
   const searchParams = useSearchParams()
@@ -78,34 +95,33 @@ function HomeInner() {
     return Object.keys(errors).length === 0
   }
 
+  async function fetchSessionAccountId() {
+    try {
+      const res = await fetch("/api/auth/session")
+      if (!res.ok) return null
+      const data = await res.json()
+      return data?.user?.account_id ?? null
+    } catch {
+      return null
+    }
+  }
+
+  async function redirectToWorkspace(preferredId?: string | null) {
+    const workspaceId = preferredId ?? (await fetchSessionAccountId())
+    if (workspaceId) {
+      window.location.href = `/${workspaceId}/dashboard`
+    } else {
+      window.location.href = "/dashboard"
+    }
+  }
+
   async function onRegister() {
     if (!validateForm("register")) return
     setLoading(true)
     setFeedback(null)
     try {
-      // If no account_id yet, create a company account automatically from email domain (demo only)
-      let acctId = accountId
       const trimmedEmail = email.trim().toLowerCase()
-      if (!acctId) {
-        const domain = trimmedEmail.split("@")[1] || "company.com"
-        const company_name = domain
-        try {
-          const accountsRes = await fetch("/api/accounts", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              company_name,
-              company_domain: domain,
-              owner_email: trimmedEmail,
-            }),
-          })
-          if (accountsRes.ok) {
-            const acc = await accountsRes.json()
-            acctId = acc.account_id || null
-            setAccountId(acctId)
-          }
-        } catch {}
-      }
+      const { companyName: derivedCompanyName, companyDomain: derivedCompanyDomain } = deriveWorkspaceDetails(trimmedEmail)
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -113,7 +129,9 @@ function HomeInner() {
           email: email.trim(), 
           password: password.trim(), 
           name: name.trim() || undefined,
-          account_id: acctId || undefined,
+          account_id: accountId || undefined,
+          company_name: derivedCompanyName,
+          company_domain: derivedCompanyDomain,
         }),
       })
       const data = await response.json()
@@ -121,6 +139,8 @@ function HomeInner() {
         setFeedback({ type: "error", message: data.error || "We couldn't complete your registration." })
         return
       }
+      const workspaceId = data.account_id as string | undefined
+      setAccountId(workspaceId || null)
       // Auto sign-in after successful registration
       const result = await signIn("credentials", { 
         email: email.trim(), 
@@ -130,12 +150,13 @@ function HomeInner() {
 
       if (result?.ok) {
         setFeedback({ type: "success", message: "Account created. Redirecting to your dashboard..." })
-        window.location.href = "/dashboard"
+        await redirectToWorkspace(workspaceId)
         return
       }
 
       // Fallback: ask user to sign in manually
-      setFeedback({ type: "success", message: "Account created successfully. You can sign in now." })
+      const workspaceHint = workspaceId ? `/${workspaceId}/dashboard` : "/dashboard"
+      setFeedback({ type: "success", message: `Account created successfully. You can sign in at ${workspaceHint}.` })
       setFormErrors({})
       setMode("login")
       setPassword("")
@@ -181,7 +202,7 @@ function HomeInner() {
           
           if (result?.ok) {
             setFeedback({ type: "success", message: "Signed in successfully. Redirecting..." })
-            window.location.href = "/dashboard"
+            await redirectToWorkspace()
             return
           }
           
@@ -197,7 +218,7 @@ function HomeInner() {
           
           // If no result, try redirect anyway
           console.log("No result from signIn, attempting redirect...")
-          window.location.href = "/dashboard"
+          await redirectToWorkspace()
         } catch (signInError) {
           console.error("SignIn exception:", signInError)
           setFeedback({
@@ -245,9 +266,7 @@ function HomeInner() {
       
       if (result?.ok) {
         setFeedback({ type: "success", message: "Signed in successfully. Redirecting..." })
-        setTimeout(() => {
-          window.location.href = "/dashboard"
-        }, 500)
+        await redirectToWorkspace()
         return
       }
       
@@ -376,17 +395,7 @@ function HomeInner() {
               <p className="mt-4 text-sm leading-relaxed text-blue-100/80 md:text-base">
                 Sign in to continue to your cloud shell environment or create a new account in just a few clicks. Enterprise-grade security, tailored for modern teams.
               </p>
-              <div className="mt-6 flex flex-wrap items-center gap-3 text-sm">
-                <Link
-                  href="/create-account"
-                  className="btn btn-primary whitespace-nowrap rounded-full border border-[#5dd4ff]/40 bg-[#061332] px-5 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-blue-50 shadow-[0_15px_35px_-20px_rgba(39,172,255,0.65)] hover:brightness-110"
-                >
-                  Create company workspace
-                </Link>
-                <span className="text-blue-100/70">
-                  New accounts receive a 7-digit ID (e.g. /0000001/dashboard)
-                </span>
-              </div>
+              
             </div>
           </div>
 
