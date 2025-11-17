@@ -102,7 +102,7 @@ export async function POST(req: Request) {
           company_domain: derivedDomain,
           owner_email: normalizedEmail,
         })
-        workspaceId = account.account_id
+        workspaceId = account.account_id ?? undefined
       }
       
       console.log('Creating user...');
