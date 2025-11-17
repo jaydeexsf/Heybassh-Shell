@@ -1367,9 +1367,6 @@ export default function Dashboard() {
             >
               Book a Service
             </button>
-            <Link href="/api/auth/signout" className="btn">
-              Sign out
-            </Link>
           </div>
         </header>
         <div className="mx-auto grid max-w-[1140px] gap-4 p-4">
