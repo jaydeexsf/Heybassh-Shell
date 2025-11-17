@@ -294,14 +294,16 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
           <div className="relative flex items-center gap-2 px-4">
             <Link href="#" className="btn">BotOnly AI</Link>
             <Link href="#" className="btn">Tools</Link>
-            <Link href="https://docs.heybassh.com" className="btn">Docs</Link>
-            <button
-              type="button"
-              onClick={() => navigate("service")}
-              className="btn btn-gold"
-            >
-              Book a Service
-            </button>
+            <div className="flex items-center gap-2">
+              <Link href="https://docs.heybassh.com" className="btn">Docs</Link>
+              <button
+                type="button"
+                onClick={() => navigate("service")}
+                className="btn btn-gold whitespace-nowrap"
+              >
+                Book a Service
+              </button>
+            </div>
             <div className="relative">
               <button onClick={() => setMenuOpen((o) => !o)} className="btn btn-gold">
                 {companyName}

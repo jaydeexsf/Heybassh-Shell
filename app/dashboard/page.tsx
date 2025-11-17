@@ -1359,15 +1359,17 @@ export default function Dashboard() {
             <Link href="#" className="btn">
               Tools
             </Link>
-            <Link href="https://docs.heybassh.com" className="btn">
-              Docs
-            </Link>
-            <button
-              onClick={() => handleNavigate("service")}
-              className="btn btn-gold"
-            >
-              Book a Service
-            </button>
+            <div className="flex items-center gap-2">
+              <Link href="https://docs.heybassh.com" className="btn">
+                Docs
+              </Link>
+              <Link
+                href="/dashboard/service"
+                className="btn btn-gold whitespace-nowrap"
+              >
+                Book a Service
+              </Link>
+            </div>
             <HeaderMenu inline buttonVariant="gold" />
           </div>
         </header>
