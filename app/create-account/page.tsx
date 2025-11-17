@@ -10,6 +10,7 @@ export default function CreateAccountPage() {
   const [ownerEmail, setOwnerEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [verifying, setVerifying] = useState(false)
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -74,8 +75,18 @@ export default function CreateAccountPage() {
               onChange={(e) => setOwnerEmail(e.target.value)}
               required
             />
-            <button type="button" className="px-3 rounded-lg border border-[#1a2446] bg-[#101733] text-blue-200 cursor-default">
-              Verify email
+            <button
+              type="button"
+              onClick={async () => {
+                if (verifying) return
+                setVerifying(true)
+                await new Promise((r) => setTimeout(r, 1200))
+                setVerifying(false)
+              }}
+              disabled={verifying}
+              className="btn btn-primary flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
+            >
+              {verifying ? "Verifying..." : "Verify email"}
             </button>
           </div>
         </div>

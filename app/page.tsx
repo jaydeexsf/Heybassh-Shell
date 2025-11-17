@@ -1,8 +1,8 @@
-
 "use client"
 
 import { signIn } from "next-auth/react"
-import { FormEvent, useState } from "react"
+import { FormEvent, useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 
 type AuthMode = "login" | "register"
 type Feedback = { type: "success" | "error" | "info"; message: string }
@@ -11,6 +11,7 @@ type FormErrors = Partial<Record<"email" | "password" | "name", string>>
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function Home() {
+  const searchParams = useSearchParams()
   const [mode, setMode] = useState<AuthMode>("login")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -21,6 +22,15 @@ export default function Home() {
   const [forgotStatus, setForgotStatus] = useState<"idle" | "sending" | "sent">("idle")
   const [showPassword, setShowPassword] = useState(false)
   const [verifiedEmail, setVerifiedEmail] = useState(false)
+  const [accountId, setAccountId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const aid = searchParams.get("account_id")
+    if (aid) {
+      setAccountId(aid)
+      setVerifiedEmail(true)
+    }
+  }, [searchParams])
 
   function resetUi() {
     setFormErrors({})
@@ -62,16 +72,58 @@ export default function Home() {
     setLoading(true)
     setFeedback(null)
     try {
+      // If no account_id yet, create a company account automatically from email domain (demo only)
+      let acctId = accountId
+      const trimmedEmail = email.trim().toLowerCase()
+      if (!acctId) {
+        const domain = trimmedEmail.split("@")[1] || "company.com"
+        const company_name = domain
+        try {
+          const accountsRes = await fetch("/api/accounts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              company_name,
+              company_domain: domain,
+              owner_email: trimmedEmail,
+            }),
+          })
+          if (accountsRes.ok) {
+            const acc = await accountsRes.json()
+            acctId = acc.account_id || null
+            setAccountId(acctId)
+          }
+        } catch {}
+      }
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password: password.trim(), name: name.trim() || undefined }),
+        body: JSON.stringify({ 
+          email: email.trim(), 
+          password: password.trim(), 
+          name: name.trim() || undefined,
+          account_id: acctId || undefined,
+        }),
       })
       const data = await response.json()
       if (!response.ok) {
         setFeedback({ type: "error", message: data.error || "We couldn't complete your registration." })
         return
       }
+      // Auto sign-in after successful registration
+      const result = await signIn("credentials", { 
+        email: email.trim(), 
+        password: password.trim(), 
+        redirect: false 
+      })
+
+      if (result?.ok) {
+        setFeedback({ type: "success", message: "Account created. Redirecting to your dashboard..." })
+        window.location.href = "/dashboard"
+        return
+      }
+
+      // Fallback: ask user to sign in manually
       setFeedback({ type: "success", message: "Account created successfully. You can sign in now." })
       setFormErrors({})
       setMode("login")
@@ -90,25 +142,11 @@ export default function Home() {
       return
     }
     setLoading(true)
-    setFeedback(null)
-    try {
-      const res = await fetch("/api/verify-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail })
-      })
-      const data = await res.json()
-      if (!res.ok || !data.ok) {
-        setFeedback({ type: "error", message: "Unable to verify email. Try again." })
-        return
-      }
-      setVerifiedEmail(true)
-      setFeedback({ type: "success", message: data.available ? "Email verified. Continue to create your free account." : "Email already registered. You can sign in." })
-    } catch {
-      setFeedback({ type: "error", message: "Something went wrong. Please try again." })
-    } finally {
-      setLoading(false)
-    }
+    setFeedback({ type: "info", message: "Demo: Skipping real verification..." })
+    await new Promise((r) => setTimeout(r, 1200))
+    setVerifiedEmail(true)
+    setLoading(false)
+    setFeedback({ type: "success", message: "Email verified (demo). Continue to create your free account." })
   }
 
   async function onLogin() {
@@ -370,9 +408,9 @@ export default function Home() {
                       type="button"
                       onClick={onVerifyEmail}
                       disabled={loading || verifiedEmail}
-                      className="px-3 rounded-lg border border-[#1a2446] bg-[#101733] text-blue-200"
+                      className="btn btn-primary flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
                     >
-                      {verifiedEmail ? "Verified" : "Verify email"}
+                      {verifiedEmail ? "Verified" : loading ? "Verifying..." : "Verify email"}
                     </button>
                   ) : (
                     <span className="hidden" />
@@ -494,7 +532,7 @@ export default function Home() {
                   type="submit"
                   disabled={loading}
                   aria-busy={loading}
-                  className="btn btn-primary flex w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
+                  className="btn btn-primary flex w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
                 >
                   {loading ? <span className="spinner" role="status" aria-label="Processing request" /> : <span>Sign in</span>}
                 </button>
