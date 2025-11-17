@@ -38,4 +38,6 @@ model Account {
   company_domain String
   owner_email    String
   created_at     DateTime @default(now())
+  /// Back relation to users under this account
+  users          User[]
 }
