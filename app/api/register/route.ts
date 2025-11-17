@@ -11,7 +11,9 @@ export const runtime = 'nodejs';
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
-  name: z.string().optional()
+  name: z.string().optional(),
+  role: z.enum(["user", "admin"]).optional(),
+  account_id: z.string().length(7).optional()
 })
 
 export async function POST(req: Request) {
@@ -30,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     try {
-      const { email, password, name } = schema.parse(body);
+      const { email, password, name, role, account_id } = schema.parse(body);
       const normalizedEmail = email.trim().toLowerCase();
       console.log('Validated input:', { email: normalizedEmail, name: name || 'not provided' });
 
@@ -52,7 +54,9 @@ export async function POST(req: Request) {
         data: { 
           email: normalizedEmail, 
           name, 
-          passwordHash 
+          passwordHash,
+          role: role ?? "user",
+          account_id: account_id ?? undefined
         } 
       });
       

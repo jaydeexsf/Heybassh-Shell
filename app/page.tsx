@@ -20,6 +20,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [forgotStatus, setForgotStatus] = useState<"idle" | "sending" | "sent">("idle")
   const [showPassword, setShowPassword] = useState(false)
+  const [verifiedEmail, setVerifiedEmail] = useState(false)
 
   function resetUi() {
     setFormErrors({})
@@ -30,6 +31,7 @@ export default function Home() {
   function handleModeChange(nextMode: AuthMode) {
     resetUi()
     setMode(nextMode)
+    setVerifiedEmail(false)
   }
 
   function validateForm(currentMode: AuthMode) {
@@ -76,6 +78,34 @@ export default function Home() {
       setPassword("")
     } catch {
       setFeedback({ type: "error", message: "Something went wrong. Please try again in a moment." })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function onVerifyEmail() {
+    const trimmedEmail = email.trim().toLowerCase()
+    if (!trimmedEmail || !emailPattern.test(trimmedEmail)) {
+      setFormErrors({ email: "Enter a valid email address." })
+      return
+    }
+    setLoading(true)
+    setFeedback(null)
+    try {
+      const res = await fetch("/api/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmedEmail })
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) {
+        setFeedback({ type: "error", message: "Unable to verify email. Try again." })
+        return
+      }
+      setVerifiedEmail(true)
+      setFeedback({ type: "success", message: data.available ? "Email verified. Continue to create your free account." : "Email already registered. You can sign in." })
+    } catch {
+      setFeedback({ type: "error", message: "Something went wrong. Please try again." })
     } finally {
       setLoading(false)
     }
@@ -295,7 +325,7 @@ export default function Home() {
           <div className="flex flex-col gap-8 rounded-2xl border border-white/10 bg-black/40 p-6 shadow-[0_20px_45px_-25px_rgba(16,167,255,0.45)] sm:p-8">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white md:text-2xl">
-                {mode === "login" ? "Welcome back" : "Create your account"}
+                {mode === "login" ? "Welcome back" : "Create your free account"}
               </h2>
               <div className="inline-flex items-center rounded-lg border border-white/10 bg-white/10 p-1 text-xs">
                 <button
@@ -320,7 +350,38 @@ export default function Home() {
             </div>
 
             <form className="grid gap-5" onSubmit={handleSubmit}>
-              {mode === "register" && (
+              <div className="grid gap-2">
+                <label className="text-sm font-medium text-blue-100" htmlFor="email">
+                  Email address
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="email"
+                    className={`input placeholder:text-blue-200/50 rounded-lg flex-1 ${formErrors.email ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    placeholder="name@company.com"
+                    type="email"
+                    value={email}
+                    autoComplete="email"
+                    onChange={(event) => setEmail(event.target.value)}
+                    aria-invalid={Boolean(formErrors.email)}
+                  />
+                  {mode === "register" ? (
+                    <button
+                      type="button"
+                      onClick={onVerifyEmail}
+                      disabled={loading || verifiedEmail}
+                      className="px-3 rounded-lg border border-[#1a2446] bg-[#101733] text-blue-200"
+                    >
+                      {verifiedEmail ? "Verified" : "Verify email"}
+                    </button>
+                  ) : (
+                    <span className="hidden" />
+                  )}
+                </div>
+                {formErrors.email && <p className="text-xs font-medium text-rose-300">{formErrors.email}</p>}
+              </div>
+
+              {mode === "register" && verifiedEmail && (
                 <div className="grid gap-2">
                   <label className="text-sm font-medium text-blue-100" htmlFor="name">
                     Full name <span className="text-blue-200/70">(optional)</span>
@@ -339,23 +400,7 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="grid gap-2">
-                <label className="text-sm font-medium text-blue-100" htmlFor="email">
-                  Work email
-                </label>
-                <input
-                  id="email"
-                  className={`input placeholder:text-blue-200/50 rounded-lg ${formErrors.email ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
-                  placeholder="you@company.com"
-                  type="email"
-                  value={email}
-                  autoComplete="email"
-                  onChange={(event) => setEmail(event.target.value)}
-                  aria-invalid={Boolean(formErrors.email)}
-                />
-                {formErrors.email && <p className="text-xs font-medium text-rose-300">{formErrors.email}</p>}
-              </div>
-
+              {mode === "register" && !verifiedEmail ? null : (
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-blue-100" htmlFor="password">
@@ -401,6 +446,7 @@ export default function Home() {
                 </div>
                 {formErrors.password && <p className="text-xs font-medium text-rose-300">{formErrors.password}</p>}
               </div>
+              )}
 
               {feedback && (
                 <div
@@ -443,18 +489,25 @@ export default function Home() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                aria-busy={loading}
-                className="btn btn-primary flex w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
-              >
-                {loading ? (
-                  <span className="spinner" role="status" aria-label="Processing request" />
-                ) : (
-                  <span>{mode === "login" ? "Sign in" : "Create account"}</span>
-                )}
-              </button>
+              {mode === "login" ? (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  aria-busy={loading}
+                  className="btn btn-primary flex w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
+                >
+                  {loading ? <span className="spinner" role="status" aria-label="Processing request" /> : <span>Sign in</span>}
+                </button>
+              ) : verifiedEmail ? (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  aria-busy={loading}
+                  className="btn btn-primary flex w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
+                >
+                  {loading ? <span className="spinner" role="status" aria-label="Processing request" /> : <span>Create account</span>}
+                </button>
+              ) : null}
             </form>
 
             {/* <p className="text-xs text-blue-200/60">
