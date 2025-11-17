@@ -436,7 +436,7 @@ function HomeInner() {
                   </label>
                   <input
                     id="name"
-                    className={`input placeholder:text-blue-200/50 rounded-lg ${formErrors.name ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    className={`input placeholder:text-blue-300/50 rounded-lg ${formErrors.name ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder="Jane Developer"
                     type="text"
                     value={name}
