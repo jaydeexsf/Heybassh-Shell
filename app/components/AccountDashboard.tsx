@@ -4,6 +4,7 @@ import Link from "next/link"
 import { ReactNode, useMemo, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
+import { getPathForView } from "./accountRouteMap"
 
 type NavChild = { id: string; label: string }
 type NavItem = {
@@ -160,14 +161,6 @@ function findNavLabel(items: NavItem[], id: string): string {
   return id.replace(/_/g, " ")
 }
 
-function viewToPath(view: string): string {
-  if (view === "overview") return "dashboard"
-  if (view === "customers_contacts") return "contacts"
-  if (view === "customers_companies") return "companies"
-  if (view === "products_listing") return "products"
-  return view
-}
-
 export default function AccountDashboard({ accountId, initialViewKey = "overview" }: { accountId: string; initialViewKey?: string }) {
   const router = useRouter()
   const [view, setView] = useState(initialViewKey)
@@ -188,9 +181,13 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
 
   const activeLabel = useMemo(() => findNavLabel(navigation, view), [view])
 
+  useEffect(() => {
+    setView(initialViewKey)
+  }, [initialViewKey])
+
   function navigate(viewKey: string) {
     setView(viewKey)
-    const seg = viewToPath(viewKey)
+    const seg = getPathForView(viewKey)
     router.push(`/${accountId}/${seg}`)
   }
 
@@ -294,10 +291,19 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
             <span className="text-lg font-semibold text-white">Heybassh</span>
             <div className="text-sm text-blue-200">Shell / Cloud • Unified workspace</div>
           </div>
-          <div className="flex items-center gap-2 px-4 relative">
+          <div className="relative flex items-center gap-2 px-4">
             <Link href="#" className="btn">BotOnly AI</Link>
             <Link href="#" className="btn">Tools</Link>
-            <Link href="https://docs.heybassh.com" className="btn">Docs</Link>
+            <div className="flex items-center gap-2">
+              <Link href="https://docs.heybassh.com" className="btn">Docs</Link>
+              <button
+                type="button"
+                onClick={() => navigate("service")}
+                className="btn btn-gold whitespace-nowrap"
+              >
+                Book a Service
+              </button>
+            </div>
             <div className="relative">
               <button onClick={() => setMenuOpen((o) => !o)} className="btn btn-gold">
                 {companyName}

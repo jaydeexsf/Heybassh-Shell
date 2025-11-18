@@ -5,11 +5,21 @@ import { useSession, signOut } from "next-auth/react"
 import Image from "next/image"
 import logo from "../../Images/heybasshlogo.png"
 
-export default function HeaderMenu() {
-  const { data } = useSession()
+type HeaderMenuProps = {
+  inline?: boolean
+  buttonVariant?: "pill" | "gold"
+  className?: string
+}
+
+export default function HeaderMenu({ inline = false, buttonVariant = "pill", className = "" }: HeaderMenuProps) {
+  const { data, status } = useSession()
   const user = data?.user as any | undefined
   const [open, setOpen] = useState(false)
   const [companyName, setCompanyName] = useState<string>("")
+
+  if (status !== "authenticated" || !user) {
+    return null
+  }
 
   const initials = useMemo(() => {
     const n = (user?.name as string | undefined) || (user?.email as string | undefined) || "User"
@@ -34,21 +44,35 @@ export default function HeaderMenu() {
     }
   }, [user?.account_id])
 
+  const containerClassName = [inline ? "relative" : "fixed right-4 top-4 z-50", className].filter(Boolean).join(" ")
+
+  const buttonClassName =
+    buttonVariant === "gold"
+      ? "btn btn-gold whitespace-nowrap flex items-center gap-2"
+      : "inline-flex items-center gap-2 rounded-lg border border-white/10 bg-black/60 px-3 py-1.5 text-sm text-blue-100 shadow hover:bg-black/70"
+
+  const menuWrapperClass = inline ? "absolute right-0 mt-2 w-72 z-50" : "mt-2 w-72"
+
   return (
-    <div className="fixed right-4 top-4 z-50">
+    <div className={containerClassName}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-black/60 px-3 py-1.5 text-sm text-blue-100 shadow hover:bg-black/70"
+        className={buttonClassName}
+        aria-haspopup="menu"
+        aria-expanded={open}
       >
-        <span className="hidden sm:inline text-blue-50 font-medium">{companyName || "Heybassh"}</span>
+        <span className={`${buttonVariant === "gold" ? "text-sm font-semibold" : "hidden sm:inline text-blue-50 font-medium"}`}>
+          {companyName || "Heybassh"}
+        </span>
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#121c3d] text-[#7ed0ff] text-xs">
           {initials}
         </span>
+        {buttonVariant === "gold" && <span className="text-xs opacity-80">▾</span>}
       </button>
 
       {open && (
-        <div className="mt-2 w-72 rounded-xl border border-white/10 bg-[#0b132c] p-3 shadow-2xl">
+        <div className={`${menuWrapperClass} rounded-xl border border-white/10 bg-[#0b132c] p-3 shadow-2xl`}>
           <div className="flex items-center gap-3 p-2">
             <Image src={logo} alt="Heybassh" height={28} className="h-7 w-auto" />
             <div className="grid leading-tight">
