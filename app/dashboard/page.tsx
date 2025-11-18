@@ -1365,7 +1365,7 @@ export default function Dashboard() {
               onClick={() => handleNavigate("service")}
               className="btn btn-gold"
             >
-              Book a Service
+              Book a Services
             </button>
           </div>
         </header>
