@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react"
 import { FormEvent, useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 import logo from "../Images/heybasshlogo.png"
 
 type AuthMode = "login" | "register"
@@ -31,14 +32,12 @@ function HomeInner() {
   const [loading, setLoading] = useState(false)
   const [forgotStatus, setForgotStatus] = useState<"idle" | "sending" | "sent">("idle")
   const [showPassword, setShowPassword] = useState(false)
-  const [verifiedEmail, setVerifiedEmail] = useState(false)
   const [accountId, setAccountId] = useState<string | null>(null)
 
   useEffect(() => {
     const aid = searchParams.get("account_id")
     if (aid) {
       setAccountId(aid)
-      setVerifiedEmail(true)
     }
   }, [searchParams])
 
@@ -51,7 +50,6 @@ function HomeInner() {
   function handleModeChange(nextMode: AuthMode) {
     resetUi()
     setMode(nextMode)
-    setVerifiedEmail(false)
   }
 
   function validateForm(currentMode: AuthMode) {
@@ -70,8 +68,10 @@ function HomeInner() {
     else if (currentMode === "register" && trimmedPassword.length < 6)
       errors.password = "Use at least 6 characters."
 
-    if (currentMode === "register" && trimmedName && trimmedName.length < 2)
-      errors.name = "Name should be at least 2 characters."
+    if (currentMode === "register") {
+      if (!trimmedName) errors.name = "Full name is required."
+      else if (trimmedName.length < 2) errors.name = "Name should be at least 2 characters."
+    }
 
     setFormErrors(errors)
     return Object.keys(errors).length === 0
@@ -111,7 +111,7 @@ function HomeInner() {
         body: JSON.stringify({ 
           email: email.trim(), 
           password: password.trim(), 
-          name: name.trim() || undefined,
+          name: name.trim(),
           account_id: acctId || undefined,
         }),
       })
@@ -143,20 +143,6 @@ function HomeInner() {
     } finally {
       setLoading(false)
     }
-  }
-
-  async function onVerifyEmail() {
-    const trimmedEmail = email.trim().toLowerCase()
-    if (!trimmedEmail || !emailPattern.test(trimmedEmail)) {
-      setFormErrors({ email: "Enter a valid email address." })
-      return
-    }
-    setLoading(true)
-    setFeedback({ type: "info", message: "Demo: Skipping real verification..." })
-    await new Promise((r) => setTimeout(r, 1200))
-    setVerifiedEmail(true)
-    setLoading(false)
-    setFeedback({ type: "success", message: "Email verified (demo). Continue to create your free account." })
   }
 
   async function onLogin() {
@@ -413,26 +399,14 @@ function HomeInner() {
                     onChange={(event) => setEmail(event.target.value)}
                     aria-invalid={Boolean(formErrors.email)}
                   />
-                  {mode === "register" ? (
-                    <button
-                      type="button"
-                      onClick={onVerifyEmail}
-                      disabled={loading || verifiedEmail}
-                      className="btn btn-primary flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
-                    >
-                      {verifiedEmail ? "Verified" : loading ? "Verifying..." : "Verify email"}
-                    </button>
-                  ) : (
-                    <span className="hidden" />
-                  )}
                 </div>
                 {formErrors.email && <p className="text-xs font-medium text-rose-300">{formErrors.email}</p>}
               </div>
 
-              {mode === "register" && verifiedEmail && (
+              {mode === "register" && (
                 <div className="grid gap-2">
                   <label className="text-sm font-medium text-blue-100" htmlFor="name">
-                    Full name <span className="text-blue-200/70">(optional)</span>
+                    Full name
                   </label>
                   <input
                     id="name"
@@ -447,21 +421,21 @@ function HomeInner() {
                   {formErrors.name && <p className="text-xs font-medium text-rose-300">{formErrors.name}</p>}
                 </div>
               )}
-
-              {mode === "register" && !verifiedEmail ? null : (
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-blue-100" htmlFor="password">
                     Password
                   </label>
-                  <button
-                    type="button"
-                    className="text-xs font-medium text-[#5dd4ff] transition hover:text-white"
-                    onClick={onForgotPassword}
-                    disabled={forgotStatus === "sending"}
-                  >
-                    {forgotStatus === "sent" ? "Reset link sent" : "Forgot password?"}
-                  </button>
+                  {mode === "login" && (
+                    <button
+                      type="button"
+                      className="text-xs font-medium text-[#5dd4ff] transition hover:text-white"
+                      onClick={onForgotPassword}
+                      disabled={forgotStatus === "sending"}
+                    >
+                      {forgotStatus === "sent" ? "Reset link sent" : "Forgot password?"}
+                    </button>
+                  )}
                 </div>
                 <div className="relative w-full">
                   <input
@@ -494,7 +468,6 @@ function HomeInner() {
                 </div>
                 {formErrors.password && <p className="text-xs font-medium text-rose-300">{formErrors.password}</p>}
               </div>
-              )}
 
               {feedback && (
                 <div
@@ -546,7 +519,7 @@ function HomeInner() {
                 >
                   {loading ? <span className="spinner" role="status" aria-label="Processing request" /> : <span>Sign in</span>}
                 </button>
-              ) : verifiedEmail ? (
+              ) : (
                 <button
                   type="submit"
                   disabled={loading}
@@ -555,8 +528,15 @@ function HomeInner() {
                 >
                   {loading ? <span className="spinner" role="status" aria-label="Processing request" /> : <span>Create account</span>}
                 </button>
-              ) : null}
+              )}
             </form>
+
+            <p className="text-xs text-blue-200/70 text-center">
+              Need a full company workspace?{" "}
+              <Link href="/create-account" className="text-[#5dd4ff] underline-offset-4 hover:underline">
+                Create your free account →
+              </Link>
+            </p>
 
             {/* <p className="text-xs text-blue-200/60">
               By continuing, you agree to the Heybassh Shell Terms and acknowledge the Privacy Policy. Need assistance?{" "}

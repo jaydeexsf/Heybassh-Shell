@@ -3,38 +3,64 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function deriveCompany(email: string) {
+  const domainPart = email.split("@")[1]?.toLowerCase() || "example.com"
+  const root = domainPart.split(".")[0] || "company"
+  const company_name = root
+    .replace(/[-_]/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ") || "Company"
+  return {
+    company_name,
+    company_domain: domainPart,
+  }
+}
+
 export default function CreateAccountPage() {
   const router = useRouter()
-  const [companyName, setCompanyName] = useState("")
-  const [companyDomain, setCompanyDomain] = useState("")
   const [ownerEmail, setOwnerEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [verifying, setVerifying] = useState(false)
+  const [status, setStatus] = useState<string | null>(null)
 
-  async function onSubmit(e: React.FormEvent) {
+  async function onVerify(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setStatus(null)
+    const trimmedEmail = ownerEmail.trim().toLowerCase()
+    if (!trimmedEmail || !emailPattern.test(trimmedEmail)) {
+      setError("Enter a valid email address")
+      return
+    }
     setLoading(true)
+    setStatus("Demo: Verifying email…")
     try {
+      await new Promise((resolve) => setTimeout(resolve, 1200))
+      const { company_name, company_domain } = deriveCompany(trimmedEmail)
       const res = await fetch("/api/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          company_name: companyName.trim(),
-          company_domain: companyDomain.trim(),
-          owner_email: ownerEmail.trim().toLowerCase(),
+          company_name,
+          company_domain,
+          owner_email: trimmedEmail,
         }),
       })
       const data = await res.json()
       if (!res.ok) {
         setError(data?.error || "Failed to create account")
-        setLoading(false)
+        setStatus(null)
         return
       }
-      router.push(`/${data.account_id}/dashboard`)
+      setStatus(`✔️ Created ${company_name}. Redirecting…`)
+      setTimeout(() => router.push(`/${data.account_id}/dashboard`), 900)
     } catch (err: any) {
-      setError("Unexpected error")
+      setError("Unexpected error. Please try again.")
+      setStatus(null)
     } finally {
       setLoading(false)
     }
@@ -42,62 +68,33 @@ export default function CreateAccountPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-[#0b1124]">
-      <form onSubmit={onSubmit} className="w-full max-w-md space-y-4 bg-[#0d142a] border border-[#111936] p-6 rounded-2xl">
+      <form onSubmit={onVerify} className="w-full max-w-md space-y-4 bg-[#0d142a] border border-[#111936] p-6 rounded-2xl">
         <h1 className="text-white text-xl font-semibold">Create your free account</h1>
+        <p className="text-sm text-blue-200/80">
+          Drop in any work email. We’ll auto-detect the company name and domain. The verification step is demo-only for now.
+        </p>
         <div>
-          <label className="block text-sm text-blue-200 mb-1">Company name</label>
-          <input
-            className="w-full rounded-lg border border-[#1a2446] bg-[#0b132c] p-2 text-white"
-            placeholder="Tesla"
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm text-blue-200 mb-1">Company domain</label>
-          <input
-            className="w-full rounded-lg border border-[#1a2446] bg-[#0b132c] p-2 text-white"
-            placeholder="teslatest.com"
-            value={companyDomain}
-            onChange={(e) => setCompanyDomain(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm text-blue-200 mb-1">Owner email</label>
+          <label className="block text-sm text-blue-200 mb-1">Work email</label>
           <div className="flex gap-2">
             <input
               type="email"
               className="flex-1 rounded-lg border border-[#1a2446] bg-[#0b132c] p-2 text-white"
-              placeholder="name@company.com"
+              placeholder="you@company.com"
               value={ownerEmail}
               onChange={(e) => setOwnerEmail(e.target.value)}
               required
             />
             <button
-              type="button"
-              onClick={async () => {
-                if (verifying) return
-                setVerifying(true)
-                await new Promise((r) => setTimeout(r, 1200))
-                setVerifying(false)
-              }}
-              disabled={verifying}
-              className="btn btn-primary flex items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary flex items-center justify-center gap-2 rounded-lg text-sm font-semibold whitespace-nowrap disabled:opacity-60"
             >
-              {verifying ? "Verifying..." : "Verify email"}
+              {loading ? "Verifying…" : "Verify email"}
             </button>
           </div>
         </div>
+        {status && <div className="text-green-300 text-sm">{status}</div>}
         {error && <div className="text-red-400 text-sm">{error}</div>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full btn btn-primary justify-center"
-        >
-          {loading ? "Creating..." : "Create account"}
-        </button>
       </form>
     </div>
   )
