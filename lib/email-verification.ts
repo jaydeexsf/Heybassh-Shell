@@ -4,10 +4,14 @@ import { getMailer, getMailFrom } from "./mailer"
 
 const VERIFICATION_TOKEN_EXPIRY = 1000 * 60 * 60 * 24 // 24 hours
 
-export async function createEmailVerificationToken(email: string) {
+export async function createEmailVerificationToken(
+  email: string,
+  tokenValue?: string,
+  expiresInMs: number = VERIFICATION_TOKEN_EXPIRY,
+) {
   await prisma.emailVerificationToken.deleteMany({ where: { email } })
-  const token = uuidv4()
-  const expires = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRY)
+  const token = tokenValue ?? uuidv4()
+  const expires = new Date(Date.now() + expiresInMs)
   return prisma.emailVerificationToken.create({
     data: { email, token, expires },
   })
@@ -39,6 +43,24 @@ export async function sendVerificationEmail(email: string, token: string, compan
 
   await getMailer().sendMail(mailOptions)
   return verifyUrl
+}
+
+export async function sendVerificationCodeEmail(email: string, code: string, companyName?: string) {
+  const mailOptions = {
+    from: getMailFrom(),
+    to: email,
+    subject: "Your Heybassh Shell verification code",
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #0b1124;">
+        <h2>Verify your email ${companyName ? `for ${companyName}` : ""}</h2>
+        <p>Use the verification code below to continue setting up your Heybassh Shell workspace.</p>
+        <p style="font-size: 32px; letter-spacing: 8px; font-weight: bold; color: #3ab0ff; margin: 24px 0;">${code}</p>
+        <p>This code will expire in 10 minutes. If you didn't request it, you can safely ignore this email.</p>
+      </div>
+    `,
+  }
+
+  await getMailer().sendMail(mailOptions)
 }
 
 export async function validateVerificationToken(token: string) {

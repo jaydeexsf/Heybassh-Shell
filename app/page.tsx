@@ -258,13 +258,13 @@ function HomeInner() {
       console.log("📧 [CLIENT] Response received:", data)
 
       if (!response.ok || !data.success) {
-        console.error("❌ [CLIENT] Email sending failed:", data)
+        console.error("[CLIENT] Email sending failed:", data)
         
         // Special handling for SMTP not configured - show reset URL
         if (data.smtpConfigured === false && data.resetUrl) {
           setFeedback({
             type: "error",
-            message: `⚠️ Email service is not configured. Click here to reset your password: ${data.resetUrl}`
+            message: `Email service is not configured. Click here to reset your password: ${data.resetUrl}`
           })
           setForgotStatus("idle")
           return
@@ -272,21 +272,21 @@ function HomeInner() {
         
         setFeedback({
           type: "error",
-          message: data.message || "❌ Failed to send reset email. Please try again."
+          message: data.message || "Failed to send reset email. Please try again."
         })
         setForgotStatus("idle")
         return
       }
 
       if (data.emailSent) {
-        console.log("✅ [CLIENT] Email sent successfully!")
+        console.log("[CLIENT] Email sent successfully!")
         setForgotStatus("sent")
         setFeedback({
           type: "success",
           message: data.message || `Password reset email has been sent successfully to ${trimmedEmail}. Please check your inbox (and spam folder).`
         })
       } else {
-        console.log("⚠️ [CLIENT] User not found or email not sent")
+        console.log("[CLIENT] User not found or email not sent")
         setForgotStatus("sent")
         setFeedback({
           type: "info",
@@ -294,10 +294,10 @@ function HomeInner() {
         })
       }
     } catch (error) {
-      console.error("❌ [CLIENT] Forgot password error:", error)
+      console.error("[CLIENT] Forgot password error:", error)
       setFeedback({
         type: "error",
-        message: "❌ Unable to send reset email. Please check your connection and try again."
+        message: "Unable to send reset email. Please check your connection and try again."
       })
       setForgotStatus("idle")
     } finally {
@@ -480,15 +480,6 @@ function HomeInner() {
                   }`}
                 >
                   <div className="flex items-start gap-2">
-                    {feedback.type === "success" && (
-                      <span className="text-emerald-300">✅</span>
-                    )}
-                    {feedback.type === "error" && (
-                      <span className="text-rose-300">❌</span>
-                    )}
-                    {feedback.type === "info" && (
-                      <span className="text-yellow-300">⚠️</span>
-                    )}
                     <span className="flex-1">
                       {feedback.message.includes('https://') ? (
                         <span>

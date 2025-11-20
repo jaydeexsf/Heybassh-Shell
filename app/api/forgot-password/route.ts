@@ -13,14 +13,14 @@ const schema = z.object({
 export async function POST(req: Request) {
   try {
     console.log("=".repeat(60))
-    console.log("🔐 [FORGOT PASSWORD] Request received")
+    console.log("[FORGOT PASSWORD] Request received")
     console.log("=".repeat(60))
     
     const body = await req.json()
     const { email } = schema.parse(body)
     const normalizedEmail = email.trim().toLowerCase()
 
-    console.log(`📧 [FORGOT PASSWORD] Processing request for email: ${normalizedEmail}`)
+    console.log(`[FORGOT PASSWORD] Processing request for email: ${normalizedEmail}`)
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     // Don't reveal if user exists or not for security
     if (!user) {
-      console.log(`❌ [FORGOT PASSWORD] User not found for email: ${normalizedEmail}`)
+      console.log(`[FORGOT PASSWORD] User not found for email: ${normalizedEmail}`)
       console.log("=".repeat(60))
       return NextResponse.json({
         success: true,
@@ -38,14 +38,14 @@ export async function POST(req: Request) {
       })
     }
 
-    console.log(`✅ [FORGOT PASSWORD] User found: ${user.id}`)
+    console.log(`[FORGOT PASSWORD] User found: ${user.id}`)
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex")
     const resetTokenExpiry = new Date()
     resetTokenExpiry.setHours(resetTokenExpiry.getHours() + 1) // Token expires in 1 hour
 
-    console.log(`🔑 [FORGOT PASSWORD] Generated reset token (expires in 1 hour)`)
+    console.log(`[FORGOT PASSWORD] Generated reset token (expires in 1 hour)`)
 
     // Save token to database
     await prisma.user.update({
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       }
     })
 
-    console.log(`💾 [FORGOT PASSWORD] Reset token saved to database`)
+    console.log(`[FORGOT PASSWORD] Reset token saved to database`)
 
     // Create reset URL - handle Vercel deployment URLs properly
     const baseUrl = process.env.NEXTAUTH_URL 
@@ -65,13 +65,13 @@ export async function POST(req: Request) {
       || "https://heybassh-shell.vercel.app"
     const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`
 
-    console.log(`🔗 [FORGOT PASSWORD] Reset URL created: ${resetUrl}`)
+    console.log(`[FORGOT PASSWORD] Reset URL created: ${resetUrl}`)
 
     let transporter
     try {
       transporter = getMailer()
     } catch (err) {
-      console.error(`❌ [FORGOT PASSWORD] SMTP setup error:`, err)
+      console.error(`[FORGOT PASSWORD] SMTP setup error:`, err)
       return NextResponse.json(
         {
           success: false,
@@ -84,16 +84,16 @@ export async function POST(req: Request) {
     }
 
     try {
-      console.log(`🔍 [SMTP] Verifying SMTP connection...`)
+      console.log(`[SMTP] Verifying SMTP connection...`)
       await transporter.verify()
-      console.log(`✅ [SMTP] SMTP connection verified successfully`)
+      console.log(`[SMTP] SMTP connection verified successfully`)
     } catch (error) {
-      console.warn(`⚠️ [SMTP] Verification failed, attempting to send anyway`, error)
+      console.warn(`[SMTP] Verification failed, attempting to send anyway`, error)
     }
 
     const fromAddress = getMailFrom()
 
-    console.log(`📤 [FORGOT PASSWORD] Attempting to send password reset email...`)
+    console.log(`[FORGOT PASSWORD] Attempting to send password reset email...`)
     console.log(`   To: ${normalizedEmail}`)
     console.log(`   From: ${fromAddress}`)
     console.log(`   Subject: Password Reset Request`)
@@ -120,12 +120,12 @@ export async function POST(req: Request) {
         text: `Password Reset Request\n\nClick this link to reset your password:\n${resetUrl}\n\nThis link expires in 1 hour.\n\nIf you didn't request this, please ignore this email.`,
       })
 
-      console.log(`✅ [FORGOT PASSWORD] Email sent successfully!`)
+      console.log(`[FORGOT PASSWORD] Email sent successfully!`)
       console.log(`   Message ID: ${emailInfo.messageId}`)
       console.log(`   Accepted: ${emailInfo.accepted?.join(", ") || "N/A"}`)
       console.log(`   Rejected: ${emailInfo.rejected?.join(", ") || "None"}`)
       console.log(`   Envelope:`, emailInfo.envelope)
-      console.log(`📧 [FORGOT PASSWORD] Password reset email has been sent to ${normalizedEmail}`)
+      console.log(`[FORGOT PASSWORD] Password reset email has been sent to ${normalizedEmail}`)
       console.log("=".repeat(60))
 
       return NextResponse.json({
@@ -140,7 +140,7 @@ export async function POST(req: Request) {
         },
       })
     } catch (emailError) {
-      console.error(`❌ [FORGOT PASSWORD] Email sending failed!`)
+      console.error(`[FORGOT PASSWORD] Email sending failed!`)
       console.error(`   Error:`, emailError)
       const errorMessage = emailError instanceof Error ? emailError.message : "Unknown error"
       const errorCode = (emailError as any)?.code || "UNKNOWN"
@@ -160,7 +160,7 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error("=".repeat(60))
-    console.error("❌ [FORGOT PASSWORD] Error occurred:")
+    console.error("[FORGOT PASSWORD] Error occurred:")
     console.error(error)
     if (error instanceof Error) {
       console.error(`   Error message: ${error.message}`)
