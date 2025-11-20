@@ -323,6 +323,47 @@ function HomeInner() {
     }
   }
 
+  async function onDemoLogin() {
+    setLoading(true)
+    setFeedback(null)
+    setForgotStatus("idle")
+    try {
+      // Use test account for demo login
+      const result = await signIn("credentials", { 
+        email: "test@allahuakbar.com", 
+        password: "any", 
+        redirect: false
+      })
+      
+      if (result?.ok) {
+        setFeedback({ type: "success", message: "Demo login successful. Redirecting..." })
+        setTimeout(() => {
+          window.location.href = "/dashboard"
+        }, 500)
+        return
+      }
+      
+      if (result?.error) {
+        setFeedback({
+          type: "error",
+          message: `Demo login failed: ${result.error}`,
+        })
+        setLoading(false)
+        return
+      }
+      
+      // Fallback redirect
+      window.location.href = "/dashboard"
+    } catch (error) {
+      console.error("Demo login error:", error)
+      setFeedback({
+        type: "error",
+        message: `Unable to login: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      })
+      setLoading(false)
+    }
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (loading) return
@@ -341,7 +382,22 @@ function HomeInner() {
       </div>
 
       <section className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12 lg:px-12">
-        <div className="grid w-full max-w-5xl gap-10 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-2xl lg:grid-cols-[1.05fr_0.95fr] lg:p-12">
+        <div className="w-full max-w-5xl space-y-4">
+          {/* Demo Login Button */}
+          <div className="flex justify-center">
+            <button
+              type="button"
+              onClick={onDemoLogin}
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-lg border border-[#3ab0ff]/50 bg-gradient-to-r from-[#3ab0ff]/20 to-[#5dd4ff]/20 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:from-[#3ab0ff]/30 hover:to-[#5dd4ff]/30 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <span>🎭</span>
+              <span>Demo Login</span>
+              {loading && <span className="spinner" role="status" />}
+            </button>
+          </div>
+
+          <div className="grid w-full gap-10 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-2xl lg:grid-cols-[1.05fr_0.95fr] lg:p-12">
           <div className="flex flex-col justify-between gap-10">
             <div>
               <h1 className="text-3xl font-semibold leading-snug text-white md:text-4xl">
@@ -562,6 +618,7 @@ function HomeInner() {
               </button>
               <a href="/" className="text-xs text-blue-200 hover:text-blue-100">Privacy policy</a>
             </div>
+          </div>
           </div>
         </div>
       </section>

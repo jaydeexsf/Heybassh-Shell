@@ -1,9 +1,11 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { ReactNode, useMemo, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
+import logo from "../../Images/heybasshlogo.png"
 
 type NavChild = { id: string; label: string }
 type NavItem = {
@@ -14,6 +16,12 @@ type NavItem = {
 }
 
 const iconClass = "h-5 w-5"
+
+const MenuIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M4 7h16M4 12h16M4 17h16" />
+  </svg>
+)
 
 const OverviewIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -179,6 +187,19 @@ const FrontOfficeIcon = () => (
 const navigation: NavItem[] = [
   { id: "overview", label: "Overview", icon: <OverviewIcon /> },
   {
+    id: "front_office",
+    label: "Front Office Apps",
+    icon: <FrontOfficeIcon />,
+    children: [
+      { id: "front_office_website", label: "Website" },
+      { id: "front_office_portal", label: "Portal" },
+      { id: "front_office_mobile", label: "Mobile App" },
+      { id: "front_office_live_chat", label: "Live Chat" },
+      { id: "front_office_help_desk", label: "Help Desk" },
+      { id: "front_office_survey", label: "Survey" },
+    ],
+  },
+  {
     id: "customers",
     label: "Customers",
     icon: <UsersIcon />,
@@ -246,12 +267,14 @@ function findNavLabel(items: NavItem[], id: string): string {
   return id.replace(/_/g, " ")
 }
 
-function viewToPath(view: string): string {
+function viewToPath(view: string): string | null {
+  // Only route to actual pages that exist, otherwise return null to keep in place
   if (view === "overview") return "dashboard"
   if (view === "customers_contacts") return "contacts"
   if (view === "customers_companies") return "companies"
   if (view === "products_listing") return "products"
-  return view
+  // For all other views, return null to just update state without routing
+  return null
 }
 
 export default function AccountDashboard({ accountId, initialViewKey = "overview" }: { accountId: string; initialViewKey?: string }) {
@@ -261,10 +284,20 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const [menuOpen, setMenuOpen] = useState(false)
   const [companyMenuOpen, setCompanyMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
-  const [frontOfficeMenuOpen, setFrontOfficeMenuOpen] = useState(false)
+  const [sidebarProfileMenuOpen, setSidebarProfileMenuOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const { data: session } = useSession()
   
   const userName = session?.user?.name || session?.user?.email || "User"
+  const userImage = typeof session?.user?.image === "string" ? session.user.image : null
+  const userInitial = userName.trim().charAt(0).toUpperCase() || "U"
+
+  // Sync view with initialViewKey when it changes (e.g., when navigating to a different route)
+  useEffect(() => {
+    if (initialViewKey && initialViewKey !== view) {
+      setView(initialViewKey)
+    }
+  }, [initialViewKey])
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -273,14 +306,14 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
       if (!target.closest('[data-dropdown]')) {
         setCompanyMenuOpen(false)
         setUserMenuOpen(false)
-        setFrontOfficeMenuOpen(false)
+        setSidebarProfileMenuOpen(false)
       }
     }
-    if (companyMenuOpen || userMenuOpen || frontOfficeMenuOpen) {
+    if (companyMenuOpen || userMenuOpen || sidebarProfileMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [companyMenuOpen, userMenuOpen, frontOfficeMenuOpen])
+  }, [companyMenuOpen, userMenuOpen, sidebarProfileMenuOpen])
 
   useEffect(() => {
     let ignore = false
@@ -298,55 +331,63 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   function navigate(viewKey: string) {
     setView(viewKey)
     const seg = viewToPath(viewKey)
-    router.push(`/${accountId}/${seg}`)
+    // Only navigate if there's an actual route, otherwise just update the view state
+    if (seg) {
+      router.push(`/${accountId}/${seg}`)
+    }
+    // If no route exists, we just update the view state and stay on the current page
   }
 
   function toggleSectionState(curr: Record<string, boolean>, id: string) {
     return { ...curr, [id]: !curr[id] }
   }
 
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ customers: true, products: true })
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ customers: true, products: true, front_office: false })
 
   function isParentActive(item: NavItem) {
     if (item.id === view) return true
     return Boolean(item.children?.some((child) => child.id === view))
   }
 
+  const desktopGrid = sidebarCollapsed ? "md:grid-cols-[64px_1fr]" : "md:grid-cols-[64px_260px_1fr]"
+
   return (
-    <div className="grid min-h-screen grid-cols-1 md:grid-cols-[64px_260px_1fr] bg-[#020617]">
+    <div className={`grid min-h-screen grid-cols-1 ${desktopGrid} bg-[#020617]`}>
       {/* Icon-only sidebar */}
-      <aside className="hidden md:flex flex-col items-center gap-4 border-r border-[#1a2446] bg-[#0e1629] py-4">
-        <button className="flex h-10 w-10 items-center justify-center rounded-lg text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
-          <LogoIcon />
+      <aside className="hidden md:flex flex-col items-center gap-3 border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur">
+        <button
+          onClick={() => setSidebarCollapsed((prev) => !prev)}
+          aria-pressed={sidebarCollapsed}
+          className={`flex h-10 w-10 items-center justify-center rounded-2xl border border-[#1a2446] transition-all ${
+            sidebarCollapsed ? "bg-[#101733] text-[#7ed0ff]" : "bg-[rgba(20,26,52,0.85)] text-white/80"
+          }`}
+          title="Toggle navigation"
+        >
+          <MenuIcon />
         </button>
-        <button className="flex h-10 w-10 items-center justify-center rounded-lg text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
-          <CreateIcon />
-        </button>
-        <button className="flex h-10 w-10 items-center justify-center rounded-lg text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
-          <InboxIcon />
-        </button>
-        <button className="flex h-10 w-10 items-center justify-center rounded-lg text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
-          <CallsIcon />
-        </button>
-        <button className="flex h-10 w-10 items-center justify-center rounded-lg text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
-          <MeetingsIcon />
-        </button>
-        <button className="flex h-10 w-10 items-center justify-center rounded-lg text-[#7ed0ff] hover:bg-[#121c3d] transition-colors mt-auto">
+        <div className="flex flex-col items-center gap-3 flex-1">
+          <button className="flex h-10 w-10 items-center justify-center rounded-2xl text-[#7ed0ff] hover:bg-[#121c3d] transition-colors" title="Create">
+            <CreateIcon />
+          </button>
+          <button className="flex h-10 w-10 items-center justify-center rounded-2xl text-[#7ed0ff] hover:bg-[#121c3d] transition-colors" title="Inbox">
+            <InboxIcon />
+          </button>
+          <button className="flex h-10 w-10 items-center justify-center rounded-2xl text-[#7ed0ff] hover:bg-[#121c3d] transition-colors" title="Calls">
+            <CallsIcon />
+          </button>
+          <button className="flex h-10 w-10 items-center justify-center rounded-2xl text-[#7ed0ff] hover:bg-[#121c3d] transition-colors" title="Meetings">
+            <MeetingsIcon />
+          </button>
+        </div>
+        <button className="flex h-10 w-10 items-center justify-center rounded-2xl text-[#7ed0ff] hover:bg-[#121c3d] transition-colors" title="Settings">
           <SettingsIcon />
         </button>
       </aside>
 
       {/* Main sidebar */}
-      <aside className="border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#0e1629]">
-        <div className="mb-4 flex items-center gap-2" style={{ paddingTop: "calc(0.5rem - 2px)", paddingBottom: "calc(0.5rem - 2px)" }}>
-          <div>
-            <div className="text-lg font-semibold text-white">Heybassh Business</div>
-            <div className="text-xs uppercase tracking-wider text-blue-200/80">Website</div>
-            <div className="text-xs text-blue-200/70">Publicity · Privacy · Productivity</div>
-          </div>
-        </div>
-
-        <nav className="flex flex-col gap-1">
+      {!sidebarCollapsed && (
+        <aside className="border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#0e1629]">
+        <nav className="flex flex-col gap-1 pt-2">
           {navigation.map((item) => {
             const hasChildren = Boolean(item.children?.length)
             const open = openSections[item.id] ?? false
@@ -406,14 +447,65 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
           })}
         </nav>
 
-        <div className="mt-6 rounded-[26px] border border-[#111936] bg-[#0d142a] p-4 text-xs text-blue-200/80">
-          <div className="text-[10px] uppercase tracking-wider text-blue-300/70">Dubai UAE</div>
+        <div className="mt-6 relative" data-dropdown>
+          <button
+            onClick={() => setSidebarProfileMenuOpen((o) => !o)}
+            className="w-full rounded-[26px] border border-[#111936] bg-[#0d142a] p-3 text-left text-blue-50 hover:bg-[#121c3d] transition"
+          >
+            <div className="flex items-center gap-3">
+              {userImage ? (
+                <div className="h-10 w-10 rounded-full overflow-hidden border border-[#1a2446]">
+                  <Image src={userImage} alt={userName} width={40} height={40} className="h-full w-full object-cover" />
+                </div>
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#5468ff] to-[#2bb9ff] flex items-center justify-center text-sm font-semibold uppercase text-white">
+                  {userInitial}
+                </div>
+              )}
+              <div className="flex-1">
+                <div className="text-sm font-medium truncate">{userName}</div>
+                <div className="text-[11px] text-blue-300 truncate">{session?.user?.email ?? "Account"}</div>
+              </div>
+              <span className="text-xs text-blue-200">▾</span>
+            </div>
+          </button>
+          {sidebarProfileMenuOpen && (
+            <div className="absolute bottom-full left-0 mb-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] text-xs text-blue-100 shadow-lg z-50 overflow-hidden" data-dropdown>
+              <Link
+                href={`/${accountId}/settings`}
+                className="block px-4 py-2 hover:bg-[#121c3d]"
+                onClick={() => setSidebarProfileMenuOpen(false)}
+              >
+                My Profile
+              </Link>
+              <Link
+                href={`/${accountId}/settings`}
+                className="block px-4 py-2 hover:bg-[#121c3d]"
+                onClick={() => setSidebarProfileMenuOpen(false)}
+              >
+                Settings
+              </Link>
+              <button
+                className="block w-full text-left px-4 py-2 hover:bg-[#121c3d]"
+                onClick={() => {
+                  setSidebarProfileMenuOpen(false)
+                  signOut({ callbackUrl: "/" })
+                }}
+              >
+                Log out
+              </button>
+            </div>
+          )}
         </div>
       </aside>
+      )}
 
       <div className="bg-[#020617]">
         <header className="sticky top-0 z-10 flex items-center justify-between bg-[rgba(9,15,31,.85)] px-4 py-2 backdrop-blur">
           <div className="flex items-center gap-3">
+            <Link href={`/${accountId}/dashboard`} className="flex items-center">
+              <Image src={logo} alt="Heybassh" height={28} className="h-7 w-auto" />
+            </Link>
             <div className="relative">
               <div className="flex items-center gap-2 border border-[#1a2446] rounded-[24px] px-3 py-1.5 bg-[#0e1629]">
                 <SearchIcon />
@@ -427,42 +519,27 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
             <button className="flex h-8 w-8 items-center justify-center rounded-[24px] border border-[#1a2446] bg-[#0e1629] text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
               <SettingsIcon />
             </button>
-            <div className="h-4 w-px bg-[#1a2446] mx-2"></div>
-            <div className="relative" data-dropdown>
-              <button
-                onClick={() => setFrontOfficeMenuOpen((o) => !o)}
-                className="text-sm text-blue-200 hover:text-white transition-colors px-2 py-1 rounded-[24px] hover:bg-[#0e1629]"
-              >
-                Front Office
-              </button>
-              {frontOfficeMenuOpen && (
-                <div className="absolute left-0 top-full mt-2 w-48 rounded-[26px] border border-[#111936] bg-[#0e1629] text-sm shadow-lg z-50" data-dropdown>
-                  <button className="block w-full text-left px-3 py-2 text-blue-100 hover:bg-[#121c3d] rounded-t-[26px]" onClick={() => setFrontOfficeMenuOpen(false)}>Website</button>
-                  <button className="block w-full text-left px-3 py-2 text-blue-100 hover:bg-[#121c3d]" onClick={() => setFrontOfficeMenuOpen(false)}>Portal</button>
-                  <button className="block w-full text-left px-3 py-2 text-blue-100 hover:bg-[#121c3d]" onClick={() => setFrontOfficeMenuOpen(false)}>Mobile App</button>
-                  <button className="block w-full text-left px-3 py-2 text-blue-100 hover:bg-[#121c3d]" onClick={() => setFrontOfficeMenuOpen(false)}>Live Chat</button>
-                  <button className="block w-full text-left px-3 py-2 text-blue-100 hover:bg-[#121c3d]" onClick={() => setFrontOfficeMenuOpen(false)}>Help Desk</button>
-                  <button className="block w-full text-left px-3 py-2 text-blue-100 hover:bg-[#121c3d] rounded-b-[26px]" onClick={() => setFrontOfficeMenuOpen(false)}>Survey</button>
-                </div>
-              )}
-            </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="#" className="btn text-sm">BotOnly AI</Link>
-            <Link href="#" className="btn text-sm">Tools</Link>
-            <button className="btn text-sm flex items-center gap-1">
+            <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+              BotOnly AI
+            </Link>
+            <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+              Tools
+            </Link>
+            <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
               <AcademyIcon />
             </button>
-            <button className="btn text-sm flex items-center gap-1">
+            <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
               <MediaIcon />
             </button>
-            <button className="btn text-sm flex items-center gap-1 relative">
+            <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446] relative">
               <BellIcon />
-              <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+              <span className="absolute top-1 right-1 h-1.5 w-1.5 bg-red-500 rounded-full"></span>
             </button>
             <Link
               href={`/${accountId}/dashboard/service`}
-              className="btn btn-gold text-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#031226] bg-gradient-to-r from-[#FFD54A] to-[#FFC107] hover:brightness-110 rounded-[20px] transition-all border border-[#d4a017]"
             >
               Book a Service
             </Link>
@@ -578,16 +655,31 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
             </div>
           ) : view === "customers_companies" ? (
             <div className="card rounded-[32px] bg-[#0e1629]">
-              <h3 className="font-semibold text-white">Companies</h3>
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold text-white">Companies</h2>
+                <p className="mt-1 text-sm text-blue-200">Manage your company database.</p>
+              </div>
             </div>
           ) : view === "products_listing" ? (
             <div className="card rounded-[32px] bg-[#0e1629]">
-              <h3 className="font-semibold text-white">Products</h3>
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold text-white">Products</h2>
+                <p className="mt-1 text-sm text-blue-200">Product catalog and listings.</p>
+              </div>
+            </div>
+          ) : view.startsWith("front_office_") ? (
+            <div className="card rounded-[32px] bg-[#0e1629]">
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold text-white">{activeLabel}</h2>
+                <p className="mt-1 text-sm text-blue-200">Front Office application module.</p>
+              </div>
             </div>
           ) : (
             <div className="card rounded-[32px] bg-[#0e1629]">
-              <h3 className="font-semibold text-white">{activeLabel}</h3>
-              <p className="text-sm text-blue-200">This is a preview area for <span className="font-medium text-blue-100">{activeLabel}</span>.</p>
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold text-white">{activeLabel}</h2>
+                <p className="mt-1 text-sm text-blue-200">This is a preview area for <span className="font-medium text-blue-100">{activeLabel}</span>.</p>
+              </div>
             </div>
           )}
         </div>
