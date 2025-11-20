@@ -34,6 +34,17 @@ export default function HeaderMenu() {
     }
   }, [user?.account_id])
 
+  // Show only logo on login page (when user is not logged in)
+  if (!user) {
+    return (
+      <div className="fixed right-4 top-4 z-50">
+        <div className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-black/60 px-3 py-1.5 shadow">
+          <Image src={logo} alt="Heybassh" height={24} className="h-6 w-auto" />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="fixed right-4 top-4 z-50">
       <button
