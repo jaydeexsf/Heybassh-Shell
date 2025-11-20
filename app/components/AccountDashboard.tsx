@@ -1532,5 +1532,6 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
         </div>
       </div>
     </div>
+  </div>
   )
 }
