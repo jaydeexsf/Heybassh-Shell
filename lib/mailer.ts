@@ -1,4 +1,4 @@
-import nodemailer, { Transporter } from "nodemailer"
+import nodemailer from "nodemailer"
 
 type MailConfig = {
   host: string
@@ -9,7 +9,9 @@ type MailConfig = {
   from: string
 }
 
-let cachedTransporter: Transporter | null = null
+type MailerInstance = ReturnType<typeof nodemailer.createTransport>
+
+let cachedTransporter: MailerInstance | null = null
 let cachedConfig: MailConfig | null = null
 
 function ensureEnv(value: string | undefined, name: string) {
@@ -38,7 +40,7 @@ function resolveConfig(): MailConfig {
   return cachedConfig
 }
 
-export function getMailer(): Transporter {
+export function getMailer(): MailerInstance {
   if (cachedTransporter) {
     return cachedTransporter
   }
