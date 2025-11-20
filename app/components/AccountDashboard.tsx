@@ -774,7 +774,6 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
           </div>
         </header>
         <div className="h-px bg-[#1a2446]/50"></div>
-        <div className="h-px bg-[#1a2446]/30 my-4"></div>
         <div className={`grid flex-1 grid-cols-1 ${contentGrid}`}>
         {/* Main sidebar */}
           {!sidebarCollapsed && (

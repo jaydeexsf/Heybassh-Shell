@@ -60,7 +60,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
 
           if (!user.emailVerified) {
-            return null
+            if (user.account_id) {
+              await prisma.user.update({
+                where: { id: user.id },
+                data: { emailVerified: new Date() }
+              })
+            } else {
+              return null
+            }
           }
 
           // Credentials are valid

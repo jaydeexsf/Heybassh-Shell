@@ -19,8 +19,15 @@ export async function POST(req: Request) {
     const { email, password } = schema.parse(body)
 
     // Check if user exists
-    const user = await prisma.user.findUnique({ 
-      where: { email: normalizedEmail } 
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: {
+        id: true,
+        email: true,
+        passwordHash: true,
+        emailVerified: true,
+        account_id: true,
+      },
     })
 
     if (!user) {
@@ -31,10 +38,17 @@ export async function POST(req: Request) {
     }
 
     if (!user.emailVerified) {
-      return NextResponse.json(
-        { error: "EMAIL_NOT_VERIFIED", message: "Please verify your email address before signing in." },
-        { status: 403 },
-      )
+      if (user.account_id) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { emailVerified: new Date() },
+        })
+      } else {
+        return NextResponse.json(
+          { error: "EMAIL_NOT_VERIFIED", message: "Please verify your email address before signing in." },
+          { status: 403 },
+        )
+      }
     }
 
     // Verify password
