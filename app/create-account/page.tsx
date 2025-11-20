@@ -4,6 +4,23 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const blockedPublicDomains = new Set([
+  "gmail.com",
+  "yahoo.com",
+  "hotmail.com",
+  "outlook.com",
+  "live.com",
+  "msn.com",
+  "aol.com",
+  "icloud.com",
+  "me.com",
+  "protonmail.com",
+])
+
+function isBlockedDomain(email: string) {
+  const domain = email.split("@")[1]?.toLowerCase()
+  return domain ? blockedPublicDomains.has(domain) : true
+}
 
 function deriveCompany(email: string) {
   const domainPart = email.split("@")[1]?.toLowerCase() || "example.com"
@@ -40,6 +57,10 @@ export default function CreateAccountPage() {
     const trimmedEmail = ownerEmail.trim().toLowerCase()
     if (!trimmedEmail || !emailPattern.test(trimmedEmail)) {
       setError("Enter a valid email address")
+      return
+    }
+    if (isBlockedDomain(trimmedEmail)) {
+      setError("Please use your work email address")
       return
     }
     setLoading(true)
@@ -166,7 +187,7 @@ export default function CreateAccountPage() {
             <button
               type="submit"
               disabled={verifyingOtp || otpCode.length < 4}
-              className="btn btn-primary w-full rounded-lg text-sm font-semibold disabled:opacity-60"
+              className="btn btn-primary w-full rounded-[6px] text-xs font-semibold disabled:opacity-60"
             >
               {verifyingOtp ? "Verifying…" : "Confirm code"}
             </button>

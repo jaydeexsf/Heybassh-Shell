@@ -11,6 +11,19 @@ const schema = z.object({
   company_domain: z.string().min(2),
 })
 
+const PUBLIC_EMAIL_DOMAINS = new Set([
+  "gmail.com",
+  "yahoo.com",
+  "hotmail.com",
+  "outlook.com",
+  "live.com",
+  "msn.com",
+  "aol.com",
+  "icloud.com",
+  "me.com",
+  "protonmail.com",
+])
+
 function padAccountId(n: number) {
   return n.toString().padStart(7, "0")
 }
@@ -24,6 +37,14 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { email, company_name, company_domain } = schema.parse(body)
     const normalizedEmail = email.trim().toLowerCase()
+    const emailDomain = normalizedEmail.split("@")[1]
+
+    if (!emailDomain || PUBLIC_EMAIL_DOMAINS.has(emailDomain)) {
+      return NextResponse.json(
+        { error: "Please use your work email address." },
+        { status: 400 },
+      )
+    }
 
     let account = await prisma.account.findFirst({
       where: { owner_email: normalizedEmail },

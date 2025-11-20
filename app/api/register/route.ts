@@ -142,6 +142,8 @@ export async function POST(req: Request) {
 
       console.log('Hashing password...');
       const passwordHash = await bcrypt.hash(password, 10);
+
+      const emailVerifiedAt = account_id ? new Date() : null;
       
       console.log('Creating user...');
       const user = await prisma.user.create({ 
@@ -152,19 +154,24 @@ export async function POST(req: Request) {
           role: role ?? "user",
           account_id: resolvedAccountId,
           companyName,
+          emailVerified: emailVerifiedAt ?? undefined,
         } 
       });
       
       console.log('User created:', user.id);
 
-      const verification = await createEmailVerificationToken(normalizedEmail)
-      await sendVerificationEmail(normalizedEmail, verification.token, companyName)
-      console.log('Verification email queued:', { userId: user.id })
+      if (!emailVerifiedAt) {
+        const verification = await createEmailVerificationToken(normalizedEmail)
+        await sendVerificationEmail(normalizedEmail, verification.token, companyName)
+        console.log('Verification email queued:', { userId: user.id })
+      }
 
       return NextResponse.json({ 
         id: user.id, 
         email: user.email,
-        message: 'Registration successful. Please check your email to verify your account before signing in.'
+        message: emailVerifiedAt
+          ? 'Registration successful. You can sign in now.'
+          : 'Registration successful. Please check your email to verify your account before signing in.'
       });
 
     } catch (validationError) {
