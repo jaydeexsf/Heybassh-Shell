@@ -15,14 +15,6 @@ export async function POST(req: Request) {
     const body = await req.json()
     const normalizedEmail = body.email?.trim().toLowerCase()
 
-    // Bypass for test account - no database or password check needed
-    if (normalizedEmail === "test@allahuakbar.com") {
-      return NextResponse.json({ 
-        success: true,
-        message: "Credentials validated successfully"
-      })
-    }
-
     // Validate schema for other accounts
     const { email, password } = schema.parse(body)
 

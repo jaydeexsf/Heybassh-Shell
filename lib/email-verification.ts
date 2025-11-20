@@ -1,16 +1,8 @@
 import { v4 as uuidv4 } from "uuid"
-import nodemailer from "nodemailer"
 import { prisma } from "./prisma"
+import { getMailer, getMailFrom } from "./mailer"
 
 const VERIFICATION_TOKEN_EXPIRY = 1000 * 60 * 60 * 24 // 24 hours
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.SMTP_USER || "jaydeexsf0@gmail.com",
-    pass: process.env.SMTP_PASSWORD || "bgoz akel fvqb muqt",
-  },
-})
 
 export async function createEmailVerificationToken(email: string) {
   await prisma.emailVerificationToken.deleteMany({ where: { email } })
@@ -22,11 +14,15 @@ export async function createEmailVerificationToken(email: string) {
 }
 
 export async function sendVerificationEmail(email: string, token: string, companyName?: string) {
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+  const baseUrl =
+    process.env.NEXTAUTH_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "http://localhost:3000"
   const verifyUrl = `${baseUrl.replace(/\/$/, "")}/verify-email?token=${encodeURIComponent(token)}`
 
   const mailOptions = {
-    from: process.env.SMTP_FROM || "jaydeexsf0@gmail.com",
+    from: getMailFrom(),
     to: email,
     subject: "Verify your Heybassh Shell account",
     html: `
@@ -41,7 +37,7 @@ export async function sendVerificationEmail(email: string, token: string, compan
     `,
   }
 
-  await transporter.sendMail(mailOptions)
+  await getMailer().sendMail(mailOptions)
   return verifyUrl
 }
 

@@ -30,16 +30,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const email = creds.email as string
           const normalizedEmail = email.trim().toLowerCase()
 
-          // Bypass for test account - no database or password check needed
-          if (normalizedEmail === "test@allahuakbar.com") {
-            console.log("Test account detected, bypassing auth checks")
-            return { 
-              id: "test-user-id", 
-              email: normalizedEmail, 
-              name: "Test User" 
-            }
-          }
-
           // Validate schema for other accounts
           const parsed = z.object({
             email: z.string().email(),

@@ -1,19 +1,9 @@
-import { v4 as uuidv4 } from 'uuid';
-import { prisma } from './prisma';
-import nodemailer from 'nodemailer';
+import { v4 as uuidv4 } from "uuid"
+import { prisma } from "./prisma"
+import { getMailer, getMailFrom } from "./mailer"
 
 // Token expires in 1 hour
 const RESET_TOKEN_EXPIRY = 60 * 60 * 1000;
-
-// Configure nodemailer with Gmail
-// Uses environment variables with fallback to production credentials
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_USER || 'jaydeexsf0@gmail.com',
-    pass: process.env.SMTP_PASSWORD || 'bgoz akel fvqb muqt',
-  },
-});
 
 export async function createPasswordResetToken(email: string) {
   // Delete any existing tokens for this email
@@ -37,12 +27,17 @@ export async function createPasswordResetToken(email: string) {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
+  const baseUrl =
+    process.env.NEXTAUTH_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "http://localhost:3000"
+  const resetUrl = `${baseUrl.replace(/\/$/, "")}/reset-password?token=${token}`
 
   const mailOptions = {
-    from: 'jaydeexsf0@gmail.com',
+    from: getMailFrom(),
     to: email,
-    subject: 'Password Reset Request',
+    subject: "Password Reset Request",
     html: `
       <p>You requested a password reset. Click the link below to set a new password:</p>
       <a href="${resetUrl}">Reset Password</a>
@@ -51,15 +46,15 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     `,
   };
 
-  console.log('[ForgotPassword] Sending reset email', { to: email, resetUrl });
+  console.log("[ForgotPassword] Sending reset email", { to: email, resetUrl })
 
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('[ForgotPassword] Email sent successfully', { messageId: info.messageId });
+    const info = await getMailer().sendMail(mailOptions)
+    console.log("[ForgotPassword] Email sent successfully", { messageId: info.messageId })
   } catch (err) {
-    console.error('[ForgotPassword] Failed to send reset email', err);
+    console.error("[ForgotPassword] Failed to send reset email", err)
     // Re-throw so the API route can return a proper error response
-    throw err;
+    throw err
   }
 }
 

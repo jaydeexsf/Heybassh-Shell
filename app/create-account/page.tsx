@@ -37,7 +37,7 @@ export default function CreateAccountPage() {
       return
     }
     setLoading(true)
-    setStatus("Demo: Verifying email…")
+    setStatus("Verifying email…")
     try {
       await new Promise((resolve) => setTimeout(resolve, 1200))
       const { company_name, company_domain } = deriveCompany(trimmedEmail)
@@ -78,7 +78,7 @@ export default function CreateAccountPage() {
       <form onSubmit={onVerify} className="w-full max-w-md space-y-4 bg-[#0d142a] border border-[#111936] p-6 rounded-2xl">
         <h1 className="text-white text-xl font-semibold">Create your free account</h1>
         <p className="text-sm text-blue-200/80">
-          Drop in any work email. We’ll auto-detect the company name and domain. The verification step is demo-only for now.
+          Drop in any work email. We’ll auto-detect the company name and domain and send a verification message to the workspace owner.
         </p>
         <div>
           <label className="block text-sm text-blue-200 mb-1">Work email</label>

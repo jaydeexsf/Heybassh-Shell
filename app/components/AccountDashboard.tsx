@@ -608,84 +608,12 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
     { id: "incidents", label: "Incidents", value: "0" },
   ]
 
-  const desktopGrid = sidebarCollapsed ? "md:grid-cols-[64px_1fr]" : "md:grid-cols-[64px_260px_1fr]"
+  const desktopGrid = "md:grid-cols-[64px_minmax(0,1fr)]"
+  const contentGrid = sidebarCollapsed ? "" : "md:grid-cols-[260px_minmax(0,1fr)]"
 
   return (
-    <div className="min-h-screen bg-[#020617] flex flex-col">
-      <header className="sticky top-0 z-10 flex items-center justify-between bg-[rgba(9,15,31,.95)] px-4 py-2 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <Link href={`/${accountId}/dashboard`} className="flex items-center">
-            <Image src={logo} alt="Heybassh" height={28} className="h-7 w-auto" />
-          </Link>
-          <div className="relative">
-            <div className="flex items-center gap-2 border border-[#1a2446] rounded-[24px] px-3 py-1.5 bg-[#0e1629]">
-              <SearchIcon />
-              <input
-                type="text"
-                placeholder="Search Heybassh"
-                className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 w-40"
-              />
-            </div>
-          </div>
-          <button className="flex h-8 w-8 items-center justify-center rounded-[24px] border border-[#1a2446] bg-[#0e1629] text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
-            <SettingsIcon />
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
-            BotOnly AI
-          </Link>
-          <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
-            Tools
-          </Link>
-          <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
-            <AcademyIcon />
-          </button>
-          <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
-            <MediaIcon />
-          </button>
-          <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446] relative">
-            <BellIcon />
-            <span className="absolute top-1 right-1 h-1.5 w-1.5 bg-red-500 rounded-full"></span>
-          </button>
-          <Link
-            href={`/${accountId}/dashboard/service`}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#031226] bg-gradient-to-r from-[#FFD54A] to-[#FFC107] hover:brightness-110 rounded-[20px] transition-all border border-[#d4a017]"
-          >
-            Book a Service
-          </Link>
-          <div className="relative inline-flex items-center gap-1.5" data-dropdown>
-            <button
-              onClick={() => setCompanyMenuOpen((o) => !o)}
-              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors"
-            >
-              <span className="truncate max-w-[120px]">{companyName}</span>
-              <span className="text-[10px]">▾</span>
-            </button>
-            {companyMenuOpen && (
-              <div className="absolute right-0 top-full mt-1.5 w-44 rounded-[20px] border border-[#1a2446] bg-[#0e1629] text-xs shadow-lg z-50 py-1" data-dropdown>
-                <Link
-                  className="block px-3 py-1.5 text-blue-100 hover:bg-[#121c3d] text-xs"
-                  href={`/${accountId}/settings`}
-                  onClick={() => setCompanyMenuOpen(false)}
-                >
-                  Company Profile
-                </Link>
-                <Link
-                  className="block px-3 py-1.5 text-blue-100 hover:bg-[#121c3d] text-xs rounded-b-[20px]"
-                  href={`/${accountId}/settings`}
-                  onClick={() => setCompanyMenuOpen(false)}
-                >
-                  Account
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-      <div className="h-px bg-[#1a2446]/50"></div>
-      <div className="h-px bg-[#1a2446]/30 my-4"></div>
-      <div className={`grid flex-1 grid-cols-1 ${desktopGrid}`}>
+    <div className="min-h-screen bg-[#020617]">
+      <div className={`grid min-h-screen grid-cols-1 ${desktopGrid}`}>
       {/* Left sidebar with profile */}
         <aside className="hidden md:flex flex-col items-center justify-between border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur min-h-full">
         <div className="flex flex-col items-center gap-3">
@@ -773,76 +701,150 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
           )}
         </div>
       </aside>
-
-      {/* Main sidebar */}
-      {!sidebarCollapsed && (
-        <aside className="border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#0e1629]">
-        <nav className="flex flex-col gap-1 pt-2">
-          {navigation.map((item) => {
-            const hasChildren = Boolean(item.children?.length)
-            const open = openSections[item.id] ?? false
-            const active = isParentActive(item)
-
-            return (
-              <div key={item.id} className="grid gap-1">
-                <button
-                  onClick={() => (hasChildren ? setOpenSections((c) => toggleSectionState(c, item.id)) : navigate(item.id))}
-                  className={`flex items-center justify-between rounded-[26px] border px-3 text-sm transition ${
-                    active
-                      ? "border-[#1a2446] bg-[#111936] text-white shadow-[0_15px_35px_-25px_rgba(39,172,255,0.65)]"
-                      : "border-transparent text-blue-100 hover:bg-[#101733]"
-                  }`}
-                  style={{ paddingTop: "calc(0.25rem - 2px)", paddingBottom: "calc(0.25rem - 2px)" }}
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#121c3d] text-[#7ed0ff]">
-                      {item.icon}
-                    </span>
-                    <span className="font-medium">{item.label}</span>
-                  </span>
-                  {hasChildren && (
-                    <span className={`text-xs transition-transform ${open ? "rotate-180 text-blue-200" : "text-blue-300"}`}>
-                      ▾
-                    </span>
-                  )}
-                </button>
-                {hasChildren && (
-                  <div
-                    className={`overflow-hidden rounded-[26px] border border-[#111936] bg-[#0d142a] transition-all ${
-                      open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                    }`}
-                  >
-                    <div className="flex flex-col gap-1 p-2">
-                      {item.children?.map((child) => {
-                        const childActive = child.id === view
-                        return (
-                          <button
-                            key={child.id}
-                            onClick={() => navigate(child.id)}
-                            className={`rounded-[24px] px-3 py-2 text-left text-xs font-medium transition ${
-                              childActive
-                                ? "bg-[#152044] text-white shadow-[0_12px_28px_-25px_rgba(39,172,255,0.65)]"
-                                : "text-blue-200 hover:bg-[#121c3d] hover:text-white"
-                            }`}
-                          >
-                            {child.label}
-                          </button>
-                        )}
-                      )}
-                    </div>
-                  </div>
-                )}
-                {navSeparators.has(item.id) && (
-                  <div className="mx-1 mt-2 h-px bg-[#1a2446]/60" aria-hidden="true"></div>
-                )}
+      <div className="flex flex-col min-h-screen">
+        <header className="sticky top-0 z-10 flex items-center justify-between bg-[rgba(9,15,31,.95)] px-4 py-2 backdrop-blur">
+          <div className="flex items-center gap-3">
+            <Link href={`/${accountId}/dashboard`} className="flex items-center">
+              <Image src={logo} alt="Heybassh" height={28} className="h-7 w-auto" />
+            </Link>
+            <div className="relative">
+              <div className="flex items-center gap-2 border border-[#1a2446] rounded-[24px] px-3 py-1.5 bg-[#0e1629]">
+                <SearchIcon />
+                <input
+                  type="text"
+                  placeholder="Search Heybassh"
+                  className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 w-40"
+                />
               </div>
-            )
-          })}
-        </nav>
-      </aside>
-      )}
+            </div>
+            <button className="flex h-8 w-8 items-center justify-center rounded-[24px] border border-[#1a2446] bg-[#0e1629] text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
+              <SettingsIcon />
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+              BotOnly AI
+            </Link>
+            <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+              Tools
+            </Link>
+            <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+              <AcademyIcon />
+            </button>
+            <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+              <MediaIcon />
+            </button>
+            <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446] relative">
+              <BellIcon />
+              <span className="absolute top-1 right-1 h-1.5 w-1.5 bg-red-500 rounded-full"></span>
+            </button>
+            <Link
+              href={`/${accountId}/dashboard/service`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#031226] bg-gradient-to-r from-[#FFD54A] to-[#FFC107] hover:brightness-110 rounded-[20px] transition-all border border-[#d4a017]"
+            >
+              Book a Service
+            </Link>
+            <div className="relative inline-flex items-center gap-1.5" data-dropdown>
+              <button
+                onClick={() => setCompanyMenuOpen((o) => !o)}
+                className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors"
+              >
+                <span className="truncate max-w-[120px]">{companyName}</span>
+                <span className="text-[10px]">▾</span>
+              </button>
+              {companyMenuOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-44 rounded-[20px] border border-[#1a2446] bg-[#0e1629] text-xs shadow-lg z-50 py-1" data-dropdown>
+                  <Link
+                    className="block px-3 py-1.5 text-blue-100 hover:bg-[#121c3d] text-xs"
+                    href={`/${accountId}/settings`}
+                    onClick={() => setCompanyMenuOpen(false)}
+                  >
+                    Company Profile
+                  </Link>
+                  <Link
+                    className="block px-3 py-1.5 text-blue-100 hover:bg-[#121c3d] text-xs rounded-b-[20px]"
+                    href={`/${accountId}/settings`}
+                    onClick={() => setCompanyMenuOpen(false)}
+                  >
+                    Account
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+        <div className="h-px bg-[#1a2446]/50"></div>
+        <div className="h-px bg-[#1a2446]/30 my-4"></div>
+        <div className={`grid flex-1 grid-cols-1 ${contentGrid}`}>
+        {/* Main sidebar */}
+          {!sidebarCollapsed && (
+            <aside className="border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#0e1629]">
+            <nav className="flex flex-col gap-1 pt-2">
+              {navigation.map((item) => {
+                const hasChildren = Boolean(item.children?.length)
+                const open = openSections[item.id] ?? false
+                const active = isParentActive(item)
 
-      <div className="bg-[#020617]">
+                return (
+                  <div key={item.id} className="grid gap-1">
+                    <button
+                      onClick={() => (hasChildren ? setOpenSections((c) => toggleSectionState(c, item.id)) : navigate(item.id))}
+                      className={`flex items-center justify-between rounded-[26px] border px-3 text-sm transition ${
+                        active
+                          ? "border-[#1a2446] bg-[#111936] text-white shadow-[0_15px_35px_-25px_rgba(39,172,255,0.65)]"
+                          : "border-transparent text-blue-100 hover:bg-[#101733]"
+                      }`}
+                      style={{ paddingTop: "calc(0.25rem - 2px)", paddingBottom: "calc(0.25rem - 2px)" }}
+                    >
+                      <span className="flex items-center gap-3">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#121c3d] text-[#7ed0ff]">
+                          {item.icon}
+                        </span>
+                        <span className="font-medium">{item.label}</span>
+                      </span>
+                      {hasChildren && (
+                        <span className={`text-xs transition-transform ${open ? "rotate-180 text-blue-200" : "text-blue-300"}`}>
+                          ▾
+                        </span>
+                      )}
+                    </button>
+                    {hasChildren && (
+                      <div
+                        className={`overflow-hidden rounded-[26px] border border-[#111936] bg-[#0d142a] transition-all ${
+                          open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-1 p-2">
+                          {item.children?.map((child) => {
+                            const childActive = child.id === view
+                            return (
+                              <button
+                                key={child.id}
+                                onClick={() => navigate(child.id)}
+                                className={`rounded-[24px] px-3 py-2 text-left text-xs font-medium transition ${
+                                  childActive
+                                    ? "bg-[#152044] text-white shadow-[0_12px_28px_-25px_rgba(39,172,255,0.65)]"
+                                    : "text-blue-200 hover:bg-[#121c3d] hover:text-white"
+                                }`}
+                              >
+                                {child.label}
+                              </button>
+                            )}
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {navSeparators.has(item.id) && (
+                      <div className="mx-1 mt-2 h-px bg-[#1a2446]/60" aria-hidden="true"></div>
+                    )}
+                  </div>
+                )
+              })}
+            </nav>
+          </aside>
+          )}
+
+          <div className="bg-[#020617]">
         <div className="mx-auto grid max-w-[1140px] gap-4 p-4">
           {view === "overview" ? (
             <div className="grid gap-5">
@@ -1532,6 +1534,8 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
         </div>
       </div>
     </div>
+  </div>
+  </div>
   </div>
   )
 }
