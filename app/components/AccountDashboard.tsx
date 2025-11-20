@@ -268,7 +268,7 @@ const navigation: NavItem[] = [
   },
   {
     id: "billing",
-    label: "Billing",
+    label: "Billing Lite",
     icon: <CardIcon />,
     children: [
       { id: "billing_clients", label: "Clients" },
@@ -561,6 +561,8 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
     return Boolean(item.children?.some((child) => child.id === view))
   }
 
+  const navSeparators = new Set(["billing", "automate"])
+
   const overviewModules = [
     {
       id: "overview_customers",
@@ -609,9 +611,83 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const desktopGrid = sidebarCollapsed ? "md:grid-cols-[64px_1fr]" : "md:grid-cols-[64px_260px_1fr]"
 
   return (
-    <div className={`grid min-h-screen grid-cols-1 ${desktopGrid} bg-[#020617]`}>
+    <div className="min-h-screen bg-[#020617] flex flex-col">
+      <header className="sticky top-0 z-10 flex items-center justify-between bg-[rgba(9,15,31,.95)] px-4 py-2 backdrop-blur">
+        <div className="flex items-center gap-3">
+          <Link href={`/${accountId}/dashboard`} className="flex items-center">
+            <Image src={logo} alt="Heybassh" height={28} className="h-7 w-auto" />
+          </Link>
+          <div className="relative">
+            <div className="flex items-center gap-2 border border-[#1a2446] rounded-[24px] px-3 py-1.5 bg-[#0e1629]">
+              <SearchIcon />
+              <input
+                type="text"
+                placeholder="Search Heybassh"
+                className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 w-40"
+              />
+            </div>
+          </div>
+          <button className="flex h-8 w-8 items-center justify-center rounded-[24px] border border-[#1a2446] bg-[#0e1629] text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
+            <SettingsIcon />
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+            BotOnly AI
+          </Link>
+          <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+            Tools
+          </Link>
+          <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+            <AcademyIcon />
+          </button>
+          <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+            <MediaIcon />
+          </button>
+          <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446] relative">
+            <BellIcon />
+            <span className="absolute top-1 right-1 h-1.5 w-1.5 bg-red-500 rounded-full"></span>
+          </button>
+          <Link
+            href={`/${accountId}/dashboard/service`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#031226] bg-gradient-to-r from-[#FFD54A] to-[#FFC107] hover:brightness-110 rounded-[20px] transition-all border border-[#d4a017]"
+          >
+            Book a Service
+          </Link>
+          <div className="relative inline-flex items-center gap-1.5" data-dropdown>
+            <button
+              onClick={() => setCompanyMenuOpen((o) => !o)}
+              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors"
+            >
+              <span className="truncate max-w-[120px]">{companyName}</span>
+              <span className="text-[10px]">▾</span>
+            </button>
+            {companyMenuOpen && (
+              <div className="absolute right-0 top-full mt-1.5 w-44 rounded-[20px] border border-[#1a2446] bg-[#0e1629] text-xs shadow-lg z-50 py-1" data-dropdown>
+                <Link
+                  className="block px-3 py-1.5 text-blue-100 hover:bg-[#121c3d] text-xs"
+                  href={`/${accountId}/settings`}
+                  onClick={() => setCompanyMenuOpen(false)}
+                >
+                  Company Profile
+                </Link>
+                <Link
+                  className="block px-3 py-1.5 text-blue-100 hover:bg-[#121c3d] text-xs rounded-b-[20px]"
+                  href={`/${accountId}/settings`}
+                  onClick={() => setCompanyMenuOpen(false)}
+                >
+                  Account
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+      <div className="h-px bg-[#1a2446]/50"></div>
+      <div className="h-px bg-[#1a2446]/30 my-4"></div>
+      <div className={`grid flex-1 grid-cols-1 ${desktopGrid}`}>
       {/* Left sidebar with profile */}
-      <aside className="hidden md:flex flex-col items-center justify-between border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur h-screen">
+        <aside className="hidden md:flex flex-col items-center justify-between border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur min-h-full">
         <div className="flex flex-col items-center gap-3">
           <button
             onClick={() => setSidebarCollapsed((prev) => !prev)}
@@ -756,115 +832,44 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                     </div>
                   </div>
                 )}
+                {navSeparators.has(item.id) && (
+                  <div className="mx-1 mt-2 h-px bg-[#1a2446]/60" aria-hidden="true"></div>
+                )}
               </div>
             )
           })}
         </nav>
-
       </aside>
       )}
 
       <div className="bg-[#020617]">
-        <header className="sticky top-0 z-10 flex items-center justify-between bg-[rgba(9,15,31,.85)] px-4 py-2 backdrop-blur">
-          <div className="flex items-center gap-3">
-            <Link href={`/${accountId}/dashboard`} className="flex items-center">
-              <Image src={logo} alt="Heybassh" height={28} className="h-7 w-auto" />
-            </Link>
-            <div className="relative">
-              <div className="flex items-center gap-2 border border-[#1a2446] rounded-[24px] px-3 py-1.5 bg-[#0e1629]">
-                <SearchIcon />
-                <input
-                  type="text"
-                  placeholder="Search Heybassh"
-                  className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 w-40"
-                />
-              </div>
-            </div>
-            <button className="flex h-8 w-8 items-center justify-center rounded-[24px] border border-[#1a2446] bg-[#0e1629] text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
-              <SettingsIcon />
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
-              BotOnly AI
-            </Link>
-            <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
-              Tools
-            </Link>
-            <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
-              <AcademyIcon />
-            </button>
-            <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
-              <MediaIcon />
-            </button>
-            <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446] relative">
-              <BellIcon />
-              <span className="absolute top-1 right-1 h-1.5 w-1.5 bg-red-500 rounded-full"></span>
-            </button>
-            <Link
-              href={`/${accountId}/dashboard/service`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#031226] bg-gradient-to-r from-[#FFD54A] to-[#FFC107] hover:brightness-110 rounded-[20px] transition-all border border-[#d4a017]"
-            >
-              Book a Service
-            </Link>
-            <div className="relative inline-flex items-center gap-1.5" data-dropdown>
-              <button
-                onClick={() => setCompanyMenuOpen((o) => !o)}
-                className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors"
-              >
-                <span className="truncate max-w-[120px]">{companyName}</span>
-                <span className="text-[10px]">▾</span>
-              </button>
-              {companyMenuOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-44 rounded-[20px] border border-[#1a2446] bg-[#0e1629] text-xs shadow-lg z-50 py-1" data-dropdown>
-                  <Link
-                    className="block px-3 py-1.5 text-blue-100 hover:bg-[#121c3d] text-xs"
-                    href={`/${accountId}/settings`}
-                    onClick={() => setCompanyMenuOpen(false)}
-                  >
-                    Company Profile
-                  </Link>
-                  <Link
-                    className="block px-3 py-1.5 text-blue-100 hover:bg-[#121c3d] text-xs rounded-b-[20px]"
-                    href={`/${accountId}/settings`}
-                    onClick={() => setCompanyMenuOpen(false)}
-                  >
-                    Account
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-        <div className="h-px bg-[#1a2446]/50"></div>
-        <div className="h-px bg-[#1a2446]/30 my-4"></div>
         <div className="mx-auto grid max-w-[1140px] gap-4 p-4">
           {view === "overview" ? (
             <div className="grid gap-5">
               <div className="card rounded-[32px] border-[#1f2c56] bg-gradient-to-r from-[#101b38] via-[#0c142a] to-[#060b1a] p-6 md:p-8">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
                       <h3 className="text-2xl font-semibold text-white">Welcome</h3>
                   <Pill>Module</Pill>
-                </div>
+              </div>
                     <p className="mt-2 max-w-2xl text-sm text-blue-200">
                       Unified navigation, shared auth, and curated module slots so every workflow is a click away.
                     </p>
-                  </div>
-                  <div className="flex items-center gap-2">
+          </div>
+          <div className="flex items-center gap-2">
                     <button
                       onClick={() => router.push(`/${accountId}/dashboard/service`)}
                       className="btn btn-gold text-xs font-semibold px-4 py-2 rounded-[26px]"
                     >
                       Request Support
                     </button>
-                    <button
+              <button
                       onClick={() => navigate("customers_contacts")}
                       className="btn text-xs font-semibold rounded-[26px]"
-                    >
+              >
                       Explore Modules
-                    </button>
+              </button>
                   </div>
                 </div>
               </div>
@@ -887,7 +892,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                     >
                       Open
                     </button>
-                  </div>
+                </div>
                 ))}
               </div>
 
@@ -951,7 +956,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       )}
                   </tbody>
                 </table>
-                </div>
+            </div>
               </div>
               <div className="card rounded-[32px] bg-[#070d20] p-6">
                 <h2 className="text-2xl font-semibold text-white">Add Contact</h2>
@@ -992,13 +997,13 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
                     />
                   </div>
-                  <button
+              <button
                     type="submit"
                     className="w-full rounded-[28px] bg-gradient-to-r from-[#31b0ff] to-[#66d6ff] py-2 text-sm font-semibold text-[#041226] transition hover:brightness-110 disabled:opacity-50"
                     disabled={!newContact.name || !newContact.email}
-                  >
+              >
                     Save
-                  </button>
+              </button>
                 </form>
                 <p className="mt-4 text-xs text-blue-300">Dummy data only. Data is stored locally in the browser.</p>
               </div>
@@ -1042,16 +1047,16 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                         </option>
                       ))}
                     </select>
-                    <button
-                      onClick={() => {
+                  <button
+                    onClick={() => {
                         setProductSearch("")
                         setProductCategory("All")
-                      }}
+                    }}
                       className="rounded-[24px] border border-[#1a2446] px-4 py-2 text-sm text-blue-100 hover:bg-[#121c3d]"
-                    >
+                  >
                       Clear
-                    </button>
-                  </div>
+                  </button>
+                </div>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full rounded-[26px] border border-[#121a36] bg-[#09112a]">
@@ -1083,8 +1088,8 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       )}
                     </tbody>
                   </table>
-                </div>
-              </div>
+            </div>
+          </div>
               <div className="card rounded-[32px] bg-[#070d20] p-6">
                 <h2 className="text-2xl font-semibold text-white">Add Product</h2>
                 <form className="mt-6 space-y-4" onSubmit={handleAddProduct}>
@@ -1096,7 +1101,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       placeholder="SKU"
                       className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
                     />
-                  </div>
+                </div>
                   <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
                     <input
                       type="text"
@@ -1105,7 +1110,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       placeholder="Name"
                       className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
                     />
-                  </div>
+              </div>
                   <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
                     <input
                       type="text"
@@ -1114,7 +1119,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       placeholder="Category"
                       className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
                     />
-                  </div>
+            </div>
                   <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
                     <input
                       type="number"
@@ -1123,7 +1128,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       placeholder="Price"
                       className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
                     />
-                  </div>
+              </div>
                   <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
                     <input
                       type="number"
@@ -1226,7 +1231,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                 <div className="mt-6 rounded-[28px] border border-[#1a2446] bg-[#09112a]">
                   <div className="overflow-x-auto rounded-[28px]">
                     <table className="w-full">
-                      <thead>
+                  <thead>
                         <tr className="border-b border-[#1a2446] text-left text-xs font-semibold uppercase tracking-wide text-blue-300">
                           <th className="px-4 py-3">ID</th>
                           <th className="px-4 py-3">Title</th>
@@ -1234,9 +1239,9 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                           <th className="px-4 py-3">Due</th>
                           <th className="px-4 py-3">Priority</th>
                           <th className="px-4 py-3">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    </tr>
+                  </thead>
+                  <tbody>
                         {filteredTasks.map((task) => (
                           <tr key={task.id} className="border-b border-[#1a2446]/40 last:border-b-0">
                             <td className="px-4 py-3 text-sm text-blue-300">{task.id}</td>
@@ -1245,19 +1250,19 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                             <td className="px-4 py-3 text-sm text-blue-200">{task.dueDate || "—"}</td>
                             <td className="px-4 py-3 text-sm text-blue-200">{task.priority}</td>
                             <td className="px-4 py-3 text-sm text-blue-200">{task.status}</td>
-                          </tr>
+                    </tr>
                         ))}
                         {!filteredTasks.length && (
                           <tr>
                             <td colSpan={6} className="px-4 py-6 text-center text-sm text-blue-300">
                               No tasks found.
                             </td>
-                          </tr>
+                    </tr>
                         )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                  </tbody>
+                </table>
+              </div>
+            </div>
               </div>
               <div className="card rounded-[32px] bg-[#070d20] p-6">
                 <h2 className="text-2xl font-semibold text-white">Filters</h2>
@@ -1270,7 +1275,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       placeholder="Search"
                       className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
                     />
-                  </div>
+            </div>
                   {(["status", "priority", "assignee"] as const).map((filterKey) => (
                     <div key={filterKey} className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
                       <select
