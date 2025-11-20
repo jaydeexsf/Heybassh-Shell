@@ -416,7 +416,7 @@ function HomeInner() {
               type="button"
               onClick={onDemoLogin}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-lg border border-[#3ab0ff]/50 bg-gradient-to-r from-[#3ab0ff]/20 to-[#5dd4ff]/20 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:from-[#3ab0ff]/30 hover:to-[#5dd4ff]/30 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+              className="radius-6 inline-flex items-center gap-2 border border-[#3ab0ff]/50 bg-gradient-to-r from-[#3ab0ff]/20 to-[#5dd4ff]/20 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:from-[#3ab0ff]/30 hover:to-[#5dd4ff]/30 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span>🎭</span>
               <span>Demo Login</span>
@@ -448,7 +448,7 @@ function HomeInner() {
                 <button
                   type="button"
                   onClick={() => handleModeChange("login")}
-                  className={`rounded-md px-3 py-1 transition whitespace-nowrap ${
+                  className={`radius-6 px-3 py-1 transition whitespace-nowrap ${
                     mode === "login" ? "bg-white text-[#061332] shadow-sm" : "text-blue-100"
                   }`}
                 >
@@ -457,7 +457,7 @@ function HomeInner() {
                 <button
                   type="button"
                   onClick={() => handleModeChange("register")}
-                  className={`rounded-md px-3 py-1 transition whitespace-nowrap ${
+                  className={`radius-6 px-3 py-1 transition whitespace-nowrap ${
                     mode === "register" ? "bg-white text-[#061332] shadow-sm" : "text-blue-100"
                   }`}
                 >
@@ -474,7 +474,7 @@ function HomeInner() {
                 <div className="flex gap-2">
                   <input
                     id="email"
-                    className={`input placeholder:text-blue-200/50 rounded-lg flex-1 ${formErrors.email ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    className={`radius-6 input placeholder:text-blue-200/50 flex-1 ${formErrors.email ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder="name@company.com"
                     type="email"
                     value={email}
@@ -493,7 +493,7 @@ function HomeInner() {
                   </label>
                   <input
                     id="name"
-                    className={`input placeholder:text-blue-300/50 rounded-lg ${formErrors.name ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    className={`radius-6 input placeholder:text-blue-300/50 ${formErrors.name ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder="Jane Developer"
                     type="text"
                     value={name}
@@ -511,7 +511,7 @@ function HomeInner() {
                   </label>
                   <input
                     id="company"
-                    className={`input placeholder:text-blue-300/50 rounded-lg ${formErrors.companyName ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    className={`radius-6 input placeholder:text-blue-300/50 ${formErrors.companyName ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder="Acme Inc."
                     type="text"
                     value={companyName}
@@ -529,7 +529,7 @@ function HomeInner() {
                   {mode === "login" && (
                     <button
                       type="button"
-                      className="text-xs font-medium text-[#5dd4ff] transition hover:text-white"
+                      className="radius-6 px-2 py-1 text-xs font-medium text-[#5dd4ff] transition hover:text-white"
                       onClick={onForgotPassword}
                       disabled={forgotStatus === "sending"}
                     >
@@ -540,7 +540,7 @@ function HomeInner() {
                 <div className="relative w-full">
                   <input
                     id="password"
-                    className={`input w-full placeholder:text-blue-200/50 rounded-lg pr-12 ${formErrors.password ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    className={`radius-6 input w-full placeholder:text-blue-200/50 pr-12 ${formErrors.password ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder={mode === "login" ? "Your password" : "At least 6 characters"}
                     type={showPassword ? "text" : "password"}
                     value={password}
@@ -551,7 +551,7 @@ function HomeInner() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-5 h-5 text-blue-300 hover:text-white transition-colors focus:outline-none z-10"
+                    className="radius-6 absolute right-3 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center text-blue-300 transition-colors hover:text-white focus:outline-none z-10"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
@@ -615,7 +615,7 @@ function HomeInner() {
                   type="submit"
                   disabled={loading}
                   aria-busy={loading}
-                  className="btn btn-primary flex w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
+                  className="radius-6 btn btn-primary flex w-full items-center justify-center gap-2 text-sm font-semibold transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
                 >
                   {loading ? <span className="spinner" role="status" aria-label="Processing request" /> : <span>Sign in</span>}
                 </button>
@@ -624,7 +624,7 @@ function HomeInner() {
                   type="submit"
                   disabled={loading}
                   aria-busy={loading}
-                  className="btn btn-primary flex w-full items-center justify-center gap-2 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
+                  className="radius-6 btn btn-primary flex w-full items-center justify-center gap-2 text-sm font-semibold transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
                 >
                   {loading ? <span className="spinner" role="status" aria-label="Processing request" /> : <span>Create account</span>}
                 </button>
@@ -652,7 +652,7 @@ function HomeInner() {
             <div className="mt-auto flex items-center justify-between border-t border-white/10 pt-4">
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-md bg-black/60 px-2 py-1 text-xs text-blue-100 hover:bg-black/70 transition"
+                className="radius-6 inline-flex items-center gap-2 bg-black/60 px-2 py-1 text-xs text-blue-100 transition hover:bg-black/70"
                 aria-label="Heybassh"
               >
                 <span className="inline-flex items-center rounded bg-black p-1">
