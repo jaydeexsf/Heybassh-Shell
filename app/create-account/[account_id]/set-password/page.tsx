@@ -14,6 +14,7 @@ export default function SetPasswordPage({ params }: { params: { account_id: stri
   const searchParams = useSearchParams()
   const presetEmail = searchParams.get("email")?.toLowerCase() ?? ""
   const companyLabel = searchParams.get("company") ?? `Workspace ${params.account_id}`
+  const setupToken = searchParams.get("verification") ?? ""
 
   const [email, setEmail] = useState(presetEmail)
   const [fullName, setFullName] = useState("")
@@ -53,6 +54,11 @@ export default function SetPasswordPage({ params }: { params: { account_id: stri
     setFeedback(null)
     if (!validate()) return
 
+    if (!setupToken) {
+      setFeedback({ type: "error", message: "Verification required. Please request a new setup code." })
+      return
+    }
+
     const normalizedEmail = email.trim().toLowerCase()
     setSubmitting(true)
 
@@ -67,6 +73,7 @@ export default function SetPasswordPage({ params }: { params: { account_id: stri
           account_id: params.account_id,
           role: "admin",
           companyName: companyLabel,
+          setupToken,
         }),
       })
 
@@ -122,7 +129,9 @@ export default function SetPasswordPage({ params }: { params: { account_id: stri
         <p className="text-xs uppercase tracking-[0.3em] text-blue-300/70">Step 2 of 2</p>
         <h1 className="text-2xl font-semibold">{heading}</h1>
         <p className="text-sm text-blue-200">
-          Demo verification complete. Create the primary password so your team can log in to Heybassh Shell.
+          {setupToken
+            ? "Demo verification complete. Create the primary password so your team can log in to Heybassh Shell."
+            : "Your verification session has expired. Request a new code to continue."}
         </p>
 
         <div className="space-y-2">
@@ -189,7 +198,7 @@ export default function SetPasswordPage({ params }: { params: { account_id: stri
 
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || !setupToken}
           className="btn btn-primary w-full justify-center rounded-2xl py-3 text-sm font-semibold uppercase tracking-wide disabled:opacity-60"
         >
           {submitting ? "Saving…" : "Create password & continue"}

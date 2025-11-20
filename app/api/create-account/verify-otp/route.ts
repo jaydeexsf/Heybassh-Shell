@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
-import { validateVerificationToken } from "@/lib/email-verification"
+import { createEmailVerificationToken, validateVerificationToken } from "@/lib/email-verification"
 
 export const runtime = "nodejs"
 
@@ -23,7 +23,9 @@ export async function POST(req: Request) {
 
     await prisma.emailVerificationToken.deleteMany({ where: { email: normalizedEmail } })
 
-    return NextResponse.json({ success: true })
+    const setupRecord = await createEmailVerificationToken(normalizedEmail, undefined, 1000 * 60 * 30)
+
+    return NextResponse.json({ success: true, setupToken: setupRecord.token })
   } catch (error) {
     console.error("[CreateAccount][VerifyOTP] error:", error)
     if (error instanceof z.ZodError) {

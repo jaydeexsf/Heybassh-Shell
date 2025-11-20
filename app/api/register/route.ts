@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
-import { createEmailVerificationToken, sendVerificationEmail } from "@/lib/email-verification"
+import { createEmailVerificationToken, sendVerificationEmail, validateVerificationToken } from "@/lib/email-verification"
 
 // Disable Edge Runtime for this route
 // This is needed because bcryptjs uses Node.js APIs not available in Edge Runtime
@@ -37,6 +37,7 @@ const schema = z.object({
   role: z.enum(["user", "admin"]).optional(),
   account_id: z.string().length(7).optional(),
   companyName: z.string().min(2, "Company name is required"),
+  setupToken: z.string().optional(),
 })
 
 function isBusinessEmail(email: string) {
@@ -87,7 +88,7 @@ export async function POST(req: Request) {
     }
 
     try {
-      const { email, password, name, role, account_id, companyName } = schema.parse(body);
+      const { email, password, name, role, account_id, companyName, setupToken } = schema.parse(body);
       const normalizedEmail = email.trim().toLowerCase();
       console.log('Validated input:', { email: normalizedEmail, name: name || 'not provided' });
 
@@ -120,6 +121,23 @@ export async function POST(req: Request) {
           )
         }
         throw accountError
+      }
+
+      if (account_id) {
+        if (!setupToken) {
+          return NextResponse.json(
+            { error: "SETUP_TOKEN_REQUIRED", message: "Verification is required before creating the workspace password." },
+            { status: 400 },
+          )
+        }
+        const setupRecord = await validateVerificationToken(setupToken)
+        if (!setupRecord || setupRecord.email !== normalizedEmail) {
+          return NextResponse.json(
+            { error: "INVALID_SETUP_TOKEN", message: "Your verification session has expired. Request a new code." },
+            { status: 400 },
+          )
+        }
+        await prisma.emailVerificationToken.deleteMany({ where: { token: setupToken } })
       }
 
       console.log('Hashing password...');

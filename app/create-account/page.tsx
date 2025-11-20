@@ -105,7 +105,11 @@ export default function CreateAccountPage() {
         email: normalizedEmail,
         company: companyName ?? "Workspace",
       }).toString()
-      router.push(`/create-account/${accountId}/set-password?${query}`)
+      if (!data?.setupToken) {
+        setError("Verification succeeded but we could not start the setup session. Please request a new code.")
+        return
+      }
+      router.push(`/create-account/${accountId}/set-password?${query}&verification=${encodeURIComponent(data.setupToken)}`)
     } catch (err: any) {
       console.error("Verify OTP error:", err)
       setError("Unexpected error. Please try again.")
