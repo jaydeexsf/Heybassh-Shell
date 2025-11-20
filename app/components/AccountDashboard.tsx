@@ -609,9 +609,83 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const desktopGrid = sidebarCollapsed ? "md:grid-cols-[64px_1fr]" : "md:grid-cols-[64px_260px_1fr]"
 
   return (
-    <div className={`grid min-h-screen grid-cols-1 ${desktopGrid} bg-[#020617]`}>
-      {/* Left sidebar with profile */}
-      <aside className="hidden md:flex flex-col items-center justify-between border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur h-screen">
+    <div className="min-h-screen bg-[#020617] flex flex-col">
+      <header className="sticky top-0 z-10 flex items-center justify-between bg-[rgba(9,15,31,.95)] px-4 py-2 backdrop-blur">
+        <div className="flex items-center gap-3">
+          <Link href={`/${accountId}/dashboard`} className="flex items-center">
+            <Image src={logo} alt="Heybassh" height={28} className="h-7 w-auto" />
+          </Link>
+          <div className="relative">
+            <div className="flex items-center gap-2 border border-[#1a2446] rounded-[24px] px-3 py-1.5 bg-[#0e1629]">
+              <SearchIcon />
+              <input
+                type="text"
+                placeholder="Search Heybassh"
+                className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 w-40"
+              />
+            </div>
+          </div>
+          <button className="flex h-8 w-8 items-center justify-center rounded-[24px] border border-[#1a2446] bg-[#0e1629] text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
+            <SettingsIcon />
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+            BotOnly AI
+          </Link>
+          <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+            Tools
+          </Link>
+          <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+            <AcademyIcon />
+          </button>
+          <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
+            <MediaIcon />
+          </button>
+          <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446] relative">
+            <BellIcon />
+            <span className="absolute top-1 right-1 h-1.5 w-1.5 bg-red-500 rounded-full"></span>
+          </button>
+          <Link
+            href={`/${accountId}/dashboard/service`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#031226] bg-gradient-to-r from-[#FFD54A] to-[#FFC107] hover:brightness-110 rounded-[20px] transition-all border border-[#d4a017]"
+          >
+            Book a Service
+          </Link>
+          <div className="relative inline-flex items-center gap-1.5" data-dropdown>
+            <button
+              onClick={() => setCompanyMenuOpen((o) => !o)}
+              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors"
+            >
+              <span className="truncate max-w-[120px]">{companyName}</span>
+              <span className="text-[10px]">▾</span>
+            </button>
+            {companyMenuOpen && (
+              <div className="absolute right-0 top-full mt-1.5 w-44 rounded-[20px] border border-[#1a2446] bg-[#0e1629] text-xs shadow-lg z-50 py-1" data-dropdown>
+                <Link
+                  className="block px-3 py-1.5 text-blue-100 hover:bg-[#121c3d] text-xs"
+                  href={`/${accountId}/settings`}
+                  onClick={() => setCompanyMenuOpen(false)}
+                >
+                  Company Profile
+                </Link>
+                <Link
+                  className="block px-3 py-1.5 text-blue-100 hover:bg-[#121c3d] text-xs rounded-b-[20px]"
+                  href={`/${accountId}/settings`}
+                  onClick={() => setCompanyMenuOpen(false)}
+                >
+                  Account
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+      <div className="h-px bg-[#1a2446]/50"></div>
+      <div className="h-px bg-[#1a2446]/30 my-4"></div>
+      <div className={`grid flex-1 grid-cols-1 ${desktopGrid}`}>
+        {/* Left sidebar with profile */}
+        <aside className="hidden md:flex flex-col items-center justify-between border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur min-h-full">
         <div className="flex flex-col items-center gap-3">
           <button
             onClick={() => setSidebarCollapsed((prev) => !prev)}
@@ -765,79 +839,6 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
       )}
 
       <div className="bg-[#020617]">
-        <header className="sticky top-0 z-10 flex items-center justify-between bg-[rgba(9,15,31,.85)] px-4 py-2 backdrop-blur">
-          <div className="flex items-center gap-3">
-            <Link href={`/${accountId}/dashboard`} className="flex items-center">
-              <Image src={logo} alt="Heybassh" height={28} className="h-7 w-auto" />
-            </Link>
-            <div className="relative">
-              <div className="flex items-center gap-2 border border-[#1a2446] rounded-[24px] px-3 py-1.5 bg-[#0e1629]">
-                <SearchIcon />
-                <input
-                  type="text"
-                  placeholder="Search Heybassh"
-                  className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 w-40"
-                />
-              </div>
-            </div>
-            <button className="flex h-8 w-8 items-center justify-center rounded-[24px] border border-[#1a2446] bg-[#0e1629] text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
-              <SettingsIcon />
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
-              BotOnly AI
-            </Link>
-            <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
-              Tools
-            </Link>
-            <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
-              <AcademyIcon />
-            </button>
-            <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
-              <MediaIcon />
-            </button>
-            <button className="inline-flex items-center justify-center h-8 w-8 text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446] relative">
-              <BellIcon />
-              <span className="absolute top-1 right-1 h-1.5 w-1.5 bg-red-500 rounded-full"></span>
-            </button>
-            <Link
-              href={`/${accountId}/dashboard/service`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#031226] bg-gradient-to-r from-[#FFD54A] to-[#FFC107] hover:brightness-110 rounded-[20px] transition-all border border-[#d4a017]"
-            >
-              Book a Service
-            </Link>
-            <div className="relative inline-flex items-center gap-1.5" data-dropdown>
-              <button
-                onClick={() => setCompanyMenuOpen((o) => !o)}
-                className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors"
-              >
-                <span className="truncate max-w-[120px]">{companyName}</span>
-                <span className="text-[10px]">▾</span>
-              </button>
-              {companyMenuOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-44 rounded-[20px] border border-[#1a2446] bg-[#0e1629] text-xs shadow-lg z-50 py-1" data-dropdown>
-                  <Link
-                    className="block px-3 py-1.5 text-blue-100 hover:bg-[#121c3d] text-xs"
-                    href={`/${accountId}/settings`}
-                    onClick={() => setCompanyMenuOpen(false)}
-                  >
-                    Company Profile
-                  </Link>
-                  <Link
-                    className="block px-3 py-1.5 text-blue-100 hover:bg-[#121c3d] text-xs rounded-b-[20px]"
-                    href={`/${accountId}/settings`}
-                    onClick={() => setCompanyMenuOpen(false)}
-                  >
-                    Account
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-        <div className="h-px bg-[#1a2446]/50"></div>
-        <div className="h-px bg-[#1a2446]/30 my-4"></div>
         <div className="mx-auto grid max-w-[1140px] gap-4 p-4">
           {view === "overview" ? (
             <div className="grid gap-5">
