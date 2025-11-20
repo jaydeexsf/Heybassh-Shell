@@ -11,6 +11,7 @@ model User {
   email             String   @unique
   name              String?
   passwordHash      String
+  companyName       String?
   resetToken        String?
   resetTokenExpiry  DateTime?
   createdAt         DateTime @default(now())
@@ -18,9 +19,18 @@ model User {
   role              String   @default("user")
   account_id        String?
   account           Account? @relation(fields: [account_id], references: [account_id])
+  emailVerified     DateTime?
 }
 
 model PasswordResetToken {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+}
+
+model EmailVerificationToken {
   id        String   @id @default(uuid())
   email     String
   token     String   @unique

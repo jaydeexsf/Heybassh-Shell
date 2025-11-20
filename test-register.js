@@ -10,7 +10,8 @@ async function testRegister() {
       body: JSON.stringify({
         email: `test${Date.now()}@example.com`,
         password: 'test1234',
-        name: 'Test User'
+        name: 'Test User',
+        companyName: 'Test Company'
       })
     });
 

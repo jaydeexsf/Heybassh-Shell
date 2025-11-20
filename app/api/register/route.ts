@@ -3,18 +3,73 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
+import { createEmailVerificationToken, sendVerificationEmail } from "@/lib/email-verification"
 
 // Disable Edge Runtime for this route
 // This is needed because bcryptjs uses Node.js APIs not available in Edge Runtime
 export const runtime = 'nodejs';
+
+const blockedEmailDomains = new Set([
+  "gmail.com",
+  "googlemail.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "msn.com",
+  "yahoo.com",
+  "ymail.com",
+  "rocketmail.com",
+  "icloud.com",
+  "me.com",
+  "mac.com",
+  "protonmail.com",
+  "aol.com",
+  "gmx.com",
+  "mail.com",
+  "zoho.com",
+  "pm.me",
+])
 
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   name: z.string().optional(),
   role: z.enum(["user", "admin"]).optional(),
-  account_id: z.string().length(7).optional()
+  account_id: z.string().length(7).optional(),
+  companyName: z.string().min(2, "Company name is required"),
 })
+
+function isBusinessEmail(email: string) {
+  const domain = email.split("@")[1]?.toLowerCase()
+  if (!domain) return false
+  return !blockedEmailDomains.has(domain)
+}
+
+async function ensureAccount(accountId: string | undefined, companyName: string, email: string) {
+  if (accountId) {
+    const existing = await prisma.account.findUnique({ where: { account_id: accountId } })
+    if (!existing) {
+      throw new Error("ACCOUNT_NOT_FOUND")
+    }
+    return accountId
+  }
+
+  const domain = email.split("@")[1] || "company.com"
+  const created = await prisma.account.create({
+    data: {
+      company_name: companyName,
+      company_domain: domain,
+      owner_email: email,
+    },
+  })
+  const computedId = String(created.accountSeq).padStart(7, "0")
+  const updated = await prisma.account.update({
+    where: { accountSeq: created.accountSeq },
+    data: { account_id: computedId },
+    select: { account_id: true },
+  })
+  return updated.account_id!
+}
 
 export async function POST(req: Request) {
   try {
@@ -32,9 +87,16 @@ export async function POST(req: Request) {
     }
 
     try {
-      const { email, password, name, role, account_id } = schema.parse(body);
+      const { email, password, name, role, account_id, companyName } = schema.parse(body);
       const normalizedEmail = email.trim().toLowerCase();
       console.log('Validated input:', { email: normalizedEmail, name: name || 'not provided' });
+
+      if (!isBusinessEmail(normalizedEmail)) {
+        return NextResponse.json(
+          { error: "BUSINESS_EMAIL_REQUIRED", message: "Please use your business email address (free providers are not allowed)." },
+          { status: 400 },
+        )
+      }
 
       console.log('Checking if user exists...');
       const exists = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -44,6 +106,20 @@ export async function POST(req: Request) {
           { error: "Email already registered" }, 
           { status: 409 }
         );
+      }
+
+      console.log('Ensuring account...');
+      let resolvedAccountId: string
+      try {
+        resolvedAccountId = await ensureAccount(account_id, companyName, normalizedEmail)
+      } catch (accountError) {
+        if ((accountError as Error).message === "ACCOUNT_NOT_FOUND") {
+          return NextResponse.json(
+            { error: "ACCOUNT_NOT_FOUND", message: "The provided account ID could not be found." },
+            { status: 404 },
+          )
+        }
+        throw accountError
       }
 
       console.log('Hashing password...');
@@ -56,15 +132,21 @@ export async function POST(req: Request) {
           name, 
           passwordHash,
           role: role ?? "user",
-          account_id: account_id ?? undefined
+          account_id: resolvedAccountId,
+          companyName,
         } 
       });
       
       console.log('User created:', user.id);
+
+      const verification = await createEmailVerificationToken(normalizedEmail)
+      await sendVerificationEmail(normalizedEmail, verification.token, companyName)
+      console.log('Verification email queued:', { userId: user.id })
+
       return NextResponse.json({ 
         id: user.id, 
         email: user.email,
-        message: 'Registration successful' 
+        message: 'Registration successful. Please check your email to verify your account before signing in.'
       });
 
     } catch (validationError) {

@@ -55,7 +55,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // Check if user exists
           const user = await prisma.user.findUnique({ 
             where: { email: normalizedEmail },
-            select: { id: true, email: true, name: true, passwordHash: true, role: true, account_id: true }
+            select: { id: true, email: true, name: true, passwordHash: true, role: true, account_id: true, emailVerified: true, companyName: true }
           })
           
           if (!user) {
@@ -69,8 +69,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return null
           }
 
+          if (!user.emailVerified) {
+            return null
+          }
+
           // Credentials are valid
-          return { id: user.id, email: user.email, name: user.name ?? user.email, role: user.role, account_id: user.account_id }
+          return { id: user.id, email: user.email, name: user.name ?? user.email, role: user.role, account_id: user.account_id, companyName: user.companyName }
         } catch (err) {
           console.error("Credentials authorize error:", err)
           return null
@@ -86,7 +90,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           name: user.name,
           role: (user as any).role,
-          account_id: (user as any).account_id
+          account_id: (user as any).account_id,
+          companyName: (user as any).companyName,
         }
       }
       return token
@@ -99,6 +104,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: (token.user as any).name,
           role: (token.user as any).role,
           account_id: (token.user as any).account_id,
+          companyName: (token.user as any).companyName,
           emailVerified: null
         } as any
       }

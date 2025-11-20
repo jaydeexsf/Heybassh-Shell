@@ -665,7 +665,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
           </button>
           
           {sidebarProfileMenuOpen && (
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 rounded-[20px] border border-[#1a2446] bg-[#0e1629] text-sm shadow-lg z-50 overflow-hidden" data-dropdown>
+            <div className="absolute bottom-full left-0 translate-x-0 mb-2 w-48 rounded-[20px] border border-[#1a2446] bg-[#0e1629] text-sm shadow-lg z-50 overflow-hidden" data-dropdown>
               <div className="px-4 py-3 border-b border-[#1a2446]">
                 <div className="font-medium text-white">{userName}</div>
                 <div className="text-xs text-blue-300 truncate">{session?.user?.email ?? ""}</div>

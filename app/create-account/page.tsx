@@ -56,8 +56,15 @@ export default function CreateAccountPage() {
         setStatus(null)
         return
       }
-      setStatus(`✔️ Created ${company_name}. Redirecting…`)
-      setTimeout(() => router.push(`/${data.account_id}/dashboard`), 900)
+      setStatus(`✔️ Created ${company_name}. Next: secure your workspace…`)
+      const query = new URLSearchParams({
+        email: trimmedEmail,
+        company: company_name,
+      }).toString()
+      setTimeout(
+        () => router.push(`/create-account/${data.account_id}/set-password?${query}`),
+        900,
+      )
     } catch (err: any) {
       setError("Unexpected error. Please try again.")
       setStatus(null)

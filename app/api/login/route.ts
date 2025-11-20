@@ -38,6 +38,13 @@ export async function POST(req: Request) {
       )
     }
 
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        { error: "EMAIL_NOT_VERIFIED", message: "Please verify your email address before signing in." },
+        { status: 403 },
+      )
+    }
+
     // Verify password
     const passwordMatch = await bcrypt.compare(password, user.passwordHash)
     

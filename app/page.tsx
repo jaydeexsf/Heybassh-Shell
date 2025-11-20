@@ -17,9 +17,29 @@ export default function Page() {
     </Suspense>
   )
 }
-type FormErrors = Partial<Record<"email" | "password" | "name", string>>
+type FormErrors = Partial<Record<"email" | "password" | "name" | "companyName", string>>
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const blockedEmailDomains = new Set([
+  "gmail.com",
+  "googlemail.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "msn.com",
+  "yahoo.com",
+  "ymail.com",
+  "rocketmail.com",
+  "icloud.com",
+  "me.com",
+  "mac.com",
+  "aol.com",
+  "protonmail.com",
+  "pm.me",
+  "gmx.com",
+  "mail.com",
+  "zoho.com",
+])
 
 function HomeInner() {
   const searchParams = useSearchParams()
@@ -27,6 +47,7 @@ function HomeInner() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
+  const [companyName, setCompanyName] = useState("")
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [formErrors, setFormErrors] = useState<FormErrors>({})
   const [loading, setLoading] = useState(false)
@@ -52,14 +73,23 @@ function HomeInner() {
     setMode(nextMode)
   }
 
+  function isBusinessEmail(emailValue: string) {
+    const domain = emailValue.split("@")[1]?.toLowerCase()
+    if (!domain) return false
+    return !blockedEmailDomains.has(domain)
+  }
+
   function validateForm(currentMode: AuthMode) {
     const errors: FormErrors = {}
     const trimmedEmail = email.trim().toLowerCase()
     const trimmedPassword = password.trim()
     const trimmedName = name.trim()
+    const trimmedCompany = companyName.trim()
 
     if (!trimmedEmail) errors.email = "Email is required."
     else if (!emailPattern.test(trimmedEmail)) errors.email = "Enter a valid email address."
+    else if (currentMode === "register" && !isBusinessEmail(trimmedEmail))
+      errors.email = "Please use your business email address (free email providers are not allowed)."
 
     // Allow empty password for test account
     const isTestAccount = trimmedEmail === "test@allahuakbar.com"
@@ -71,6 +101,7 @@ function HomeInner() {
     if (currentMode === "register") {
       if (!trimmedName) errors.name = "Full name is required."
       else if (trimmedName.length < 2) errors.name = "Name should be at least 2 characters."
+      if (!trimmedCompany) errors.companyName = "Company name is required."
     }
 
     setFormErrors(errors)
@@ -85,16 +116,15 @@ function HomeInner() {
       // If no account_id yet, create a company account automatically from email domain (demo only)
       let acctId = accountId
       const trimmedEmail = email.trim().toLowerCase()
+      const trimmedCompany = companyName.trim()
       if (!acctId) {
-        const domain = trimmedEmail.split("@")[1] || "company.com"
-        const company_name = domain
         try {
           const accountsRes = await fetch("/api/accounts", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              company_name,
-              company_domain: domain,
+              company_name: trimmedCompany,
+              company_domain: trimmedEmail.split("@")[1] || "company.com",
               owner_email: trimmedEmail,
             }),
           })
@@ -112,32 +142,27 @@ function HomeInner() {
           email: email.trim(), 
           password: password.trim(), 
           name: name.trim(),
+          companyName: trimmedCompany,
           account_id: acctId || undefined,
         }),
       })
       const data = await response.json()
       if (!response.ok) {
-        setFeedback({ type: "error", message: data.error || "We couldn't complete your registration." })
+        let errorMessage = data.error || "We couldn't complete your registration."
+        if (data.error === "BUSINESS_EMAIL_REQUIRED") {
+          errorMessage = "Please use your business email address (free providers are not allowed)."
+        }
+        setFeedback({ type: "error", message: errorMessage })
         return
       }
-      // Auto sign-in after successful registration
-      const result = await signIn("credentials", { 
-        email: email.trim(), 
-        password: password.trim(), 
-        redirect: false 
+      setFeedback({
+        type: "success",
+        message: "Account created. Please verify your email before signing in.",
       })
-
-      if (result?.ok) {
-        setFeedback({ type: "success", message: "Account created. Redirecting to your dashboard..." })
-        window.location.href = "/dashboard"
-        return
-      }
-
-      // Fallback: ask user to sign in manually
-      setFeedback({ type: "success", message: "Account created successfully. You can sign in now." })
       setFormErrors({})
       setMode("login")
       setPassword("")
+      setCompanyName("")
     } catch {
       setFeedback({ type: "error", message: "Something went wrong. Please try again in a moment." })
     } finally {
@@ -213,6 +238,8 @@ function HomeInner() {
           errorMessage = "The password you entered is incorrect. Please try again or use 'Forgot password?' to reset it."
         } else if (data.error === "VALIDATION_ERROR") {
           errorMessage = "Please enter a valid email address and password."
+        } else if (data.error === "EMAIL_NOT_VERIFIED") {
+          errorMessage = "Please verify your email address before signing in. Check your inbox for the confirmation link."
         } else if (data.message) {
           errorMessage = data.message
         }
@@ -475,6 +502,23 @@ function HomeInner() {
                     aria-invalid={Boolean(formErrors.name)}
                   />
                   {formErrors.name && <p className="text-xs font-medium text-rose-300">{formErrors.name}</p>}
+                </div>
+              )}
+              {mode === "register" && (
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium text-blue-100" htmlFor="company">
+                    Company name
+                  </label>
+                  <input
+                    id="company"
+                    className={`input placeholder:text-blue-300/50 rounded-lg ${formErrors.companyName ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    placeholder="Acme Inc."
+                    type="text"
+                    value={companyName}
+                    onChange={(event) => setCompanyName(event.target.value)}
+                    aria-invalid={Boolean(formErrors.companyName)}
+                  />
+                  {formErrors.companyName && <p className="text-xs font-medium text-rose-300">{formErrors.companyName}</p>}
                 </div>
               )}
               <div className="grid gap-2">
