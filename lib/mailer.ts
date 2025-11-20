@@ -22,22 +22,12 @@ function resolveConfig(): MailConfig {
     return cachedConfig
   }
 
-  let user = process.env.SMTP_USER
-  let pass = process.env.SMTP_PASSWORD
-
-  if (!user || !pass) {
-    console.warn("[SMTP] Environment variables SMTP_USER/SMTP_PASSWORD not set. Using fallback credentials for email delivery. Update your environment variables to use your own SMTP account.")
-    user = FALLBACK_SMTP_USER
-    pass = FALLBACK_SMTP_PASS
-  }
-
-  const host = process.env.SMTP_HOST || "smtp.gmail.com"
-  const port = Number(process.env.SMTP_PORT || "587")
-  const secure =
-    process.env.SMTP_SECURE !== undefined
-      ? process.env.SMTP_SECURE === "true"
-      : port === 465
-  const from = process.env.SMTP_FROM || user
+  const user = FALLBACK_SMTP_USER
+  const pass = FALLBACK_SMTP_PASS
+  const host = "smtp.gmail.com"
+  const port = 587
+  const secure = false
+  const from = user
 
   cachedConfig = { host, port, secure, user, pass, from }
   return cachedConfig
