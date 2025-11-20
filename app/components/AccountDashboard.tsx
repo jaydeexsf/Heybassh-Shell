@@ -268,7 +268,7 @@ const navigation: NavItem[] = [
   },
   {
     id: "billing",
-    label: "Billing",
+    label: "Billing Lite",
     icon: <CardIcon />,
     children: [
       { id: "billing_clients", label: "Clients" },
@@ -561,6 +561,8 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
     return Boolean(item.children?.some((child) => child.id === view))
   }
 
+  const navSeparators = new Set(["billing", "automate"])
+
   const overviewModules = [
     {
       id: "overview_customers",
@@ -684,7 +686,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
       <div className="h-px bg-[#1a2446]/50"></div>
       <div className="h-px bg-[#1a2446]/30 my-4"></div>
       <div className={`grid flex-1 grid-cols-1 ${desktopGrid}`}>
-        {/* Left sidebar with profile */}
+      {/* Left sidebar with profile */}
         <aside className="hidden md:flex flex-col items-center justify-between border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur min-h-full">
         <div className="flex flex-col items-center gap-3">
           <button
@@ -830,11 +832,13 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                     </div>
                   </div>
                 )}
+                {navSeparators.has(item.id) && (
+                  <div className="mx-1 mt-2 h-px bg-[#1a2446]/60" aria-hidden="true"></div>
+                )}
               </div>
             )
           })}
         </nav>
-
       </aside>
       )}
 
@@ -845,27 +849,27 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
               <div className="card rounded-[32px] border-[#1f2c56] bg-gradient-to-r from-[#101b38] via-[#0c142a] to-[#060b1a] p-6 md:p-8">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
                       <h3 className="text-2xl font-semibold text-white">Welcome</h3>
                   <Pill>Module</Pill>
-                </div>
+              </div>
                     <p className="mt-2 max-w-2xl text-sm text-blue-200">
                       Unified navigation, shared auth, and curated module slots so every workflow is a click away.
                     </p>
-                  </div>
-                  <div className="flex items-center gap-2">
+          </div>
+          <div className="flex items-center gap-2">
                     <button
                       onClick={() => router.push(`/${accountId}/dashboard/service`)}
                       className="btn btn-gold text-xs font-semibold px-4 py-2 rounded-[26px]"
                     >
                       Request Support
                     </button>
-                    <button
+              <button
                       onClick={() => navigate("customers_contacts")}
                       className="btn text-xs font-semibold rounded-[26px]"
-                    >
+              >
                       Explore Modules
-                    </button>
+              </button>
                   </div>
                 </div>
               </div>
@@ -888,7 +892,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                     >
                       Open
                     </button>
-                  </div>
+                </div>
                 ))}
               </div>
 
@@ -952,7 +956,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       )}
                   </tbody>
                 </table>
-                </div>
+            </div>
               </div>
               <div className="card rounded-[32px] bg-[#070d20] p-6">
                 <h2 className="text-2xl font-semibold text-white">Add Contact</h2>
@@ -993,13 +997,13 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
                     />
                   </div>
-                  <button
+              <button
                     type="submit"
                     className="w-full rounded-[28px] bg-gradient-to-r from-[#31b0ff] to-[#66d6ff] py-2 text-sm font-semibold text-[#041226] transition hover:brightness-110 disabled:opacity-50"
                     disabled={!newContact.name || !newContact.email}
-                  >
+              >
                     Save
-                  </button>
+              </button>
                 </form>
                 <p className="mt-4 text-xs text-blue-300">Dummy data only. Data is stored locally in the browser.</p>
               </div>
@@ -1043,16 +1047,16 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                         </option>
                       ))}
                     </select>
-                    <button
-                      onClick={() => {
+                  <button
+                    onClick={() => {
                         setProductSearch("")
                         setProductCategory("All")
-                      }}
+                    }}
                       className="rounded-[24px] border border-[#1a2446] px-4 py-2 text-sm text-blue-100 hover:bg-[#121c3d]"
-                    >
+                  >
                       Clear
-                    </button>
-                  </div>
+                  </button>
+                </div>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full rounded-[26px] border border-[#121a36] bg-[#09112a]">
@@ -1084,8 +1088,8 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       )}
                     </tbody>
                   </table>
-                </div>
-              </div>
+            </div>
+          </div>
               <div className="card rounded-[32px] bg-[#070d20] p-6">
                 <h2 className="text-2xl font-semibold text-white">Add Product</h2>
                 <form className="mt-6 space-y-4" onSubmit={handleAddProduct}>
@@ -1097,7 +1101,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       placeholder="SKU"
                       className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
                     />
-                  </div>
+                </div>
                   <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
                     <input
                       type="text"
@@ -1106,7 +1110,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       placeholder="Name"
                       className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
                     />
-                  </div>
+              </div>
                   <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
                     <input
                       type="text"
@@ -1115,7 +1119,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       placeholder="Category"
                       className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
                     />
-                  </div>
+            </div>
                   <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
                     <input
                       type="number"
@@ -1124,7 +1128,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       placeholder="Price"
                       className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
                     />
-                  </div>
+              </div>
                   <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
                     <input
                       type="number"
@@ -1227,7 +1231,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                 <div className="mt-6 rounded-[28px] border border-[#1a2446] bg-[#09112a]">
                   <div className="overflow-x-auto rounded-[28px]">
                     <table className="w-full">
-                      <thead>
+                  <thead>
                         <tr className="border-b border-[#1a2446] text-left text-xs font-semibold uppercase tracking-wide text-blue-300">
                           <th className="px-4 py-3">ID</th>
                           <th className="px-4 py-3">Title</th>
@@ -1235,9 +1239,9 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                           <th className="px-4 py-3">Due</th>
                           <th className="px-4 py-3">Priority</th>
                           <th className="px-4 py-3">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    </tr>
+                  </thead>
+                  <tbody>
                         {filteredTasks.map((task) => (
                           <tr key={task.id} className="border-b border-[#1a2446]/40 last:border-b-0">
                             <td className="px-4 py-3 text-sm text-blue-300">{task.id}</td>
@@ -1246,19 +1250,19 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                             <td className="px-4 py-3 text-sm text-blue-200">{task.dueDate || "—"}</td>
                             <td className="px-4 py-3 text-sm text-blue-200">{task.priority}</td>
                             <td className="px-4 py-3 text-sm text-blue-200">{task.status}</td>
-                          </tr>
+                    </tr>
                         ))}
                         {!filteredTasks.length && (
                           <tr>
                             <td colSpan={6} className="px-4 py-6 text-center text-sm text-blue-300">
                               No tasks found.
                             </td>
-                          </tr>
+                    </tr>
                         )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                  </tbody>
+                </table>
+              </div>
+            </div>
               </div>
               <div className="card rounded-[32px] bg-[#070d20] p-6">
                 <h2 className="text-2xl font-semibold text-white">Filters</h2>
@@ -1271,7 +1275,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       placeholder="Search"
                       className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
                     />
-                  </div>
+            </div>
                   {(["status", "priority", "assignee"] as const).map((filterKey) => (
                     <div key={filterKey} className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
                       <select
