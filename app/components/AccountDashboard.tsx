@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ReactNode, useMemo, useState, useEffect, ChangeEvent } from "react"
+import { ReactNode, useMemo, useState, useEffect, ChangeEvent, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
 import logo from "../../Images/heybasshlogo.png"
@@ -310,6 +310,7 @@ const defaultEmployees: Employee[] = [
 ]
 
 const defaultLeaveRequests: LeaveRequest[] = []
+const SEARCH_SELECTION_KEY = "heybassh_search_selection"
 
 const priorityOptions: Task["priority"][] = ["Low", "Normal", "High"]
 const statusOptions: Task["status"][] = ["Todo", "In Progress", "Done"]
@@ -363,6 +364,10 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [contacts, setContacts] = useState<Contact[]>(defaultContacts)
   const [searchQuery, setSearchQuery] = useState("")
+  const [searchPreviewOpen, setSearchPreviewOpen] = useState(false)
+  const [searchPreviewSelection, setSearchPreviewSelection] = useState<string | null>(null)
+  const [searchTransitioning, setSearchTransitioning] = useState(false)
+  const searchLoaderTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [newContact, setNewContact] = useState({ name: "", email: "", phone: "", company: "" })
   const [products, setProducts] = useState<Product[]>(defaultProducts)
   const [productCategory, setProductCategory] = useState("All")
@@ -410,13 +415,34 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
         setCompanyMenuOpen(false)
         setUserMenuOpen(false)
         setSidebarProfileMenuOpen(false)
+        setSearchPreviewOpen(false)
       }
     }
-    if (companyMenuOpen || userMenuOpen || sidebarProfileMenuOpen) {
+    if (companyMenuOpen || userMenuOpen || sidebarProfileMenuOpen || searchPreviewOpen) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [companyMenuOpen, userMenuOpen, sidebarProfileMenuOpen])
+  }, [companyMenuOpen, userMenuOpen, sidebarProfileMenuOpen, searchPreviewOpen])
+
+  useEffect(() => {
+    return () => {
+      if (searchLoaderTimeout.current) {
+        clearTimeout(searchLoaderTimeout.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const storedSelection = sessionStorage.getItem(SEARCH_SELECTION_KEY)
+    if (!storedSelection) return
+    setSearchPreviewSelection(storedSelection)
+    const clearTimer = setTimeout(() => {
+      setSearchPreviewSelection(null)
+      sessionStorage.removeItem(SEARCH_SELECTION_KEY)
+    }, 4000)
+    return () => clearTimeout(clearTimer)
+  }, [view])
 
   // Fetch company name
   useEffect(() => {
@@ -466,9 +492,35 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   function handleTopSearchChange(event: ChangeEvent<HTMLInputElement>) {
     const nextValue = event.target.value
     setSearchQuery(nextValue)
-    if (view !== "customers_contacts") {
-      navigate("customers_contacts")
+    setSearchPreviewOpen(Boolean(nextValue.trim()))
+    if (!nextValue.trim()) {
+      setSearchPreviewSelection(null)
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem(SEARCH_SELECTION_KEY)
+      }
     }
+  }
+
+  function scheduleSearchLoader() {
+    setSearchTransitioning(true)
+    if (searchLoaderTimeout.current) {
+      clearTimeout(searchLoaderTimeout.current)
+    }
+    searchLoaderTimeout.current = setTimeout(() => {
+      setSearchTransitioning(false)
+    }, 500)
+  }
+
+  function handleSearchResultNavigate(contactId?: string) {
+    if (contactId) {
+      setSearchPreviewSelection(contactId)
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(SEARCH_SELECTION_KEY, contactId)
+      }
+    }
+    setSearchPreviewOpen(false)
+    scheduleSearchLoader()
+    navigate("customers_contacts")
   }
 
   function toggleSectionState(curr: Record<string, boolean>, id: string) {
@@ -730,20 +782,78 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
             <Link href={`/${accountId}/dashboard`} className="flex items-center">
               <Image src={logo} alt="Heybassh" height={28} className="h-7 w-auto" />
             </Link>
-            <div className="relative">
+            <div className="relative" data-dropdown>
               <div className="flex items-center gap-2 border border-[#1a2446] rounded-[24px] px-3 py-1.5 bg-[#0e1629]">
                 <SearchIcon />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={handleTopSearchChange}
-                  onFocus={() => {
-                    if (view !== "customers_contacts") navigate("customers_contacts")
+                  onFocus={() => setSearchPreviewOpen(Boolean(searchQuery.trim()))}
+                  onBlur={() => {
+                    if (!searchQuery.trim()) setSearchPreviewOpen(false)
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      setSearchPreviewOpen(false)
+                      ;(event.target as HTMLInputElement).blur()
+                    } else if (event.key === "Enter") {
+                      setSearchPreviewOpen(false)
+                      handleSearchResultNavigate()
+                    }
                   }}
                   placeholder="Search name, email, phone, company"
                   className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 w-40"
                 />
               </div>
+              {searchTransitioning && (
+                <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2 text-[11px] text-blue-300">
+                  <span className="h-3 w-3 animate-spin rounded-full border border-blue-300 border-r-transparent"></span>
+                  Loading…
+                </div>
+              )}
+              {searchPreviewOpen && (
+                <div className="absolute left-0 top-full mt-2 w-[320px] rounded-[20px] border border-[#1a2446] bg-[#050a1b] shadow-2xl">
+                  <div className="flex items-center justify-between border-b border-[#111936] px-4 py-2 text-xs uppercase tracking-wide text-blue-300">
+                    <span>Contacts</span>
+                    <button
+                      className="text-[11px] font-semibold text-[#7ed0ff] hover:text-white transition-colors"
+                      onClick={() => handleSearchResultNavigate()}
+                    >
+                      View all
+                    </button>
+                  </div>
+                  <div className="max-h-72 overflow-y-auto">
+                    {searchQuery.trim() ? (
+                      filteredContacts.length ? (
+                        filteredContacts.slice(0, 5).map((contact) => (
+                          <button
+                            key={contact.id}
+                            onClick={() => handleSearchResultNavigate(contact.id)}
+                            className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left hover:bg-[#0c142a] transition-colors"
+                          >
+                            <div>
+                              <p className="text-sm font-semibold text-white">{contact.name}</p>
+                              <p className="text-xs text-blue-300">{contact.email}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-blue-200">{contact.company}</p>
+                              <p className="text-xs text-blue-400/80">{contact.phone}</p>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-6 text-center text-xs text-blue-300">No contacts found.</div>
+                      )
+                    ) : (
+                      <div className="px-4 py-6 text-center text-xs text-blue-300">Start typing to search contacts.</div>
+                    )}
+                  </div>
+                  {filteredContacts.length > 5 && (
+                    <div className="border-t border-[#111936] px-4 py-2 text-[11px] text-blue-300">Showing top 5 results</div>
+                  )}
+                </div>
+              )}
             </div>
             <button className="flex h-8 w-8 items-center justify-center rounded-[24px] border border-[#1a2446] bg-[#0e1629] text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
               <SettingsIcon />
@@ -958,15 +1068,22 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                     </tr>
                   </thead>
                   <tbody>
-                      {filteredContacts.map((contact) => (
-                        <tr key={contact.id} className="border-b border-[#1a2446]/40 last:border-b-0">
+                      {filteredContacts.map((contact) => {
+                        const highlighted = contact.id === searchPreviewSelection
+                        return (
+                        <tr
+                          key={contact.id}
+                          className={`border-b border-[#1a2446]/40 last:border-b-0 transition-colors ${
+                            highlighted ? "bg-[#132045] shadow-[0_0_0_1px_rgba(126,208,255,0.4)]" : ""
+                          }`}
+                        >
                           <td className="px-4 py-3 text-sm text-blue-300">{contact.id}</td>
                           <td className="px-4 py-3 text-sm font-semibold text-white">{contact.name}</td>
                           <td className="px-4 py-3 text-sm text-blue-200">{contact.email}</td>
                           <td className="px-4 py-3 text-sm text-blue-200">{contact.phone}</td>
                           <td className="px-4 py-3 text-sm text-blue-200">{contact.company}</td>
-                    </tr>
-                      ))}
+                        </tr>
+                      )})}
                       {!filteredContacts.length && (
                         <tr>
                           <td colSpan={5} className="px-4 py-6 text-center text-sm text-blue-300">
