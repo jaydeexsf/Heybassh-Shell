@@ -212,8 +212,19 @@ function HomeInner() {
       
       if (result?.ok) {
         setFeedback({ type: "success", message: "Signed in successfully. Redirecting..." })
-        setTimeout(() => {
-          window.location.href = "/dashboard"
+        setTimeout(async () => {
+          try {
+            const sRes = await fetch("/api/auth/session")
+            const s = sRes.ok ? await sRes.json() : null
+            const accId = s?.user?.account_id
+            if (accId) {
+              window.location.href = `/${accId}/dashboard`
+            } else {
+              window.location.href = "/dashboard" // middleware will normalize
+            }
+          } catch {
+            window.location.href = "/dashboard"
+          }
         }, 500)
         return
       }
