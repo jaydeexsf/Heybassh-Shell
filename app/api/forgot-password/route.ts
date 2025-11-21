@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     const baseUrl = process.env.NEXTAUTH_URL 
       || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
       || process.env.NEXT_PUBLIC_APP_URL
-      || "https://heybassh-shell.vercel.app"
+      || "https://app.heybassh.com"
     const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`
 
     console.log(`[FORGOT PASSWORD] Reset URL created: ${resetUrl}`)
