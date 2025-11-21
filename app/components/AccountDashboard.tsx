@@ -727,7 +727,11 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                 <SearchIcon />
                 <input
                   type="text"
-                  placeholder="Search Heybassh"
+                  value={view === "customers_contacts" ? searchQuery : ""}
+                  onChange={(event) => {
+                    if (view === "customers_contacts") setSearchQuery(event.target.value)
+                  }}
+                  placeholder={view === "customers_contacts" ? "Search name, email, phone, company" : "Search Heybassh"}
                   className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 w-40"
                 />
               </div>
@@ -931,15 +935,6 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       <p className="mt-1 text-sm text-blue-200">Lightweight contacts view for demo</p>
                     </div>
                     <Pill>Live Demo</Pill>
-                  </div>
-                  <div className="mt-4 rounded-[32px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(event) => setSearchQuery(event.target.value)}
-                      placeholder="Search name, email, phone, company"
-                      className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
-                    />
                   </div>
               </div>
               <div className="overflow-x-auto">
