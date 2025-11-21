@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ReactNode, useMemo, useState, useEffect } from "react"
+import { ReactNode, useMemo, useState, useEffect, ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
 import logo from "../../Images/heybasshlogo.png"
@@ -463,6 +463,14 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
     }
   }
 
+  function handleTopSearchChange(event: ChangeEvent<HTMLInputElement>) {
+    const nextValue = event.target.value
+    setSearchQuery(nextValue)
+    if (view !== "customers_contacts") {
+      navigate("customers_contacts")
+    }
+  }
+
   function toggleSectionState(curr: Record<string, boolean>, id: string) {
     return { ...curr, [id]: !curr[id] }
   }
@@ -727,11 +735,12 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                 <SearchIcon />
                 <input
                   type="text"
-                  value={view === "customers_contacts" ? searchQuery : ""}
-                  onChange={(event) => {
-                    if (view === "customers_contacts") setSearchQuery(event.target.value)
+                  value={searchQuery}
+                  onChange={handleTopSearchChange}
+                  onFocus={() => {
+                    if (view !== "customers_contacts") navigate("customers_contacts")
                   }}
-                  placeholder={view === "customers_contacts" ? "Search name, email, phone, company" : "Search Heybassh"}
+                  placeholder="Search name, email, phone, company"
                   className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 w-40"
                 />
               </div>
