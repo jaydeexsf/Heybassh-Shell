@@ -343,6 +343,15 @@ function viewToPath(view: string): string | null {
   return null
 }
 
+// Helper: match query tokens against a full name so that first/last names can be searched independently
+function nameMatchesTokens(name: string, query: string) {
+  const toTokens = (s: string) => s.toLowerCase().split(/[\s\-]+/).filter(Boolean)
+  const nameTokens = toTokens(name)
+  const queryTokens = toTokens(query)
+  if (!queryTokens.length) return true
+  return queryTokens.every((qt) => nameTokens.some((nt) => nt.includes(qt)))
+}
+
 export default function AccountDashboard({ accountId, initialViewKey = "overview" }: { accountId: string; initialViewKey?: string }) {
   const router = useRouter()
   const [view, setView] = useState(initialViewKey)
@@ -381,12 +390,12 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const [leaveForm, setLeaveForm] = useState({ employeeId: "", type: "Annual", startDate: "", endDate: "" })
   const [leaveFilter, setLeaveFilter] = useState("All")
   const { data: session } = useSession()
-  
+
   const userName = session?.user?.name || session?.user?.email || "User"
   const userImage = typeof session?.user?.image === "string" ? session.user.image : null
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U"
 
-  // Sync view with initialViewKey when it changes (e.g., when navigating to a different route)
+  // Sync view when initialViewKey changes
   useEffect(() => {
     if (initialViewKey && initialViewKey !== view) {
       setView(initialViewKey)
@@ -409,15 +418,18 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
     }
   }, [companyMenuOpen, userMenuOpen, sidebarProfileMenuOpen])
 
+  // Fetch company name
   useEffect(() => {
     let ignore = false
     fetch(`/api/accounts/${accountId}`)
-      .then((r) => r.ok ? r.json() : null)
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!ignore && data?.company_name) setCompanyName(data.company_name)
       })
       .catch(() => {})
-    return () => { ignore = true }
+    return () => {
+      ignore = true
+    }
   }, [accountId])
 
   const activeLabel = useMemo(() => findNavLabel(navigation, view), [view])
@@ -425,9 +437,11 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
     if (!searchQuery.trim()) return contacts
     const q = searchQuery.trim().toLowerCase()
     return contacts.filter((contact) => {
-      return [contact.id, contact.name, contact.email, contact.phone, contact.company].some((field) =>
+      const matchesNameTokens = nameMatchesTokens(contact.name, q)
+      const matchesOtherFields = [contact.id, contact.email, contact.phone, contact.company].some((field) =>
         field.toLowerCase().includes(q),
       )
+      return matchesNameTokens || matchesOtherFields
     })
   }, [contacts, searchQuery])
 
@@ -447,16 +461,17 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
     if (seg) {
       router.push(`/${accountId}/${seg}`)
     }
-    // If no route exists, we just update the view state and stay on the current page
   }
 
   function toggleSectionState(curr: Record<string, boolean>, id: string) {
     return { ...curr, [id]: !curr[id] }
   }
 
+  // ... (rest of the code remains the same)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ customers: true, products: true, front_office: false })
 
   function handleAddContact(event: React.FormEvent<HTMLFormElement>) {
+    // ... (rest of the code remains the same)
     event.preventDefault()
     if (!newContact.name || !newContact.email) return
     const numericPart = contacts.length ? parseInt(contacts[contacts.length - 1].id.split("-")[1] ?? "1000", 10) : 1000
