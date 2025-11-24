@@ -204,7 +204,7 @@ export function Automate() {
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = WorkflowStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<WorkflowStatus | 'all'>('all');
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [workflowToDelete, setWorkflowToDelete] = useState<string | null>(null);;
 
