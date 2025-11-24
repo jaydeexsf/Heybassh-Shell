@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { Fragment, useState } from "react";
+import { Dialog, Transition, Menu } from "@headlessui/react";
 import { CheckCircleIcon, ClockIcon, ArrowPathIcon, TrashIcon, Cog6ToothIcon, PlusIcon, ArrowDownTrayIcon, ArrowUpTrayIcon, FunnelIcon } from "@heroicons/react/24/outline";
 
 type WorkflowStatus = 'active' | 'paused' | 'draft' | 'error';
@@ -1239,83 +1240,6 @@ function ArrowDownIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
-
-// Add Dialog and Transition components
-type DialogProps = {
-  open: boolean;
-  onClose: (open: boolean) => void;
-  children: React.ReactNode;
-  className?: string;
-};
-
-function Dialog({ open, onClose, children, className = '' }: DialogProps) {
-  return (
-    <div className={`fixed inset-0 z-10 overflow-y-auto ${!open && 'hidden'}`}>
-      {children}
-    </div>
-  );
-}
-
-Dialog.Panel = function DialogPanel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`min-h-screen px-4 text-center ${className}`}>
-      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-      <div className="inline-block h-screen w-full max-w-md p-4 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-        {children}
-      </div>
-    </div>
-  );
-};
-
-Dialog.Title = 'div';
-
-const Transition = {
-  Root: 'div',
-  Child: 'div',
-} as any;
-
-// Add Menu component
-function Menu({ children }: { children: React.ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  return (
-    <div className="relative">
-      {React.Children.map(children, (child) => {
-        if (React.isValidElement(child) && child.type === Menu.Button) {
-          return React.cloneElement(child as React.ReactElement, { 
-            onClick: () => setIsOpen(!isOpen) 
-          });
-        }
-        return child;
-      })}
-      {isOpen && (
-        <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-          {React.Children.map(children, (child) => {
-            if (React.isValidElement(child) && child.type === Menu.Items) {
-              return child;
-            }
-            return null;
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-Menu.Button = 'button';
-Menu.Items = function MenuItems({ children }: { children: React.ReactNode }) {
-  return <div className="py-1">{children}</div>;
-};
-Menu.Item = function MenuItem({ children, className = '', ...props }: { children: React.ReactNode; className?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return (
-    <button
-      className={`${className} w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-};
 
 // Add ExclamationTriangleIcon
 function ExclamationTriangleIcon(props: React.SVGProps<SVGSVGElement>) {

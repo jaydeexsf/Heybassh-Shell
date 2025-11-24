@@ -9,6 +9,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@headlessui/react": "^2.1.6",
     "@heroicons/react": "^2.1.5",
     "@prisma/client": "5.19.1",
     "@types/uuid": "^11.0.0",

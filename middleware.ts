@@ -1,12 +1,13 @@
 
-import { auth } from "@/lib/auth"
 import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+import { getToken } from "next-auth/jwt"
 
-export default async function middleware(req: Request) {
+export default async function middleware(req: NextRequest) {
   const url = new URL(req.url)
   const path = url.pathname
 
-  const session = await auth()
+  const session = await getToken({ req, secret: process.env.AUTH_SECRET })
 
   // 1) Normalize global /dashboard to account-scoped /{account_id}/dashboard
   if (path === "/dashboard" || path.startsWith("/dashboard/")) {
