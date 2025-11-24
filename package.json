@@ -9,6 +9,7 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@heroicons/react": "^2.1.5",
     "@prisma/client": "5.19.1",
     "@types/uuid": "^11.0.0",
     "bcryptjs": "2.4.3",
