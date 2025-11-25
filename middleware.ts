@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getToken } from "next-auth/jwt"
 
-const authSecret = process.env.AUTH_SECRET
+const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
 
 export default async function middleware(req: NextRequest) {
   if (!authSecret) {
