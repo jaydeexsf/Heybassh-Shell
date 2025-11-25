@@ -82,28 +82,54 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        const authenticatedUser = user as typeof user & {
+          id: string
+          email: string
+          name?: string | null
+          role?: string
+          account_id?: string | null
+          companyName?: string | null
+        }
+
         token.user = {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: (user as any).role,
-          account_id: (user as any).account_id,
-          companyName: (user as any).companyName,
+          id: authenticatedUser.id,
+          email: authenticatedUser.email,
+          name: authenticatedUser.name ?? authenticatedUser.email,
+          role: authenticatedUser.role,
+          account_id: authenticatedUser.account_id,
+          companyName: authenticatedUser.companyName,
         }
       }
       return token
     },
     async session({ session, token }) {
       if (token.user) {
+        const tokenUser = token.user as {
+          id: string
+          email: string
+          name?: string | null
+          role?: string
+          account_id?: string | null
+          companyName?: string | null
+        }
+
         session.user = {
-          id: (token.user as any).id,
-          email: (token.user as any).email,
-          name: (token.user as any).name,
-          role: (token.user as any).role,
-          account_id: (token.user as any).account_id,
-          companyName: (token.user as any).companyName,
-          emailVerified: null
-        } as any
+          ...session.user,
+          id: tokenUser.id,
+          email: tokenUser.email,
+          name: tokenUser.name ?? tokenUser.email,
+          role: tokenUser.role,
+          account_id: tokenUser.account_id,
+          companyName: tokenUser.companyName,
+          emailVerified: null,
+        } as typeof session.user & {
+          id: string
+          email: string
+          name?: string | null
+          role?: string
+          account_id?: string | null
+          companyName?: string | null
+        }
       }
       return session
     }

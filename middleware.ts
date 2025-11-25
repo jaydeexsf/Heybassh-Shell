@@ -2,11 +2,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getToken } from "next-auth/jwt"
 
+const authSecret = process.env.AUTH_SECRET
+
 export default async function middleware(req: NextRequest) {
+  if (!authSecret) {
+    throw new Error("AUTH_SECRET is not configured")
+  }
+
   const url = req.nextUrl
   const path = url.pathname
 
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET })
+  const token = await getToken({ req, secret: authSecret })
   const sessionUser = (token as any)?.user
 
   // 1) Normalize global /dashboard to account-scoped /{account_id}/dashboard

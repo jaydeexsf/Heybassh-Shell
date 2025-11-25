@@ -6,12 +6,14 @@ declare module "next-auth" {
       id: string
       role?: string | null
       account_id?: string | null
+      companyName?: string | null
     }
   }
 
   interface User extends DefaultUser {
     role?: string | null
     account_id?: string | null
+    companyName?: string | null
   }
 }
 
@@ -23,6 +25,7 @@ declare module "next-auth/jwt" {
       name?: string | null
       role?: string | null
       account_id?: string | null
+      companyName?: string | null
     }
   }
 }
