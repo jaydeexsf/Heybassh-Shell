@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import logo from "../Images/heybasshlogo.png"
+import { PrimaryButton } from "./components/PrimaryButton"
 
 type AuthMode = "login" | "register"
 type Feedback = { type: "success" | "error" | "info"; message: string }
@@ -513,23 +514,13 @@ function HomeInner() {
               )}
 
               {mode === "login" ? (
-                <button
-                  type="submit"
-                  disabled={loading}
-                  aria-busy={loading}
-                  className="radius-6 btn btn-primary flex w-full items-center justify-center gap-2 text-sm font-semibold transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
-                >
+                <PrimaryButton type="submit" disabled={loading} aria-busy={loading} className="w-full">
                   {loading ? <span className="spinner" role="status" aria-label="Processing request" /> : <span>Sign in</span>}
-                </button>
+                </PrimaryButton>
               ) : (
-                <button
-                  type="submit"
-                  disabled={loading}
-                  aria-busy={loading}
-                  className="radius-6 btn btn-primary flex w-full items-center justify-center gap-2 text-sm font-semibold transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap"
-                >
+                <PrimaryButton type="submit" disabled={loading} aria-busy={loading} className="w-full">
                   {loading ? <span className="spinner" role="status" aria-label="Processing request" /> : <span>Create account</span>}
-                </button>
+                </PrimaryButton>
               )}
             </form>
 

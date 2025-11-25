@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { PrimaryButton } from "../components/PrimaryButton"
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const blockedPublicDomains = new Set([
@@ -158,13 +159,9 @@ export default function CreateAccountPage() {
                 onChange={(e) => setOwnerEmail(e.target.value)}
                 required
               />
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary flex items-center justify-center gap-2 rounded-lg text-sm font-semibold whitespace-nowrap disabled:opacity-60"
-              >
+              <PrimaryButton type="submit" disabled={loading} className="whitespace-nowrap px-4">
                 {loading ? "Sending…" : otpSent ? "Resend code" : "Send code"}
-              </button>
+              </PrimaryButton>
             </div>
           </div>
         </form>
