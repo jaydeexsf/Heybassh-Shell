@@ -593,7 +593,7 @@ export function Automate() {
                     Run
                   </button>
                   <div className="relative">
-                    <Menu as="div" className="relative">
+                    <Menu>
                       <Menu.Button className="inline-flex items-center rounded-md bg-gray-700 px-3 py-2 text-sm font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         <EllipsisVerticalIcon className="h-4 w-4" />
                       </Menu.Button>

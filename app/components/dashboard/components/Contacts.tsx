@@ -1,4 +1,12 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  UserCircleIcon,
+  CalendarDaysIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
+} from "@heroicons/react/24/outline";
 import { Contact } from "../types";
 
 interface ContactsProps {
@@ -9,6 +17,7 @@ interface ContactsProps {
 export function Contacts({ contacts, onAddContact }: ContactsProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [newContact, setNewContact] = useState<Omit<Contact, 'id'>>({ 
     name: "", 
     email: "", 
@@ -16,11 +25,20 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
     company: "" 
   });
 
-  const filteredContacts = contacts.filter(contact =>
-    contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.company.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredContacts = useMemo(() => (
+    contacts.filter(contact =>
+      contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contact.company.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  ), [contacts, searchTerm]);
+
+  const actionButtons = [
+    { label: "Contact Owner", icon: UserCircleIcon },
+    { label: "Created Date", icon: CalendarDaysIcon },
+    { label: "Activity", icon: ChartBarIcon },
+    { label: "Status", icon: CheckCircleIcon },
+  ];
 
   const handleAddContact = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,21 +51,49 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
     <div className="space-y-6">
       <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
         <h2 className="text-2xl font-bold text-white">Contacts</h2>
-        <div className="flex space-x-2">
-          <div className="relative">
+        <div className="flex flex-1 flex-col space-y-3 sm:flex-row sm:items-center sm:justify-end sm:space-y-0 sm:space-x-4">
+          <label className="flex items-center space-x-2 text-sm text-gray-300">
             <input
-              type="text"
-              placeholder="Search contacts..."
-              className="rounded-lg border border-gray-700 bg-[#1a2035] px-4 py-2 pl-10 text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              type="checkbox"
+              className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-indigo-600 focus:ring-indigo-500"
+              checked={isSelectionMode}
+              onChange={(e) => setIsSelectionMode(e.target.checked)}
             />
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+            <span>Select</span>
+          </label>
+
+          {!isSelectionMode ? (
+            <div className="relative flex-1 sm:max-w-sm">
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search contacts..."
+                className="w-full rounded-full border border-gray-700 bg-[#1a2035] px-4 py-2 pl-10 pr-12 text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:text-white focus:outline-none"
+              >
+                <FunnelIcon className="h-5 w-5" />
+              </button>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {actionButtons.map(({ label, icon: Icon }) => (
+                <button
+                  key={label}
+                  type="button"
+                  className="inline-flex items-center rounded-full border border-gray-700 bg-gray-800/80 px-3 py-1 text-xs font-medium text-gray-200 hover:border-indigo-500 hover:text-white"
+                >
+                  <Icon className="mr-1 h-4 w-4" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <button
             onClick={() => setIsAdding(!isAdding)}
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-800"
