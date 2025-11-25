@@ -684,13 +684,13 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   ]
 
   const desktopGrid = "md:grid-cols-[64px_minmax(0,1fr)]"
-  const contentGrid = sidebarCollapsed ? "" : "md:grid-cols-[260px_minmax(0,1fr)]"
+  const contentGrid = sidebarCollapsed ? "md:grid-cols-[minmax(0,1fr)]" : "md:grid-cols-[260px_minmax(0,1fr)]"
 
   return (
     <div className="min-h-screen bg-[#020617]">
-      <div className={`grid min-h-screen grid-cols-1 ${desktopGrid}`}>
+      <div className={`grid min-h-screen grid-cols-1 ${desktopGrid} transition-[grid-template-columns] duration-300 ease-in-out`}>
       {/* Left sidebar with profile */}
-        <aside className="hidden md:flex flex-col items-center justify-between border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur min-h-full">
+        <aside className="hidden md:flex md:sticky md:top-0 md:h-screen flex-col items-center justify-between border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur">
         <div className="flex flex-col items-center gap-3">
           <button
             onClick={() => setSidebarCollapsed((prev) => !prev)}
@@ -915,8 +915,9 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
         <div className={`grid flex-1 grid-cols-1 ${contentGrid}`}>
         {/* Main sidebar */}
           {!sidebarCollapsed && (
-            <aside className="border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#0e1629]">
-            <nav className="flex flex-col gap-1 pt-2">
+            <aside className="border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#0e1629] md:sticky md:top-0 md:h-screen transition-[transform,opacity] duration-300 ease-in-out md:translate-x-0 md:opacity-100">
+            <div className="flex h-full flex-col">
+            <nav className="flex-1 overflow-y-auto pr-1 flex flex-col gap-1 pt-2 pb-24">
               {navigation.map((item) => {
                 const hasChildren = Boolean(item.children?.length)
                 const open = openSections[item.id] ?? false
@@ -978,6 +979,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                 )
               })}
             </nav>
+            </div>
           </aside>
           )}
 
