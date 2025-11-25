@@ -1,9 +1,14 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import {
   MagnifyingGlassIcon,
-  LockClosedIcon,
-  ArrowRightIcon,
   EllipsisVerticalIcon,
+  PencilIcon,
+  TrashIcon,
+  UserCircleIcon,
+  CalendarDaysIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
+  FunnelIcon,
 } from "@heroicons/react/24/outline";
 import { Contact } from "../types";
 
@@ -29,7 +34,11 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
     phone: "", 
     company: "" 
   });
+  const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
+  const moreDropdownRef = useRef<HTMLDivElement>(null);
+  const filtersDropdownRef = useRef<HTMLDivElement>(null);
 
   const filteredContacts = useMemo(() => (
     contacts.filter(contact =>
@@ -49,6 +58,23 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
       selectAllCheckboxRef.current.indeterminate = someSelected;
     }
   }, [someSelected]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (moreDropdownRef.current && !moreDropdownRef.current.contains(event.target as Node)) {
+        setMoreDropdownOpen(false);
+      }
+      if (filtersDropdownRef.current && !filtersDropdownRef.current.contains(event.target as Node)) {
+        setFiltersOpen(false);
+      }
+    }
+
+    if (moreDropdownOpen || filtersOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [moreDropdownOpen, filtersOpen]);
 
   const handleSelectAll = () => {
     if (allSelected) {
@@ -73,6 +99,20 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
     onAddContact(newContact);
     setNewContact({ name: "", email: "", phone: "", company: "" });
     setIsAdding(false);
+  };
+
+  const handleDeleteSelected = () => {
+    // This would typically call a prop function to delete contacts
+    // For now, we'll just clear the selection
+    console.log('Delete contacts:', Array.from(selectedContacts));
+    setSelectedContacts(new Set());
+    setMoreDropdownOpen(false);
+  };
+
+  const handleEditSelected = () => {
+    // This would typically open an edit modal or form
+    console.log('Edit contacts:', Array.from(selectedContacts));
+    setMoreDropdownOpen(false);
   };
 
   return (
@@ -106,23 +146,51 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
           </div>
           <div className="flex items-center gap-2">
             <button className="inline-flex items-center gap-1.5 rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#121c3d] transition-colors">
-              <LockClosedIcon className="h-4 w-4" />
-              Enrich records
+              <UserCircleIcon className="h-4 w-4" />
+              Contact Owner
             </button>
             <button className="inline-flex items-center gap-1.5 rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#121c3d] transition-colors">
-              <LockClosedIcon className="h-4 w-4" />
-              Fill smart properties
+              <CalendarDaysIcon className="h-4 w-4" />
+              Created Date
             </button>
             <button className="inline-flex items-center gap-1.5 rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#121c3d] transition-colors">
-              <ArrowRightIcon className="h-4 w-4" />
-              Assign
+              <ChartBarIcon className="h-4 w-4" />
+              Activity
             </button>
             <button className="inline-flex items-center gap-1.5 rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#121c3d] transition-colors">
-              More
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+              <CheckCircleIcon className="h-4 w-4" />
+              Status
             </button>
+            <div className="relative" ref={moreDropdownRef}>
+              <button 
+                onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
+                className="inline-flex items-center gap-1.5 rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#121c3d] transition-colors"
+              >
+                More
+                <svg className={`h-3 w-3 transition-transform ${moreDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {moreDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 rounded-[20px] border border-[#1a2446] bg-[#0e1629] shadow-lg z-50 overflow-hidden">
+                  <button
+                    onClick={handleEditSelected}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-blue-200 hover:bg-[#121c3d] transition-colors"
+                  >
+                    <PencilIcon className="h-4 w-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDeleteSelected}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-red-400 hover:bg-[#121c3d] transition-colors"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -130,15 +198,67 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
       {/* Search and Controls - Only shows when no contacts selected */}
       {!hasSelectedContacts && (
         <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-sm">
+          <div className="relative flex-1 max-w-sm" ref={filtersDropdownRef}>
             <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-300/60" />
             <input
               type="text"
               placeholder="Search"
-              className="w-full rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 pl-10 pr-4 text-sm text-blue-200 placeholder-blue-300/60 focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff]"
+              className="w-full rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 pl-10 pr-10 text-sm text-blue-200 placeholder-blue-300/60 focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff]"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((prev) => !prev)}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-blue-300/70 hover:text-blue-100 transition-colors ${filtersOpen ? 'bg-[#142044]' : ''}`}
+            >
+              <FunnelIcon className="h-5 w-5" />
+            </button>
+            {filtersOpen && (
+              <div className="absolute right-0 top-full mt-2 w-72 rounded-[24px] border border-[#1a2446] bg-[#050a1b] p-4 text-sm text-blue-100 shadow-2xl z-50">
+                <p className="text-xs uppercase tracking-wide text-blue-300/80 mb-3">Filters</p>
+                <div className="space-y-2">
+                  {[
+                    "Contact owner",
+                    "Create date",
+                    "Last activity date",
+                    "Lead status",
+                  ].map((label) => (
+                    <button
+                      key={label}
+                      className="flex w-full items-center justify-between rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-left text-xs font-medium text-blue-100 hover:border-[#2b9bff] hover:text-white transition-colors"
+                      type="button"
+                    >
+                      <span>{label}</span>
+                      <span className="text-blue-300/80">▾</span>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between rounded-[18px] border border-dashed border-[#1a2446] bg-transparent px-3 py-2 text-left text-xs font-semibold text-[#7ed0ff] hover:border-[#2b9bff] hover:text-white transition-colors"
+                  >
+                    Advanced filters
+                    <span className="text-blue-300/80">+</span>
+                  </button>
+                </div>
+                <div className="mt-4 flex items-center justify-between text-xs text-blue-300">
+                  <button
+                    type="button"
+                    className="text-[#7ed0ff] hover:text-white transition-colors"
+                    onClick={() => setFiltersOpen(false)}
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-[16px] bg-[#2b9bff] px-3 py-1 text-[#041226] font-semibold"
+                    onClick={() => setFiltersOpen(false)}
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
