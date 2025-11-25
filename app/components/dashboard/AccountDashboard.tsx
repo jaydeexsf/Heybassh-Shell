@@ -154,6 +154,7 @@ export default function AccountDashboard({
   
   const { data: session } = useSession();
   const userName = session?.user?.name || session?.user?.email || "User";
+  const userEmail = session?.user?.email || "";
   const userImage = typeof session?.user?.image === "string" ? session.user.image : null;
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U";
 
@@ -444,9 +445,12 @@ export default function AccountDashboard({
             </nav>
           </div>
           <div className="flex flex-shrink-0 border-t border-gray-700 p-4">
-            <div className="group block w-full flex-shrink-0">
-              <div className="flex items-center">
-                <div>
+            <div className="relative w-full" data-dropdown>
+              <button
+                className="flex w-full items-center justify-between rounded-2xl border border-transparent px-2 py-1 text-left text-sm text-white hover:border-[#1a2446]"
+                onClick={() => setSidebarProfileMenuOpen((prev) => !prev)}
+              >
+                <div className="flex items-center gap-3">
                   {userImage ? (
                     <Image
                       className="inline-block h-9 w-9 rounded-full"
@@ -460,17 +464,36 @@ export default function AccountDashboard({
                       {userInitial}
                     </div>
                   )}
+                  <span className="text-sm font-semibold text-white">Account</span>
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-white">{userName}</p>
-                  <button
-                    onClick={handleSignOut}
-                    className="text-xs font-medium text-gray-400 group-hover:text-gray-300"
-                  >
-                    Sign out
-                  </button>
+                <span className="text-xs text-blue-200">▾</span>
+              </button>
+              {sidebarProfileMenuOpen && (
+                <div className="absolute bottom-full left-0 mb-3 w-56 rounded-2xl border border-[#1a2446] bg-[#0e1629] p-3 shadow-xl">
+                  <div className="mb-3">
+                    <p className="text-sm font-semibold text-white">{userName}</p>
+                    <p className="text-xs text-blue-200">{userEmail}</p>
+                  </div>
+                  <div className="flex flex-col gap-2 text-sm text-blue-100">
+                    <Link
+                      href="/settings"
+                      className="rounded-lg px-3 py-2 hover:bg-[#131d3a]"
+                      onClick={() => setSidebarProfileMenuOpen(false)}
+                    >
+                      Settings
+                    </Link>
+                    <button
+                      className="rounded-lg px-3 py-2 text-left hover:bg-[#131d3a]"
+                      onClick={() => {
+                        setSidebarProfileMenuOpen(false);
+                        handleSignOut();
+                      }}
+                    >
+                      Log out
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -488,28 +511,6 @@ export default function AccountDashboard({
                 <span className="ml-3 text-xl font-bold text-white">Heybassh</span>
               )}
             </div>
-            <button
-              type="button"
-              className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            >
-              <span className="sr-only">Collapse sidebar</span>
-              <svg
-                className={`h-6 w-6 transform transition-transform ${
-                  sidebarCollapsed ? 'rotate-180' : ''
-                }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
           </div>
           <div className="flex flex-1 flex-col overflow-y-auto pt-5">
             <nav className="flex-1 space-y-1 px-2">
@@ -517,9 +518,12 @@ export default function AccountDashboard({
             </nav>
           </div>
           <div className="flex flex-shrink-0 border-t border-gray-700 p-4">
-            <div className="group block w-full flex-shrink-0">
-              <div className="flex items-center">
-                <div>
+            <div className="relative w-full" data-dropdown>
+              <button
+                className="flex w-full items-center justify-between rounded-2xl border border-transparent px-2 py-1 text-left text-sm text-white hover:border-[#1a2446]"
+                onClick={() => setSidebarProfileMenuOpen((prev) => !prev)}
+              >
+                <div className="flex items-center gap-3">
                   {userImage ? (
                     <Image
                       className="inline-block h-9 w-9 rounded-full"
@@ -533,19 +537,36 @@ export default function AccountDashboard({
                       {userInitial}
                     </div>
                   )}
+                  {!sidebarCollapsed && <span className="text-sm font-semibold text-white">Account</span>}
                 </div>
-                {!sidebarCollapsed && (
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-white">{userName}</p>
-                    <button
-                      onClick={handleSignOut}
-                      className="text-xs font-medium text-gray-400 group-hover:text-gray-300"
+                <span className="text-xs text-blue-200">▾</span>
+              </button>
+              {sidebarProfileMenuOpen && (
+                <div className="absolute right-0 top-auto mt-3 w-56 rounded-2xl border border-[#1a2446] bg-[#0e1629] p-3 shadow-xl">
+                  <div className="mb-3">
+                    <p className="text-sm font-semibold text-white">{userName}</p>
+                    <p className="text-xs text-blue-200">{userEmail}</p>
+                  </div>
+                  <div className="flex flex-col gap-2 text-sm text-blue-100">
+                    <Link
+                      href="/settings"
+                      className="rounded-lg px-3 py-2 hover:bg-[#131d3a]"
+                      onClick={() => setSidebarProfileMenuOpen(false)}
                     >
-                      Sign out
+                      Settings
+                    </Link>
+                    <button
+                      className="rounded-lg px-3 py-2 text-left hover:bg-[#131d3a]"
+                      onClick={() => {
+                        setSidebarProfileMenuOpen(false);
+                        handleSignOut();
+                      }}
+                    >
+                      Log out
                     </button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -554,17 +575,30 @@ export default function AccountDashboard({
       {/* Main content */}
       <div className="flex flex-1 flex-col md:pl-64">
         <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-[#0f172a] shadow">
-          <button
-            type="button"
-            className="border-r border-gray-700 px-4 text-gray-400 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden"
-            onClick={() => setMenuOpen(true)}
-          >
-            <span className="sr-only">Open sidebar</span>
-            <MenuIcon />
-          </button>
-          <div className="flex flex-1 justify-between px-4">
-            <div className="flex flex-1">
-              <div className="flex w-full max-w-2xl items-center justify-center md:ml-6 md:max-w-xs">
+          <div className="flex flex-1 items-center justify-between px-4">
+            <div className="flex flex-1 items-center gap-3">
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-300 hover:bg-[#141c33] focus:outline-none focus:ring-2 focus:ring-indigo-500 md:hidden"
+                onClick={() => setMenuOpen(true)}
+              >
+                <span className="sr-only">Open navigation</span>
+                <MenuIcon />
+              </button>
+              <button
+                type="button"
+                className="hidden md:inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-300 hover:bg-[#141c33] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                onClick={() => setSidebarCollapsed((prev) => !prev)}
+                aria-pressed={sidebarCollapsed}
+              >
+                <span className="sr-only">Toggle navigation</span>
+                <MenuIcon />
+              </button>
+              <Link href={`/${accountId}/dashboard`} className="hidden items-center gap-2 md:flex">
+                <Image src="/heybasshlogo.png" alt="Heybassh" width={28} height={28} className="h-7 w-auto" />
+                {!sidebarCollapsed && <span className="text-sm font-semibold text-white">Heybassh</span>}
+              </Link>
+              <div className="flex w-full max-w-2xl items-center justify-center md:ml-4 md:max-w-xs">
                 <div className="relative w-full">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <SearchIcon />
