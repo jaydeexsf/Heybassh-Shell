@@ -2,62 +2,117 @@ import { Pill } from "./Pill";
 
 interface OverviewProps {
   companyName: string;
+  onNavigate: (view: string) => void;
+  onRequestSupport: () => void;
 }
 
-export function Overview({ companyName }: OverviewProps) {
+const overviewModules = [
+  {
+    id: "overview_customers",
+    title: "Customer Module",
+    description: "Contacts, companies, deals, products & more.",
+    view: "customers_contacts",
+  },
+  {
+    id: "overview_billing",
+    title: "Billing Lite Module",
+    description: "Quotes, invoices, Stripe/Woo sync.",
+    view: "billing",
+  },
+  {
+    id: "overview_service",
+    title: "Book a Service Module",
+    description: "Log a support request or feature task.",
+    view: "service",
+  },
+  {
+    id: "overview_tasks",
+    title: "Tasks Module",
+    description: "Teamwork-style lists and boards.",
+    view: "tasks",
+  },
+  {
+    id: "overview_hr",
+    title: "HR / People Module",
+    description: "Directory, leave, onboarding.",
+    view: "hr",
+  },
+  {
+    id: "overview_admin",
+    title: "IT / Admin Module",
+    description: "Assets, approvals, access requests.",
+    view: "admin",
+  },
+];
+
+const overviewStats = [
+  { id: "leads", label: "Leads this week", value: "128" },
+  { id: "closed", label: "Closed Won", value: "$12.4k" },
+  { id: "incidents", label: "Incidents", value: "0" },
+];
+
+export function Overview({ companyName, onNavigate, onRequestSupport }: OverviewProps) {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Welcome back, {companyName}!</h2>
-        <div className="flex space-x-2">
-          <Pill>Dashboard</Pill>
-          <Pill>Quick Actions</Pill>
+    <div className="grid gap-5">
+      <div className="card rounded-[32px] border-[#1f2c56] bg-gradient-to-r from-[#101b38] via-[#0c142a] to-[#060b1a] p-6 md:p-8">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <h3 className="text-2xl font-semibold text-white">Welcome, {companyName}</h3>
+              <Pill>Module</Pill>
+            </div>
+            <p className="mt-2 max-w-2xl text-sm text-blue-200">
+              Unified navigation, shared auth, and curated module slots so every workflow is a click away.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onRequestSupport}
+              className="btn btn-gold rounded-[26px] px-4 py-2 text-xs font-semibold"
+            >
+              Request Support
+            </button>
+            <button
+              onClick={() => onNavigate("customers_contacts")}
+              className="btn rounded-[26px] px-4 py-2 text-xs font-semibold"
+            >
+              Explore Modules
+            </button>
+          </div>
         </div>
       </div>
-      
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* Stats Cards */}
-        {[
-          { title: "Total Revenue", value: "$24,780", change: "+12.5%", trend: "up" },
-          { title: "Active Users", value: "1,429", change: "+8.2%", trend: "up" },
-          { title: "Tasks Completed", value: "87/124", change: "+5.1%", trend: "up" },
-        ].map((stat, index) => (
-          <div key={index} className="rounded-lg bg-[#1a2035] p-6 shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-400">{stat.title}</p>
-                <p className="mt-1 text-2xl font-bold text-white">{stat.value}</p>
-              </div>
-              <div className={`rounded-full p-2 ${stat.trend === 'up' ? 'bg-green-900/20 text-green-400' : 'bg-red-900/20 text-red-400'}`}>
-                {stat.change}
-              </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {overviewModules.map((module) => (
+          <div
+            key={module.id}
+            className="card rounded-[28px] border-[#1a2446]/80 bg-[#0c142a] p-5 shadow-[0_25px_45px_-35px_rgba(39,172,255,0.65)]"
+          >
+            <div className="flex items-center justify-between text-xs text-blue-200">
+              <span className="font-semibold text-white/80">{module.title.split(" ")[0]}</span>
+              <Pill>Module</Pill>
             </div>
+            <h4 className="mt-2 text-lg font-semibold text-white">{module.title}</h4>
+            <p className="mt-1 text-sm text-blue-200">{module.description}</p>
+            <button
+              onClick={() =>
+                module.view === "service" ? onRequestSupport() : onNavigate(module.view)
+              }
+              className="mt-4 inline-flex w-full items-center justify-center rounded-[26px] bg-[#2b9bff] px-4 py-2 text-sm font-semibold text-[#041226] transition hover:brightness-110"
+            >
+              Open
+            </button>
           </div>
         ))}
       </div>
 
-      {/* Recent Activity */}
-      <div className="rounded-lg bg-[#1a2035] p-6 shadow">
-        <h3 className="mb-4 text-lg font-semibold text-white">Recent Activity</h3>
-        <div className="space-y-4">
-          {[
-            { id: 1, user: "Alex Johnson", action: "created a new task", time: "2 min ago" },
-            { id: 2, user: "Maria Garcia", action: "updated the project timeline", time: "1 hour ago" },
-            { id: 3, user: "John Smith", action: "commented on the design", time: "3 hours ago" },
-          ].map((activity) => (
-            <div key={activity.id} className="flex items-start space-x-3">
-              <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-medium">
-                {activity.user.charAt(0)}
-              </div>
-              <div>
-                <p className="text-sm text-white">
-                  <span className="font-medium">{activity.user}</span> {activity.action}
-                </p>
-                <p className="text-xs text-gray-400">{activity.time}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {overviewStats.map((stat) => (
+          <div key={stat.id} className="card rounded-[28px] border-[#132044] bg-[#050b1c]">
+            <p className="text-xs uppercase tracking-wide text-blue-300">{stat.label}</p>
+            <p className="mt-2 text-2xl font-semibold text-white">{stat.value}</p>
+          </div>
+        ))}
       </div>
     </div>
   );
