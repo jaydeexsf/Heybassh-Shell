@@ -7,20 +7,31 @@ import Image from "next/image";
 import Link from "next/link";
 
 // Types and constants
-import { 
-  NavItem, 
-  Contact, 
-  Product, 
-  Task, 
-  Employee, 
+import {
+  NavItem,
+  Contact,
+  Product,
+  Task,
+  Employee,
   LeaveRequest,
+  Invoice,
+  Client,
+  Payment,
+  Quote,
+  Credit,
+  Project,
+  Vendor,
+  PurchaseOrder,
+  Expense,
+  Transaction,
+  FrontOfficeApp,
   defaultContacts,
   defaultProducts,
   defaultEmployees,
   defaultLeaveRequests,
   priorityOptions,
   statusOptions,
-  SEARCH_SELECTION_KEY
+  SEARCH_SELECTION_KEY,
 } from "./types";
 
 // Icons
@@ -57,17 +68,12 @@ import { Contacts } from "./components/Contacts";
 import { Products } from "./components/Products";
 import { Tasks } from "./components/Tasks";
 import { HRPeople } from "./components/HRPeople";
+import { Billing } from "./components/Billing";
+import { Reports } from "./components/Reports";
+import { Automate } from "./components/Automate";
+import { FrontOfficeApps } from "./components/FrontOfficeApps";
 import { Pill } from "./components/Pill";
 
-// Placeholder components for other tabs
-const Billing = () => <PlaceholderTab name="Billing" />;
-const Reports = () => <PlaceholderTab name="Reports" />;
-const Automate = () => <PlaceholderTab name="Automate" />;
-const Admin = () => <PlaceholderTab name="Admin" />;
-const Finance = () => <PlaceholderTab name="Finance" />;
-const Executive = () => <PlaceholderTab name="Executive" />;
-
-// Reusable placeholder component
 const PlaceholderTab = ({ name }: { name: string }) => (
   <div className="flex h-96 items-center justify-center rounded-lg border-2 border-dashed border-gray-700">
     <div className="text-center">
@@ -127,6 +133,17 @@ export default function AccountDashboard({
   const [tasks, setTasks] = useState<Task[]>([]);
   const [employees, setEmployees] = useState<Employee[]>(defaultEmployees);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(defaultLeaveRequests);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [credits, setCredits] = useState<Credit[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [frontOfficeApps, setFrontOfficeApps] = useState<FrontOfficeApp[]>([]);
   
   // Search and navigation state
   const [searchQuery, setSearchQuery] = useState("");
@@ -145,7 +162,7 @@ export default function AccountDashboard({
     setView(newView);
     const path = viewToPath(newView);
     if (path) {
-      router.push(`/app/${path}`);
+      router.push(`/${accountId}/${path}`);
     }
     setMenuOpen(false);
   };
@@ -229,6 +246,50 @@ export default function AccountDashboard({
     setLeaveRequests([...leaveRequests, newLeaveRequest]);
   };
 
+  const handleAddInvoice = (invoice: Omit<Invoice, 'id'>) => {
+    setInvoices((prev) => [...prev, { ...invoice, id: `INV-${Date.now()}` }]);
+  };
+
+  const handleAddClient = (client: Omit<Client, 'id'>) => {
+    setClients((prev) => [...prev, { ...client, id: `CL-${Date.now()}` }]);
+  };
+
+  const handleAddPayment = (payment: Omit<Payment, 'id'>) => {
+    setPayments((prev) => [...prev, { ...payment, id: `PAY-${Date.now()}` }]);
+  };
+
+  const handleAddQuote = (quote: Omit<Quote, 'id'>) => {
+    setQuotes((prev) => [...prev, { ...quote, id: `QUO-${Date.now()}` }]);
+  };
+
+  const handleAddCredit = (credit: Omit<Credit, 'id'>) => {
+    setCredits((prev) => [...prev, { ...credit, id: `CR-${Date.now()}` }]);
+  };
+
+  const handleAddProject = (project: Omit<Project, 'id'>) => {
+    setProjects((prev) => [...prev, { ...project, id: `PRJ-${Date.now()}` }]);
+  };
+
+  const handleAddVendor = (vendor: Omit<Vendor, 'id'>) => {
+    setVendors((prev) => [...prev, { ...vendor, id: `VEN-${Date.now()}` }]);
+  };
+
+  const handleAddPurchaseOrder = (po: Omit<PurchaseOrder, 'id'>) => {
+    setPurchaseOrders((prev) => [...prev, { ...po, id: `PO-${Date.now()}` }]);
+  };
+
+  const handleAddExpense = (expense: Omit<Expense, 'id'>) => {
+    setExpenses((prev) => [...prev, { ...expense, id: `EXP-${Date.now()}` }]);
+  };
+
+  const handleAddTransaction = (transaction: Omit<Transaction, 'id'>) => {
+    setTransactions((prev) => [...prev, { ...transaction, id: `TRX-${Date.now()}` }]);
+  };
+
+  const handleAddFrontOfficeApp = (app: Omit<FrontOfficeApp, 'id'>) => {
+    setFrontOfficeApps((prev) => [...prev, { ...app, id: `APP-${Date.now()}` }]);
+  };
+
   // Handle updating leave request status
   const handleUpdateLeaveStatus = (id: string, status: LeaveRequest['status']) => {
     setLeaveRequests(leaveRequests.map(request => 
@@ -239,15 +300,15 @@ export default function AccountDashboard({
   // Render the appropriate view based on the current view state
   const renderView = () => {
     switch (view) {
-      case 'overview':
-        return <Overview companyName={companyName} />;
-      case 'customers_contacts':
-        return <Contacts contacts={contacts} onAddContact={handleAddContact} />;
-      case 'products_listing':
-        return <Products products={products} onAddProduct={handleAddProduct} />;
-      case 'tasks':
-        return <Tasks tasks={tasks} onAddTask={handleAddTask} employees={employees} />;
-      case 'hr':
+      case "overview":
+        return <Overview companyName={companyName} />
+      case "customers_contacts":
+        return <Contacts contacts={contacts} onAddContact={handleAddContact} />
+      case "products_listing":
+        return <Products products={products} onAddProduct={handleAddProduct} />
+      case "tasks":
+        return <Tasks tasks={tasks} onAddTask={handleAddTask} employees={employees} />
+      case "hr":
         return (
           <HRPeople
             employees={employees}
@@ -256,30 +317,54 @@ export default function AccountDashboard({
             onAddLeaveRequest={handleAddLeaveRequest}
             onUpdateLeaveStatus={handleUpdateLeaveStatus}
           />
-        );
-      case 'billing':
-        return <Billing />;
-      case 'reports':
-        return <Reports />;
-      case 'automate':
-        return <Automate />;
-      case 'admin':
-        return <Admin />;
-      case 'finance':
-        return <Finance />;
-      case 'executive':
-        return <Executive />;
-      default:
+        )
+      case "billing":
         return (
-          <div className="flex h-64 items-center justify-center">
-            <div className="text-center">
-              <h3 className="text-lg font-medium text-white">Page Not Found</h3>
-              <p className="mt-1 text-gray-400">The requested page does not exist.</p>
-            </div>
-          </div>
-        );
+          <Billing
+            invoices={invoices}
+            clients={clients}
+            payments={payments}
+            quotes={quotes}
+            credits={credits}
+            projects={projects}
+            vendors={vendors}
+            purchaseOrders={purchaseOrders}
+            expenses={expenses}
+            transactions={transactions}
+            onAddInvoice={handleAddInvoice}
+            onAddClient={handleAddClient}
+            onAddPayment={handleAddPayment}
+            onAddQuote={handleAddQuote}
+            onAddCredit={handleAddCredit}
+            onAddProject={handleAddProject}
+            onAddVendor={handleAddVendor}
+            onAddPurchaseOrder={handleAddPurchaseOrder}
+            onAddExpense={handleAddExpense}
+            onAddTransaction={handleAddTransaction}
+          />
+        )
+      case "reports":
+        return <Reports />
+      case "automate":
+        return <Automate />
+      case "front_office":
+      case "front_office_website":
+      case "front_office_portal":
+      case "front_office_mobile":
+      case "front_office_live_chat":
+      case "front_office_help_desk":
+      case "front_office_survey":
+        return <FrontOfficeApps apps={frontOfficeApps} onAddApp={handleAddFrontOfficeApp} />
+      case "admin":
+        return <PlaceholderTab name="Admin" />
+      case "finance":
+        return <PlaceholderTab name="Finance" />
+      case "executive":
+        return <PlaceholderTab name="Executive" />
+      default:
+        return <PlaceholderTab name={findNavLabel(navigation, view)} />
     }
-  };
+  }
 
   // Render navigation items
   const renderNavItems = (items: NavItem[], level = 0) => {
