@@ -2,13 +2,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getToken } from "next-auth/jwt"
 
-const authSecret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET
+const authSecret = (process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET) as string
 
 export default async function middleware(req: NextRequest) {
-  if (!authSecret) {
-    throw new Error("AUTH_SECRET is not configured")
-  }
-
   const url = req.nextUrl
   const path = url.pathname
 
@@ -29,7 +25,8 @@ export default async function middleware(req: NextRequest) {
   // 2) Protect account-scoped dashboard routes and enforce correct tenant in URL
   const isAccountScoped = /^\/[^/]+\/dashboard(\/.*)?$/.test(path)
   if (isAccountScoped) {
-    if (!token) return NextResponse.redirect(new URL("/", url.origin))
+    // If there is no token, allow the request through and let the route handle auth
+    if (!token) return NextResponse.next()
     const accId = sessionUser?.account_id
     const pathAccId = path.split("/")[1]
     if (accId && pathAccId !== accId) {
