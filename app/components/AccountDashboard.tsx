@@ -14,6 +14,7 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline"
 import logo from "../../Images/heybasshlogo.png"
+import { Contacts } from "./dashboard/components/Contacts"
 
 type NavChild = { id: string; label: string }
 type NavItem = {
@@ -371,15 +372,11 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const [sidebarProfileMenuOpen, setSidebarProfileMenuOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [contacts, setContacts] = useState<Contact[]>(defaultContacts)
-  const [contactSearchTerm, setContactSearchTerm] = useState("")
-  const [contactSelectionMode, setContactSelectionMode] = useState(false)
-  const [showAddContactForm, setShowAddContactForm] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchPreviewOpen, setSearchPreviewOpen] = useState(false)
   const [searchPreviewSelection, setSearchPreviewSelection] = useState<string | null>(null)
   const [searchTransitioning, setSearchTransitioning] = useState(false)
   const searchLoaderTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [newContact, setNewContact] = useState({ name: "", email: "", phone: "", company: "" })
   const [products, setProducts] = useState<Product[]>(defaultProducts)
   const [productCategory, setProductCategory] = useState("All")
   const [productSearch, setProductSearch] = useState("")
@@ -411,12 +408,6 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const userImage = typeof session?.user?.image === "string" ? session.user.image : null
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U"
 
-  const contactActionButtons = [
-    { label: "Contact Owner", icon: UserCircleIcon },
-    { label: "Created Date", icon: CalendarDaysIcon },
-    { label: "Activity", icon: ChartBarIcon },
-    { label: "Status", icon: CheckCircleIcon },
-  ]
 
   // Sync view when initialViewKey changes
   useEffect(() => {
@@ -478,7 +469,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
 
   const activeLabel = useMemo(() => findNavLabel(navigation, view), [view])
   const filteredContacts = useMemo(() => {
-    const rawQuery = (contactSearchTerm || searchQuery).trim()
+    const rawQuery = searchQuery.trim()
     if (!rawQuery) return contacts
     const q = rawQuery.toLowerCase()
     return contacts.filter((contact) => {
@@ -488,7 +479,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
       )
       return matchesNameTokens || matchesOtherFields
     })
-  }, [contacts, contactSearchTerm, searchQuery])
+  }, [contacts, searchQuery])
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -549,15 +540,11 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   // ... (rest of the code remains the same)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ customers: true, products: true, front_office: false })
 
-  function handleAddContact(event: React.FormEvent<HTMLFormElement>) {
-    // ... (rest of the code remains the same)
-    event.preventDefault()
-    if (!newContact.name || !newContact.email) return
+  function handleAddContact(contact: Omit<Contact, 'id'>) {
+    if (!contact.name || !contact.email) return
     const numericPart = contacts.length ? parseInt(contacts[contacts.length - 1].id.split("-")[1] ?? "1000", 10) : 1000
     const nextId = `C-${String(numericPart + 1).padStart(4, "0")}`
-    setContacts([...contacts, { id: nextId, ...newContact }])
-    setNewContact({ name: "", email: "", phone: "", company: "" })
-    setShowAddContactForm(false)
+    setContacts([...contacts, { id: nextId, ...contact }])
   }
 
   function handleAddProduct(event: React.FormEvent<HTMLFormElement>) {
@@ -1067,162 +1054,8 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
               </div>
             </div>
           ) : view === "customers_contacts" ? (
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-              <div className="card rounded-[32px] bg-[#070d20] p-6">
-                <div className="mb-6 space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-semibold text-white">Contacts</h2>
-                        <Pill>Live Demo</Pill>
-                      </div>
-                      <p className="mt-1 text-sm text-blue-200">Lightweight contacts view for demo</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:space-x-4">
-                      <label className="flex items-center space-x-2 text-sm text-blue-200">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-indigo-600 focus:ring-indigo-500"
-                          checked={contactSelectionMode}
-                          onChange={(event) => setContactSelectionMode(event.target.checked)}
-                        />
-                        <span>Select</span>
-                      </label>
-                      {!contactSelectionMode ? (
-                        <div className="relative w-full sm:max-w-xs">
-                          <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                          <input
-                            type="text"
-                            placeholder="Search contacts..."
-                            className="w-full rounded-full border border-gray-700 bg-[#1a2035] px-4 py-2 pl-10 pr-12 text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            value={contactSearchTerm}
-                            onChange={(event) => setContactSearchTerm(event.target.value)}
-                          />
-                          <button
-                            type="button"
-                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:text-white focus:outline-none"
-                          >
-                            <FunnelIcon className="h-5 w-5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {contactActionButtons.map(({ label, icon: Icon }) => (
-                            <button
-                              key={label}
-                              type="button"
-                              className="inline-flex items-center rounded-full border border-gray-700 bg-gray-800/80 px-3 py-1 text-xs font-medium text-gray-200 hover:border-indigo-500 hover:text-white"
-                            >
-                              <Icon className="mr-1 h-4 w-4" />
-                              {label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setShowAddContactForm((prev) => !prev)}
-                      className="rounded-[26px] bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-[#070d20]"
-                    >
-                      {showAddContactForm ? "Cancel" : "Add Contact"}
-                    </button>
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full rounded-[26px] border border-[#121a36] bg-[#09112a]">
-                    <thead>
-                      <tr className="border-b border-[#1a2446] text-left text-xs font-semibold uppercase tracking-wide text-blue-300">
-                        <th className="px-4 py-3">ID</th>
-                        <th className="px-4 py-3">Name</th>
-                        <th className="px-4 py-3">Email</th>
-                        <th className="px-4 py-3">Phone</th>
-                        <th className="px-4 py-3">Company</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredContacts.map((contact) => {
-                        const highlighted = contact.id === searchPreviewSelection
-                        return (
-                          <tr
-                            key={contact.id}
-                            className={`border-b border-[#1a2446]/40 last:border-b-0 transition-colors ${
-                              highlighted ? "bg-[#132045] shadow-[0_0_0_1px_rgba(126,208,255,0.4)]" : ""
-                            }`}
-                          >
-                            <td className="px-4 py-3 text-sm text-blue-300">{contact.id}</td>
-                            <td className="px-4 py-3 text-sm font-semibold text-white">{contact.name}</td>
-                            <td className="px-4 py-3 text-sm text-blue-200">{contact.email}</td>
-                            <td className="px-4 py-3 text-sm text-blue-200">{contact.phone}</td>
-                            <td className="px-4 py-3 text-sm text-blue-200">{contact.company}</td>
-                          </tr>
-                        )
-                      })}
-                      {!filteredContacts.length && (
-                        <tr>
-                          <td colSpan={5} className="px-4 py-6 text-center text-sm text-blue-300">
-                            {(contactSearchTerm || searchQuery).trim()
-                              ? `No contacts found for “${(contactSearchTerm || searchQuery).trim()}”.`
-                              : "No contacts available."}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              {showAddContactForm && (
-                <div className="card rounded-[32px] bg-[#070d20] p-6">
-                  <h2 className="text-2xl font-semibold text-white">Add Contact</h2>
-                  <form className="mt-6 space-y-4" onSubmit={handleAddContact}>
-                    <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
-                      <input
-                        type="text"
-                        value={newContact.name}
-                        onChange={(event) => setNewContact((prev) => ({ ...prev, name: event.target.value }))}
-                        placeholder="Full name"
-                        className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
-                      />
-                    </div>
-                    <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
-                      <input
-                        type="email"
-                        value={newContact.email}
-                        onChange={(event) => setNewContact((prev) => ({ ...prev, email: event.target.value }))}
-                        placeholder="Email"
-                        className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
-                      />
-                    </div>
-                    <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
-                      <input
-                        type="text"
-                        value={newContact.phone}
-                        onChange={(event) => setNewContact((prev) => ({ ...prev, phone: event.target.value }))}
-                        placeholder="Phone"
-                        className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
-                      />
-                    </div>
-                    <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2">
-                      <input
-                        type="text"
-                        value={newContact.company}
-                        onChange={(event) => setNewContact((prev) => ({ ...prev, company: event.target.value }))}
-                        placeholder="Company"
-                        className="w-full bg-transparent text-sm text-blue-100 placeholder-blue-300/70 focus:outline-none"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="w-full rounded-[28px] bg-gradient-to-r from-[#31b0ff] to-[#66d6ff] py-2 text-sm font-semibold text-[#041226] transition hover:brightness-110 disabled:opacity-50"
-                      disabled={!newContact.name || !newContact.email}
-                    >
-                      Save
-                    </button>
-                  </form>
-                  <p className="mt-4 text-xs text-blue-300">Dummy data only. Data is stored locally in the browser.</p>
-                </div>
-              )}
+            <div className="space-y-6">
+              <Contacts contacts={contacts} onAddContact={handleAddContact} />
             </div>
           ) : view === "customers_companies" ? (
             <div className="card rounded-[32px] bg-[#0e1629]">
