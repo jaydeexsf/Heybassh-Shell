@@ -17,10 +17,12 @@ interface ReportFilter {
   customEndDate?: string;
 }
 
-type ReportData = {
+type ReportDatum = {
   name: string;
   [key: string]: string | number;
-}[];
+};
+
+type ReportData = ReportDatum[];
 
 export function Reports() {
   const [activeTab, setActiveTab] = useState<ReportType>('sales');
@@ -42,7 +44,7 @@ export function Reports() {
     { name: 'Jul', sales: 3490, revenue: 4300, profit: 2100 },
   ];
 
-  const productData = [
+  const productData: ReportData = [
     { name: 'Product A', value: 400 },
     { name: 'Product B', value: 300 },
     { name: 'Product C', value: 300 },
@@ -52,7 +54,7 @@ export function Reports() {
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   const renderChart = () => {
-    const data = activeTab === 'products' ? productData : salesData;
+    const data: ReportData = activeTab === 'products' ? productData : salesData;
     
     switch (chartType) {
       case 'bar':
