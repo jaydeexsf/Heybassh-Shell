@@ -19,7 +19,8 @@ export default async function middleware(req: NextRequest) {
       const tail = path.length > 10 ? path.slice("/dashboard".length) : ""
       return NextResponse.redirect(new URL(`/${accId}/dashboard${tail}`, url.origin))
     }
-    return NextResponse.redirect(new URL("/", url.origin))
+    // If user has no account_id yet, allow access to the generic dashboard route
+    return NextResponse.next()
   }
 
   // 2) Protect account-scoped dashboard routes and enforce correct tenant in URL
