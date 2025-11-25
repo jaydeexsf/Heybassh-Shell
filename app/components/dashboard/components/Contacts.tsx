@@ -18,6 +18,7 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [newContact, setNewContact] = useState<Omit<Contact, 'id'>>({ 
     name: "", 
     email: "", 
@@ -57,7 +58,11 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
               type="checkbox"
               className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-indigo-600 focus:ring-indigo-500"
               checked={isSelectionMode}
-              onChange={(e) => setIsSelectionMode(e.target.checked)}
+              onChange={(e) => {
+                const enabled = e.target.checked;
+                setIsSelectionMode(enabled);
+                setSelectedIds(enabled ? contacts.map((contact) => contact.id) : []);
+              }}
             />
             <span>Select</span>
           </label>
@@ -180,6 +185,11 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
         <table className="min-w-full divide-y divide-gray-700">
           <thead className="bg-[#1a2035]">
             <tr>
+              {isSelectionMode && (
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
+                  Select
+                </th>
+              )}
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-300">
                 Name
               </th>
@@ -198,9 +208,27 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700 bg-[#1a2035]">
-            {filteredContacts.map((contact) => (
-              <tr key={contact.id} className="hover:bg-gray-800">
-                <td className="whitespace-nowrap px-6 py-4">
+            {filteredContacts.map((contact) => {
+              const isSelected = selectedIds.includes(contact.id);
+              return (
+                <tr key={contact.id} className="hover:bg-gray-800">
+                  {isSelectionMode && (
+                    <td className="whitespace-nowrap px-4 py-4">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-gray-600 bg-gray-800 text-indigo-600 focus:ring-indigo-500"
+                        checked={isSelected}
+                        onChange={(event) => {
+                          if (event.target.checked) {
+                            setSelectedIds((prev) => [...prev, contact.id]);
+                          } else {
+                            setSelectedIds((prev) => prev.filter((id) => id !== contact.id));
+                          }
+                        }}
+                      />
+                    </td>
+                  )}
+                  <td className="whitespace-nowrap px-6 py-4">
                   <div className="flex items-center">
                     <div className="h-10 w-10 flex-shrink-0">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-600 text-sm font-medium text-white">
@@ -221,11 +249,12 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
                 <td className="whitespace-nowrap px-6 py-4">
                   <div className="text-sm text-gray-300">{contact.company}</div>
                 </td>
-                <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                  <button className="text-indigo-400 hover:text-indigo-300">Edit</button>
-                </td>
-              </tr>
-            ))}
+                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                    <button className="text-indigo-400 hover:text-indigo-300">Edit</button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
