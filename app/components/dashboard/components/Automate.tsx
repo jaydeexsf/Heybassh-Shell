@@ -941,7 +941,8 @@ export function Automate() {
                 <PrimaryButton
                   type="button"
                   onClick={() => {
-                    const updatedWorkflow = {
+                    if (!selectedWorkflow) return;
+                    const updatedWorkflow: Workflow = {
                       ...selectedWorkflow,
                       status: 'active',
                       updated: new Date().toISOString(),
