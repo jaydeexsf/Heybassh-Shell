@@ -339,7 +339,7 @@ const renderFilterButton = (
 
       <div className="space-y-3 flex justify-between">
         {hasSelectedContacts ? (
-          <div className="flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-[6px]">
+          <div className="flex w-full flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-[6px]">
             <div className="flex flex-wrap items-center gap-4">
               <span className="text-sm text-blue-200">
                 {selectedContacts.size} contact{selectedContacts.size !== 1 ? "s" : ""} selected
@@ -394,8 +394,8 @@ const renderFilterButton = (
               <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-300/60" />
               <input
                 type="text"
-                placeholder="Search contacts, owners, or companies"
-                className="w-full rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 pl-12 pr-12 text-sm text-blue-200 placeholder-blue-300/60 focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff]"
+                placeholder="Search contacts"
+                className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 pl-12 pr-12 text-sm text-blue-200 placeholder-blue-300/60 focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff]"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
@@ -567,27 +567,8 @@ const renderFilterButton = (
                   </button>
                 </div>
               </th>
-              <th scope="col" className="px-6 py-3 text-left">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Owner</span>
-                  <SortIcon className="h-4 w-4 text-blue-300/60" />
-                  <button className="text-blue-300/60 transition hover:text-blue-300">
-                    <EllipsisVerticalIcon className="h-4 w-4" />
-                  </button>
-                </div>
-              </th>
-              <th scope="col" className="px-6 py-3 text-left">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Created</span>
-                  <SortIcon className="h-4 w-4 text-blue-300/60" />
-                </div>
-              </th>
-              <th scope="col" className="px-6 py-3 text-left">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Activity</span>
-                  <SortIcon className="h-4 w-4 text-blue-300/60" />
-                </div>
-              </th>
+              {/* Owner, Created, and Activity columns are intentionally hidden from the table UI
+                  but are still available for filtering via the controls above. */}
               <th scope="col" className="px-6 py-3 text-left">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Status</span>
@@ -599,7 +580,7 @@ const renderFilterButton = (
           <tbody className="divide-y divide-[#1a2446] bg-[#0c142a]">
             {isLoading ? (
               <tr>
-                <td colSpan={8} className="px-6 py-8 text-center text-sm text-blue-300">
+                <td colSpan={5} className="px-6 py-8 text-center text-sm text-blue-300">
                   <span className="inline-flex items-center justify-center gap-2 text-blue-200">
                     <SpinnerIcon className="h-5 w-5 text-blue-300" />
                     Loading contacts…
@@ -642,11 +623,6 @@ const renderFilterButton = (
                       <div className="text-sm text-blue-200">{contact.phone || "--"}</div>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <div className="text-sm text-blue-200">{contact.owner || "Unassigned"}</div>
-                    </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-blue-200">{formatDate(contact.createdAt)}</td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-blue-200">{formatDate(contact.lastActivity)}</td>
-                    <td className="whitespace-nowrap px-6 py-4">
                       <span
                         className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
                           statusColors[contact.status] ?? "border-[#1a2446] text-blue-100"
@@ -660,7 +636,7 @@ const renderFilterButton = (
               })
             ) : (
               <tr>
-                <td colSpan={8} className="px-6 py-8 text-center text-sm text-blue-300">
+                <td colSpan={5} className="px-6 py-8 text-center text-sm text-blue-300">
                   {searchTerm ? `No contacts found for "${searchTerm}".` : "No contacts yet. Add one to get started."}
                 </td>
               </tr>
