@@ -339,7 +339,7 @@ const renderFilterButton = (
 
       <div className="space-y-3">
         {hasSelectedContacts ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-[6px]">
+          <div className="flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-[6px]">
             <div className="flex flex-wrap items-center gap-4">
               <span className="text-sm text-blue-200">
                 {selectedContacts.size} contact{selectedContacts.size !== 1 ? "s" : ""} selected
@@ -390,7 +390,7 @@ const renderFilterButton = (
           </div>
         ) : (
           <>
-            <div className="relative flex-1 max-w-xl">
+            <div className="relative w-full max-w-2xl">
               <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-300/60" />
               <input
                 type="text"
@@ -401,7 +401,7 @@ const renderFilterButton = (
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-2" ref={inlineFiltersRef}>
+            <div className="flex w-full max-w-4xl flex-wrap items-center gap-2" ref={inlineFiltersRef}>
               {renderFilterButton(
                 "owner",
                 "Contact Owner",
