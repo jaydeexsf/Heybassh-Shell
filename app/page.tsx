@@ -271,6 +271,9 @@ function HomeInner() {
 
       if (!response.ok || !data.success) {
         console.error("[CLIENT] Email sending failed:", data)
+        if (data.errorDetails) {
+          console.error("[CLIENT] Detailed email error:", data.errorDetails)
+        }
         
         // Special handling for SMTP not configured - show reset URL
         if (data.smtpConfigured === false && data.resetUrl) {

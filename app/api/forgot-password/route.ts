@@ -10,6 +10,42 @@ const schema = z.object({
   email: z.string().email()
 })
 
+function normalizeEmailError(error: unknown) {
+  if (error instanceof Error) {
+    const code = (error as any)?.code || error.name || "UNKNOWN"
+    return {
+      message: error.message || "Unknown error",
+      code,
+      details: {
+        name: error.name,
+        message: error.message,
+        code: (error as any)?.code,
+        statusCode: (error as any)?.statusCode,
+        cause: (error as any)?.cause,
+        stack: error.stack,
+      },
+    }
+  }
+
+  if (error && typeof error === "object") {
+    const record = error as Record<string, unknown>
+    const message =
+      typeof record.message === "string"
+        ? record.message
+        : JSON.stringify(record, null, 2)
+    const code =
+      typeof record.code === "string"
+        ? record.code
+        : typeof record.name === "string"
+          ? record.name
+          : "UNKNOWN"
+    return { message, code, details: record }
+  }
+
+  const fallback = typeof error === "string" ? error : "Unknown error"
+  return { message: fallback, code: "UNKNOWN", details: { raw: error } }
+}
+
 export async function POST(req: Request) {
   try {
     console.log("=".repeat(60))
@@ -111,10 +147,10 @@ export async function POST(req: Request) {
     } catch (emailError) {
       console.error(`[FORGOT PASSWORD] Email sending failed!`)
       console.error(`   Error:`, emailError)
-      const errorMessage = emailError instanceof Error ? emailError.message : "Unknown error"
-      const errorCode = (emailError as any)?.code || "UNKNOWN"
+      const { message: errorMessage, code: errorCode, details } = normalizeEmailError(emailError)
       const isConfigError =
-        errorMessage.includes("RESEND_API_KEY") || errorMessage.includes("sender email")
+        errorMessage.toLowerCase().includes("resend_api_key") ||
+        errorMessage.toLowerCase().includes("sender email")
       console.log("=".repeat(60))
 
       return NextResponse.json(
@@ -124,6 +160,7 @@ export async function POST(req: Request) {
           message: `Failed to send password reset email: ${errorMessage}`,
           error: errorMessage,
           errorCode,
+          errorDetails: details,
           smtpConfigured: isConfigError ? false : undefined,
           resetUrl: isConfigError ? resetUrl : undefined,
         },

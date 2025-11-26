@@ -27,6 +27,25 @@ function getClient(): Resend {
   return client
 }
 
+function wrapResendError(error: unknown): Error {
+  if (!error || typeof error !== "object") {
+    return new Error(typeof error === "string" ? error : "Failed to send email via Resend")
+  }
+
+  const message =
+    typeof (error as any).message === "string"
+      ? (error as any).message
+      : "Failed to send email via Resend"
+
+  const wrapped = new Error(message)
+  ;(wrapped as any).code =
+    (error as any).code || (error as any).name || (error as any).statusCode || "RESEND_ERROR"
+  ;(wrapped as any).statusCode = (error as any).statusCode
+  ;(wrapped as any).cause = error
+  ;(wrapped as any).details = error
+  return wrapped
+}
+
 export async function sendEmail({ from, ...rest }: SendEmailInput) {
   const sender = from ?? defaultFromEmail
   if (!sender) {
@@ -39,7 +58,7 @@ export async function sendEmail({ from, ...rest }: SendEmailInput) {
   })
 
   if (error) {
-    throw error
+    throw wrapResendError(error)
   }
 }
 
