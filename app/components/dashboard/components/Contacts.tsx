@@ -331,58 +331,6 @@ const renderFilterButton = (
         </PrimaryButton>
       </div>
 
-      {hasSelectedContacts && (
-        <div className="flex flex-col gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-[6px] lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-4">
-            <span className="text-sm text-blue-200">
-              {selectedContacts.size} contact{selectedContacts.size !== 1 ? "s" : ""} selected
-            </span>
-            {selectedContacts.size < filteredContacts.length && (
-              <button onClick={handleSelectAll} className="text-sm text-[#7ed0ff] transition-colors hover:text-white">
-                Select all {filteredContacts.length} contacts
-              </button>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative" ref={moreDropdownRef}>
-              <button
-                onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
-                className="inline-flex items-center gap-1.5 rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1.5 text-xs text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white"
-              >
-                More
-                <svg
-                  className={`h-3 w-3 transition-transform ${moreDropdownOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {moreDropdownOpen && (
-                <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-[20px] border border-[#1a2446] bg-[#0e1629] shadow-lg">
-                  <button
-                    onClick={handleEditSelected}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-blue-200 transition-colors hover:bg-[#121c3d]"
-                  >
-                    <PencilIcon className="h-4 w-4" />
-                    Edit
-                  </button>
-                  <button
-                    onClick={handleDeleteSelected}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-rose-400 transition-colors hover:bg-[#121c3d]"
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                    Delete
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {errorMessage && (
         <div className="rounded-[20px] border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
           {errorMessage}
@@ -390,139 +338,193 @@ const renderFilterButton = (
       )}
 
       <div className="space-y-3">
-        <div className="relative flex-1 max-w-xl">
-          <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-300/60" />
-          <input
-            type="text"
-            placeholder="Search contacts, owners, or companies"
-            className="w-full rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 pl-12 pr-12 text-sm text-blue-200 placeholder-blue-300/60 focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff]"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2" ref={inlineFiltersRef}>
-          {renderFilterButton(
-            "owner",
-            "Contact Owner",
-            <UserCircleIcon className="h-4 w-4" />,
-            <select
-              className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
-              value={filters.owner}
-              onChange={(event) => handleFilterChange("owner", event.target.value)}
-            >
-              <option value="all">All owners</option>
-              <option value="unassigned">Unassigned</option>
-              {ownerOptions.map((owner) => (
-                <option key={owner} value={owner}>
-                  {owner}
-                </option>
-              ))}
-            </select>,
-            filters.owner !== "all",
-            () => setActiveFilterPanel(null),
-          )}
-          {renderFilterButton(
-            "created",
-            "Created Date",
-            <CalendarDaysIcon className="h-4 w-4" />,
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-blue-300/70">From</p>
-                <input
-                  type="date"
-                  className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
-                  value={filters.createdFrom}
-                  onChange={(event) => handleFilterChange("createdFrom", event.target.value)}
-                />
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-blue-300/70">To</p>
-                <input
-                  type="date"
-                  className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
-                  value={filters.createdTo}
-                  onChange={(event) => handleFilterChange("createdTo", event.target.value)}
-                />
-              </div>
-            </div>,
-            Boolean(filters.createdFrom || filters.createdTo),
-            () => setActiveFilterPanel(null),
-          )}
-          {renderFilterButton(
-            "activity",
-            "Activity",
-            <ChartBarIcon className="h-4 w-4" />,
-            <div className="grid gap-2 sm:grid-cols-2">
-              {activityFilters.map((activity) => (
-                <label
-                  key={activity.value}
-                  className={`cursor-pointer rounded-[18px] border px-3 py-2 text-xs font-medium transition ${
-                    filters.activity === activity.value
-                      ? "border-[#2b9bff] bg-[#142044] text-white"
-                      : "border-[#1a2446] bg-[#0e1629] text-blue-100"
-                  }`}
+        {hasSelectedContacts ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-[6px]">
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="text-sm text-blue-200">
+                {selectedContacts.size} contact{selectedContacts.size !== 1 ? "s" : ""} selected
+              </span>
+              {selectedContacts.size < filteredContacts.length && (
+                <button onClick={handleSelectAll} className="text-sm text-[#7ed0ff] transition-colors hover:text-white">
+                  Select all {filteredContacts.length} contacts
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative" ref={moreDropdownRef}>
+                <button
+                  onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
+                  className="inline-flex items-center gap-1.5 rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1.5 text-xs text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white"
                 >
-                  <input
-                    type="radio"
-                    name="activity-filter"
-                    value={activity.value}
-                    className="sr-only"
-                    checked={filters.activity === activity.value}
-                    onChange={(event) => handleFilterChange("activity", event.target.value)}
-                  />
-                  {activity.label}
-                </label>
-              ))}
-            </div>,
-            filters.activity !== "all",
-            () => setActiveFilterPanel(null),
-          )}
-          {renderFilterButton(
-            "status",
-            "Status",
-            <CheckCircleIcon className="h-4 w-4" />,
-            <div className="flex flex-wrap gap-2">
+                  More
+                  <svg
+                    className={`h-3 w-3 transition-transform ${moreDropdownOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {moreDropdownOpen && (
+                  <div className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-[20px] border border-[#1a2446] bg-[#0e1629] shadow-lg">
+                    <button
+                      onClick={handleEditSelected}
+                      className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-blue-200 transition-colors hover:bg-[#121c3d]"
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={handleDeleteSelected}
+                      className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-rose-400 transition-colors hover:bg-[#121c3d]"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="relative flex-1 max-w-xl">
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-300/60" />
+              <input
+                type="text"
+                placeholder="Search contacts, owners, or companies"
+                className="w-full rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 pl-12 pr-12 text-sm text-blue-200 placeholder-blue-300/60 focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff]"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2" ref={inlineFiltersRef}>
+              {renderFilterButton(
+                "owner",
+                "Contact Owner",
+                <UserCircleIcon className="h-4 w-4" />,
+                <select
+                  className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
+                  value={filters.owner}
+                  onChange={(event) => handleFilterChange("owner", event.target.value)}
+                >
+                  <option value="all">All owners</option>
+                  <option value="unassigned">Unassigned</option>
+                  {ownerOptions.map((owner) => (
+                    <option key={owner} value={owner}>
+                      {owner}
+                    </option>
+                  ))}
+                </select>,
+                filters.owner !== "all",
+                () => setActiveFilterPanel(null),
+              )}
+              {renderFilterButton(
+                "created",
+                "Created Date",
+                <CalendarDaysIcon className="h-4 w-4" />,
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-300/70">From</p>
+                    <input
+                      type="date"
+                      className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
+                      value={filters.createdFrom}
+                      onChange={(event) => handleFilterChange("createdFrom", event.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-300/70">To</p>
+                    <input
+                      type="date"
+                      className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
+                      value={filters.createdTo}
+                      onChange={(event) => handleFilterChange("createdTo", event.target.value)}
+                    />
+                  </div>
+                </div>,
+                Boolean(filters.createdFrom || filters.createdTo),
+                () => setActiveFilterPanel(null),
+              )}
+              {renderFilterButton(
+                "activity",
+                "Activity",
+                <ChartBarIcon className="h-4 w-4" />,
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {activityFilters.map((activity) => (
+                    <label
+                      key={activity.value}
+                      className={`cursor-pointer rounded-[18px] border px-3 py-2 text-xs font-medium transition ${
+                        filters.activity === activity.value
+                          ? "border-[#2b9bff] bg-[#142044] text-white"
+                          : "border-[#1a2446] bg-[#0e1629] text-blue-100"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="activity-filter"
+                        value={activity.value}
+                        className="sr-only"
+                        checked={filters.activity === activity.value}
+                        onChange={(event) => handleFilterChange("activity", event.target.value)}
+                      />
+                      {activity.label}
+                    </label>
+                  ))}
+                </div>,
+                filters.activity !== "all",
+                () => setActiveFilterPanel(null),
+              )}
+              {renderFilterButton(
+                "status",
+                "Status",
+                <CheckCircleIcon className="h-4 w-4" />,
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleFilterChange("status", "all")}
+                    className={`rounded-[18px] border px-3 py-1.5 text-xs font-medium transition ${
+                      filters.status === "all"
+                        ? "border-[#2b9bff] bg-[#142044] text-white"
+                        : "border-[#1a2446] bg-[#0e1629] text-blue-100"
+                    }`}
+                  >
+                    All
+                  </button>
+                  {contactStatusOptions.map((status) => (
+                    <button
+                      type="button"
+                      key={status}
+                      onClick={() => handleFilterChange("status", status)}
+                      className={`rounded-[18px] border px-3 py-1.5 text-xs font-medium transition ${
+                        filters.status === status
+                          ? "border-[#2b9bff] bg-[#142044] text-white"
+                          : "border-[#1a2446] bg-[#0e1629] text-blue-100"
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>,
+                filters.status !== "all",
+                () => setActiveFilterPanel(null),
+              )}
               <button
                 type="button"
-                onClick={() => handleFilterChange("status", "all")}
-                className={`rounded-[18px] border px-3 py-1.5 text-xs font-medium transition ${
-                  filters.status === "all"
-                    ? "border-[#2b9bff] bg-[#142044] text-white"
-                    : "border-[#1a2446] bg-[#0e1629] text-blue-100"
-                }`}
+                onClick={() => {
+                  handleResetFilters();
+                  setActiveFilterPanel(null);
+                }}
+                className="ml-auto inline-flex items-center gap-1 rounded-[20px] border border-transparent px-3 py-1.5 text-xs text-[#7ed0ff] transition hover:text-white"
               >
-                All
+                Clear filters
               </button>
-              {contactStatusOptions.map((status) => (
-                <button
-                  type="button"
-                  key={status}
-                  onClick={() => handleFilterChange("status", status)}
-                  className={`rounded-[18px] border px-3 py-1.5 text-xs font-medium transition ${
-                    filters.status === status
-                      ? "border-[#2b9bff] bg-[#142044] text-white"
-                      : "border-[#1a2446] bg-[#0e1629] text-blue-100"
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
-            </div>,
-            filters.status !== "all",
-            () => setActiveFilterPanel(null),
-          )}
-          <button
-            type="button"
-            onClick={() => {
-              handleResetFilters();
-              setActiveFilterPanel(null);
-            }}
-            className="ml-auto inline-flex items-center gap-1 rounded-[20px] border border-transparent px-3 py-1.5 text-xs text-[#7ed0ff] transition hover:text-white"
-          >
-            Clear filters
-          </button>
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-[28px] border border-[#1a2446] bg-[#0c142a]">
