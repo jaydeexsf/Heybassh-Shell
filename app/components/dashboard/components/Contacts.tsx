@@ -348,7 +348,7 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
                   ref={selectAllCheckboxRef}
                   checked={allSelected}
                   onChange={handleSelectAll}
-                  className="h-4 w-4 rounded border-[#1a2446] bg-[#0e1629] text-[#2b9bff] focus:ring-[#2b9bff]"
+                  className="h-4 w-4 rounded border-[#1a2446] bg-[#0e1629] text-[#2b9bff] focus:ring-[#2b9bff] min1370:-ml-5"
                 />
               </th>
               <th scope="col" className="px-6 py-3 text-left">
