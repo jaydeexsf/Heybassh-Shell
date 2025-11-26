@@ -10,7 +10,7 @@ export const PrimaryButton = forwardRef<HTMLButtonElement, PrimaryButtonProps>(f
   ref,
 ) {
   const baseStyles =
-    "inline-flex items-center justify-center gap-3 rounded-lg border-none px-6 py-3 text-[0.75rem] font-bold uppercase tracking-wide text-[#031226] bg-[#3ab0ff] shadow-[0_4px_6px_-1px_rgba(72,138,236,0.19),0_2px_4px_-1px_rgba(72,138,236,0.09)] transition-all duration-300 select-none"
+    "inline-flex items-center justify-center gap-3 rounded-lg border-none px-6 py-2 text-[0.6rem] font-bold tracking-wide text-[#031226] bg-[#3ab0ff] shadow-[0_4px_6px_-1px_rgba(72,138,236,0.19),0_2px_4px_-1px_rgba(72,138,236,0.09)] transition-all duration-300 select-none"
   const enabledStyles =
     "hover:shadow-[0_10px_15px_-3px_rgba(72,138,236,0.31),0_4px_6px_-2px_rgba(72,138,236,0.09)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3ab0ff]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#031226] active:opacity-85"
   const disabledStyles = "opacity-60 cursor-not-allowed shadow-none"

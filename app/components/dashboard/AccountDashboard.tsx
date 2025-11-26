@@ -329,12 +329,21 @@ export default function AccountDashboard({
     <div className="flex h-screen bg-gray-900 text-gray-200">
       {/* Mobile sidebar */}
       <div
-        className={`fixed inset-0 z-40 flex md:hidden ${
-          menuOpen ? 'block' : 'hidden'
+        className={`fixed inset-0 z-40 flex justify-end md:hidden transition-opacity duration-300 ${
+          menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       >
-        <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setMenuOpen(false)}></div>
-        <div className="relative flex w-72 max-w-xs flex-1 flex-col bg-[#0f172a] pt-5">
+        <div
+          className={`fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ${
+            menuOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={() => setMenuOpen(false)}
+        ></div>
+        <div
+          className={`relative flex w-72 max-w-xs flex-1 flex-col bg-[#0f172a] pt-5 transform transition-transform duration-300 ${
+            menuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
           <div className="flex h-16 flex-shrink-0 items-center px-4">
             <div className="flex items-center">
               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-600 text-white">

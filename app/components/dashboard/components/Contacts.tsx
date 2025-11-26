@@ -646,7 +646,7 @@ const renderFilterButton = (
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 mt-[-50px] flex items-center justify-center bg-[#020617]/80 px-4 py-10 backdrop-blur-sm">
+        <div className="fixed mt-[-50px] inset-0 z-50 mt-[-50px] flex items-center justify-center bg-[#020617]/80 px-4 py-10 backdrop-blur-sm">
           <div className="w-full max-w-3xl rounded-[32px] border border-[#1a2446] bg-[#050a1b] p-6 shadow-2xl">
             <div className="mb-6 flex items-center justify-between">
               <div>
