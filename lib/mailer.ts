@@ -1,63 +1,46 @@
-import nodemailer from "nodemailer"
+import { Resend } from "resend"
 
-type MailConfig = {
-  host: string
-  port: number
-  secure: boolean
-  user: string
-  pass: string
-  from: string
+type SendEmailInput = {
+  to: string | string[]
+  subject: string
+  html: string
+  text?: string
+  from?: string
 }
 
-type MailerInstance = ReturnType<typeof nodemailer.createTransport>
+const resendApiKey = process.env.RESEND_API_KEY
+const defaultFromEmail =
+  process.env.EMAIL_FROM || "Heybassh Shell <onboarding@resend.dev>"
 
-let cachedTransporter: MailerInstance | null = null
-let cachedConfig: MailConfig | null = null
+let client: Resend | null = null
 
-const FALLBACK_SMTP_USER = "jaydeexsf0@gmail.com"
-const FALLBACK_SMTP_PASS = "bgoz akel fvqb muqt"
-
-function resolveConfig(): MailConfig {
-  if (cachedConfig) {
-    return cachedConfig
+function getClient(): Resend {
+  if (client) {
+    return client
   }
 
-  const user = FALLBACK_SMTP_USER
-  const pass = FALLBACK_SMTP_PASS
-  const host = "smtp.gmail.com"
-  const port = 587
-  const secure = false
-  const from = user
+  if (!resendApiKey) {
+    throw new Error("Missing RESEND_API_KEY environment variable.")
+  }
 
-  cachedConfig = { host, port, secure, user, pass, from }
-  return cachedConfig
+  client = new Resend(resendApiKey)
+  return client
 }
 
-export function getMailer(): MailerInstance {
-  if (cachedTransporter) {
-    return cachedTransporter
+export async function sendEmail({ from, ...rest }: SendEmailInput) {
+  const sender = from ?? defaultFromEmail
+  if (!sender) {
+    throw new Error("Missing sender email. Set EMAIL_FROM or pass `from`.")
   }
 
-  const config = resolveConfig()
-  cachedTransporter = nodemailer.createTransport({
-    host: config.host,
-    port: config.port,
-    secure: config.secure,
-    auth: {
-      user: config.user,
-      pass: config.pass,
-    },
+  const { error } = await getClient().emails.send({
+    from: sender,
+    ...rest,
   })
 
-  return cachedTransporter
-}
-
-export function getMailFrom(): string {
-  return resolveConfig().from
-}
-
-export function getMailerConfig(): MailConfig {
-  return resolveConfig()
+  if (error) {
+    throw error
+  }
 }
 
 

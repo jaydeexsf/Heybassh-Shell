@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import crypto from "crypto"
-import { getMailer, getMailFrom } from "@/lib/mailer"
+import { sendEmail } from "@/lib/mailer"
 
 export const runtime = 'nodejs'
 
@@ -67,31 +67,7 @@ export async function POST(req: Request) {
 
     console.log(`[FORGOT PASSWORD] Reset URL created: ${resetUrl}`)
 
-    let transporter
-    try {
-      transporter = getMailer()
-    } catch (err) {
-      console.error(`[FORGOT PASSWORD] SMTP setup error:`, err)
-      return NextResponse.json(
-        {
-          success: false,
-          emailSent: false,
-          message: "Email service is not configured. Please contact support.",
-          error: err instanceof Error ? err.message : "Unknown SMTP configuration error",
-        },
-        { status: 500 },
-      )
-    }
-
-    try {
-      console.log(`[SMTP] Verifying SMTP connection...`)
-      await transporter.verify()
-      console.log(`[SMTP] SMTP connection verified successfully`)
-    } catch (error) {
-      console.warn(`[SMTP] Verification failed, attempting to send anyway`, error)
-    }
-
-    const fromAddress = getMailFrom()
+    const fromAddress = process.env.EMAIL_FROM
 
     console.log(`[FORGOT PASSWORD] Attempting to send password reset email...`)
     console.log(`   To: ${normalizedEmail}`)
@@ -100,8 +76,8 @@ export async function POST(req: Request) {
     console.log(`   Reset URL: ${resetUrl}`)
 
     try {
-      const emailInfo = await transporter.sendMail({
-        from: `Heybassh Shell <${fromAddress}>`,
+      await sendEmail({
+        from: fromAddress,
         to: normalizedEmail,
         subject: "Password Reset Request - Heybassh Shell",
         html: `
@@ -121,10 +97,6 @@ export async function POST(req: Request) {
       })
 
       console.log(`[FORGOT PASSWORD] Email sent successfully!`)
-      console.log(`   Message ID: ${emailInfo.messageId}`)
-      console.log(`   Accepted: ${emailInfo.accepted?.join(", ") || "N/A"}`)
-      console.log(`   Rejected: ${emailInfo.rejected?.join(", ") || "None"}`)
-      console.log(`   Envelope:`, emailInfo.envelope)
       console.log(`[FORGOT PASSWORD] Password reset email has been sent to ${normalizedEmail}`)
       console.log("=".repeat(60))
 
@@ -134,9 +106,6 @@ export async function POST(req: Request) {
         message: `Password reset email has been sent. Please check your inbox (and spam folder).`,
         details: {
           to: normalizedEmail,
-          messageId: emailInfo.messageId,
-          accepted: emailInfo.accepted || [],
-          rejected: emailInfo.rejected || [],
         },
       })
     } catch (emailError) {
@@ -144,6 +113,8 @@ export async function POST(req: Request) {
       console.error(`   Error:`, emailError)
       const errorMessage = emailError instanceof Error ? emailError.message : "Unknown error"
       const errorCode = (emailError as any)?.code || "UNKNOWN"
+      const isConfigError =
+        errorMessage.includes("RESEND_API_KEY") || errorMessage.includes("sender email")
       console.log("=".repeat(60))
 
       return NextResponse.json(
@@ -153,6 +124,8 @@ export async function POST(req: Request) {
           message: `Failed to send password reset email: ${errorMessage}`,
           error: errorMessage,
           errorCode,
+          smtpConfigured: isConfigError ? false : undefined,
+          resetUrl: isConfigError ? resetUrl : undefined,
         },
         { status: 500 },
       )

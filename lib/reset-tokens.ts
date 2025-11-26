@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid"
 import { prisma } from "./prisma"
-import { getMailer, getMailFrom } from "./mailer"
+import { sendEmail } from "./mailer"
 
 // Token expires in 1 hour
 const RESET_TOKEN_EXPIRY = 60 * 60 * 1000;
@@ -35,7 +35,6 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   const resetUrl = `${baseUrl.replace(/\/$/, "")}/reset-password?token=${token}`
 
   const mailOptions = {
-    from: getMailFrom(),
     to: email,
     subject: "Password Reset Request",
     html: `
@@ -49,8 +48,8 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   console.log("[ForgotPassword] Sending reset email", { to: email, resetUrl })
 
   try {
-    const info = await getMailer().sendMail(mailOptions)
-    console.log("[ForgotPassword] Email sent successfully", { messageId: info.messageId })
+    await sendEmail(mailOptions)
+    console.log("[ForgotPassword] Email sent successfully")
   } catch (err) {
     console.error("[ForgotPassword] Failed to send reset email", err)
     // Re-throw so the API route can return a proper error response

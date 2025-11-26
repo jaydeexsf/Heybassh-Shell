@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid"
 import { prisma } from "./prisma"
-import { getMailer, getMailFrom } from "./mailer"
+import { sendEmail } from "./mailer"
 
 const VERIFICATION_TOKEN_EXPIRY = 1000 * 60 * 60 * 24 // 24 hours
 
@@ -26,7 +26,6 @@ export async function sendVerificationEmail(email: string, token: string, compan
   const verifyUrl = `${baseUrl.replace(/\/$/, "")}/verify-email?token=${encodeURIComponent(token)}`
 
   const mailOptions = {
-    from: getMailFrom(),
     to: email,
     subject: "Verify your Heybassh Shell account",
     html: `
@@ -41,13 +40,12 @@ export async function sendVerificationEmail(email: string, token: string, compan
     `,
   }
 
-  await getMailer().sendMail(mailOptions)
+  await sendEmail(mailOptions)
   return verifyUrl
 }
 
 export async function sendVerificationCodeEmail(email: string, code: string, companyName?: string) {
   const mailOptions = {
-    from: getMailFrom(),
     to: email,
     subject: "Your Heybassh Shell verification code",
     html: `
@@ -60,7 +58,7 @@ export async function sendVerificationCodeEmail(email: string, code: string, com
     `,
   }
 
-  await getMailer().sendMail(mailOptions)
+  await sendEmail(mailOptions)
 }
 
 export async function validateVerificationToken(token: string) {
