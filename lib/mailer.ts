@@ -10,7 +10,7 @@ type SendEmailInput = {
 
 const resendApiKey = process.env.RESEND_API_KEY
 const defaultFromEmail =
-  process.env.EMAIL_FROM || "Heybassh Shell <onboarding@resend.dev>"
+  process.env.EMAIL_FROM || "Heybassh Portal <noreply@app.heybassh.com>"
 
 let client: Resend | null = null
 

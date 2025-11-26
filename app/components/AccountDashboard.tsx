@@ -740,7 +740,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
     <div className="min-h-screen bg-[#020617]">
       <div className={`grid min-h-screen grid-cols-1 ${desktopGrid} transition-[grid-template-columns] duration-300 ease-in-out`}>
       {/* Left sidebar with profile */}
-        <aside className="hidden md:flex md:sticky md:top-0 md:h-screen flex-col items-center justify-between border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur">
+        <aside className="hidden md:flex md:sticky md:top-0 md:h-screen flex-col items-center justify-between border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur z-50">
         <div className="flex flex-col items-center gap-3">
           <button
             onClick={() => setSidebarCollapsed((prev) => !prev)}
