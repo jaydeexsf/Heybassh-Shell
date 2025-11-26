@@ -23,6 +23,38 @@ export type Contact = {
   status: ContactStatus;
 };
 
+// Companies share similar lifecycle fields and status semantics as contacts
+export type CompanyStatus = ContactStatus;
+
+export type Company = {
+  id: string;
+  name: string;
+  domain: string;
+  industry: string;
+  size: string;
+  owner: string;
+  createdAt: string;
+  lastActivity: string;
+  status: CompanyStatus;
+};
+
+// Deals track pipeline stage as well as win/loss status
+export type DealStage = "New" | "Qualified" | "Proposal" | "Negotiation" | "Won" | "Lost";
+
+export type DealStatus = "Open" | "Won" | "Lost";
+
+export type Deal = {
+  id: string;
+  name: string;
+  company: string;
+  amount: number;
+  owner: string;
+  createdAt: string;
+  lastActivity: string;
+  stage: DealStage;
+  status: DealStatus;
+};
+
 export type Product = {
   sku: string;
   name: string;
@@ -191,6 +223,13 @@ export const SEARCH_SELECTION_KEY = "heybassh_search_selection";
 
 export const defaultContacts: Contact[] = [];
 export const contactStatusOptions: ContactStatus[] = ["New", "In Progress", "Customer", "Churned"];
+
+export const defaultCompanies: Company[] = [];
+export const companyStatusOptions: CompanyStatus[] = ["New", "In Progress", "Customer", "Churned"];
+
+export const defaultDeals: Deal[] = [];
+export const dealStageOptions: DealStage[] = ["New", "Qualified", "Proposal", "Negotiation", "Won", "Lost"];
+export const dealStatusOptions: DealStatus[] = ["Open", "Won", "Lost"];
 
 export const defaultProducts: Product[] = [
   { sku: "P-1001", name: "Heybassh T-Shirt", category: "Merch", price: 25, stock: 120 },

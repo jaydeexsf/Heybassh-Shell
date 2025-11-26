@@ -12,11 +12,11 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { PrimaryButton } from "../../PrimaryButton";
-import { Contact, contactStatusOptions } from "../types";
+import { Company, companyStatusOptions } from "../types";
 
 type ActivityFilterValue = "all" | "7" | "30" | "stale30";
 
-type ContactFilters = {
+type CompanyFilters = {
   owner: string;
   status: string;
   createdFrom: string;
@@ -24,12 +24,12 @@ type ContactFilters = {
   activity: ActivityFilterValue;
 };
 
-type NewContactFormState = {
+type NewCompanyFormState = {
   name: string;
-  email: string;
-  phone: string;
-  company: string;
-  status: Contact["status"];
+  domain: string;
+  industry: string;
+  size: string;
+  status: Company["status"];
 };
 
 const activityFilters: { label: string; value: ActivityFilterValue }[] = [
@@ -39,7 +39,7 @@ const activityFilters: { label: string; value: ActivityFilterValue }[] = [
   { label: "No activity 30+ days", value: "stale30" },
 ];
 
-const defaultFilters: ContactFilters = {
+const defaultFilters: CompanyFilters = {
   owner: "all",
   status: "all",
   createdFrom: "",
@@ -49,7 +49,7 @@ const defaultFilters: ContactFilters = {
 
 type FilterPanel = "owner" | "created" | "activity" | "status";
 
-const statusColors: Record<Contact["status"], string> = {
+const statusColors: Record<Company["status"], string> = {
   New: "border-blue-500/40 bg-blue-500/10 text-blue-200",
   "In Progress": "border-amber-500/40 bg-amber-500/10 text-amber-200",
   Customer: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
@@ -62,20 +62,20 @@ const SortIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-interface ContactsProps {
-  contacts: Contact[];
-  onAddContact: (contact: Omit<Contact, "id">) => Promise<void> | void;
+interface CompaniesProps {
+  companies: Company[];
+  onAddCompany: (company: Omit<Company, "id">) => Promise<void> | void;
   isLoading?: boolean;
   errorMessage?: string;
   defaultOwner?: string;
 }
 
-const createInitialContact = (): NewContactFormState => ({
+const createInitialCompany = (): NewCompanyFormState => ({
   name: "",
-  email: "",
-  phone: "",
-  company: "",
-  status: contactStatusOptions[0] ?? "New",
+  domain: "",
+  industry: "",
+  size: "",
+  status: companyStatusOptions[0] ?? "New",
 });
 
 const SpinnerIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
@@ -85,21 +85,21 @@ const SpinnerIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
   </svg>
 );
 
-export function Contacts({
-  contacts,
-  onAddContact,
+export function Companies({
+  companies,
+  onAddCompany,
   isLoading = false,
   errorMessage,
   defaultOwner = "Unassigned",
-}: ContactsProps) {
+}: CompaniesProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
-  const [newContact, setNewContact] = useState<NewContactFormState>(createInitialContact);
-  const [filters, setFilters] = useState<ContactFilters>(defaultFilters);
+  const [selectedCompanies, setSelectedCompanies] = useState<Set<string>>(new Set());
+  const [newCompany, setNewCompany] = useState<NewCompanyFormState>(createInitialCompany);
+  const [filters, setFilters] = useState<CompanyFilters>(defaultFilters);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [activeFilterPanel, setActiveFilterPanel] = useState<FilterPanel | null>(null);
-  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
+  const [isSubmittingCompany, setIsSubmittingCompany] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
   const moreDropdownRef = useRef<HTMLDivElement>(null);
@@ -107,13 +107,13 @@ export function Contacts({
 
   const ownerOptions = useMemo(() => {
     const owners = new Set<string>();
-    contacts.forEach((contact) => {
-      if (contact.owner?.trim()) {
-        owners.add(contact.owner.trim());
+    companies.forEach((company) => {
+      if (company.owner?.trim()) {
+        owners.add(company.owner.trim());
       }
     });
     return Array.from(owners).sort((a, b) => a.localeCompare(b));
-  }, [contacts]);
+  }, [companies]);
 
   const normalizeDate = (value: string) => {
     if (!value) return null;
@@ -121,35 +121,35 @@ export function Contacts({
     return Number.isNaN(date.getTime()) ? null : date;
   };
 
-  const filteredContacts = useMemo(() => {
+  const filteredCompanies = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     const now = Date.now();
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
 
-    return contacts.filter((contact) => {
+    return companies.filter((company) => {
       const matchesSearch =
         !normalizedSearch ||
-        contact.name.toLowerCase().includes(normalizedSearch) ||
-        contact.email.toLowerCase().includes(normalizedSearch) ||
-        (contact.company ?? "").toLowerCase().includes(normalizedSearch) ||
-        (contact.owner ?? "Unassigned").toLowerCase().includes(normalizedSearch);
+        company.name.toLowerCase().includes(normalizedSearch) ||
+        company.domain.toLowerCase().includes(normalizedSearch) ||
+        company.industry.toLowerCase().includes(normalizedSearch) ||
+        (company.owner ?? "Unassigned").toLowerCase().includes(normalizedSearch);
 
-      const ownerValue = contact.owner?.trim() || "Unassigned";
+      const ownerValue = company.owner?.trim() || "Unassigned";
       const matchesOwner =
         filters.owner === "all" ||
         (filters.owner === "unassigned" ? ownerValue === "Unassigned" : ownerValue === filters.owner);
 
-      const matchesStatus = filters.status === "all" || contact.status === filters.status;
+      const matchesStatus = filters.status === "all" || company.status === filters.status;
 
-      const createdAtDate = normalizeDate(contact.createdAt);
+      const createdAtDate = normalizeDate(company.createdAt);
       const createdFromDate = normalizeDate(filters.createdFrom);
       const createdToDate = normalizeDate(filters.createdTo);
 
       const matchesCreatedFrom = !createdFromDate || (createdAtDate && createdAtDate >= createdFromDate);
       const matchesCreatedTo = !createdToDate || (createdAtDate && createdAtDate <= createdToDate);
 
-      const lastActivityDate = normalizeDate(contact.lastActivity);
+      const lastActivityDate = normalizeDate(company.lastActivity);
       const lastActivityTime = lastActivityDate?.getTime() ?? 0;
 
       const matchesActivity =
@@ -158,15 +158,13 @@ export function Contacts({
         (filters.activity === "30" && lastActivityDate && lastActivityTime >= thirtyDaysAgo) ||
         (filters.activity === "stale30" && (!lastActivityDate || lastActivityTime < thirtyDaysAgo));
 
-      return (
-        matchesSearch && matchesOwner && matchesStatus && matchesCreatedFrom && matchesCreatedTo && matchesActivity
-      );
+      return matchesSearch && matchesOwner && matchesStatus && matchesCreatedFrom && matchesCreatedTo && matchesActivity;
     });
-  }, [contacts, filters, searchTerm]);
+  }, [companies, filters, searchTerm]);
 
-  const hasSelectedContacts = selectedContacts.size > 0;
-  const allSelected = filteredContacts.length > 0 && selectedContacts.size === filteredContacts.length;
-  const someSelected = selectedContacts.size > 0 && selectedContacts.size < filteredContacts.length;
+  const hasSelectedCompanies = selectedCompanies.size > 0;
+  const allSelected = filteredCompanies.length > 0 && selectedCompanies.size === filteredCompanies.length;
+  const someSelected = selectedCompanies.size > 0 && selectedCompanies.size < filteredCompanies.length;
 
   useEffect(() => {
     if (selectAllCheckboxRef.current) {
@@ -175,141 +173,141 @@ export function Contacts({
   }, [someSelected]);
 
   useEffect(() => {
-    setSelectedContacts((prev) => {
+    setSelectedCompanies((prev) => {
       const next = new Set<string>();
-      contacts.forEach((contact) => {
-        if (prev.has(contact.id)) {
-          next.add(contact.id);
+      companies.forEach((company) => {
+        if (prev.has(company.id)) {
+          next.add(company.id);
         }
       });
       return next;
     });
-  }, [contacts]);
+  }, [companies]);
 
-useEffect(() => {
-  function handleClickOutside(event: MouseEvent) {
-    if (moreDropdownRef.current && !moreDropdownRef.current.contains(event.target as Node)) {
-      setMoreDropdownOpen(false);
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (moreDropdownRef.current && !moreDropdownRef.current.contains(event.target as Node)) {
+        setMoreDropdownOpen(false);
+      }
+      if (inlineFiltersRef.current && !inlineFiltersRef.current.contains(event.target as Node)) {
+        setActiveFilterPanel(null);
+      }
     }
-    if (inlineFiltersRef.current && !inlineFiltersRef.current.contains(event.target as Node)) {
-      setActiveFilterPanel(null);
-    }
-  }
 
-  if (moreDropdownOpen || activeFilterPanel) {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }
-}, [moreDropdownOpen, activeFilterPanel]);
+    if (moreDropdownOpen || activeFilterPanel) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [moreDropdownOpen, activeFilterPanel]);
 
   const handleSelectAll = () => {
     if (allSelected) {
-      setSelectedContacts(new Set());
+      setSelectedCompanies(new Set());
     } else {
-      setSelectedContacts(new Set(filteredContacts.map((c) => c.id)));
+      setSelectedCompanies(new Set(filteredCompanies.map((c) => c.id)));
     }
   };
 
-  const handleSelectContact = (contactId: string) => {
-    const newSelected = new Set(selectedContacts);
-    if (newSelected.has(contactId)) {
-      newSelected.delete(contactId);
+  const handleSelectCompany = (companyId: string) => {
+    const next = new Set(selectedCompanies);
+    if (next.has(companyId)) {
+      next.delete(companyId);
     } else {
-      newSelected.add(contactId);
+      next.add(companyId);
     }
-    setSelectedContacts(newSelected);
+    setSelectedCompanies(next);
   };
 
-const handleAddContact = async (event: React.FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
-  if (!newContact.name.trim() || !newContact.email.trim()) return;
+  const handleAddCompany = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!newCompany.name.trim()) return;
 
-  const timestamp = new Date().toISOString();
-  const payload: Omit<Contact, "id"> = {
-    name: newContact.name.trim(),
-    email: newContact.email.trim(),
-    phone: newContact.phone.trim(),
-    company: newContact.company.trim(),
-    owner: defaultOwner?.trim() || "Unassigned",
-    createdAt: timestamp,
-    lastActivity: timestamp,
-    status: newContact.status,
+    const timestamp = new Date().toISOString();
+    const payload: Omit<Company, "id"> = {
+      name: newCompany.name.trim(),
+      domain: newCompany.domain.trim() || "example.com",
+      industry: newCompany.industry.trim() || "General",
+      size: newCompany.size.trim() || "Small",
+      owner: defaultOwner?.trim() || "Unassigned",
+      createdAt: timestamp,
+      lastActivity: timestamp,
+      status: newCompany.status,
+    };
+
+    try {
+      setIsSubmittingCompany(true);
+      setFormError(null);
+      await onAddCompany(payload);
+      setNewCompany(createInitialCompany());
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Failed to add company", error);
+      setFormError("Failed to save company. Please try again.");
+    } finally {
+      setIsSubmittingCompany(false);
+    }
   };
-
-  try {
-    setIsSubmittingContact(true);
-    setFormError(null);
-    await onAddContact(payload);
-    setNewContact(createInitialContact());
-    setIsModalOpen(false);
-  } catch (error) {
-    console.error("Failed to add contact", error);
-    setFormError("Failed to save contact. Please try again.");
-  } finally {
-    setIsSubmittingContact(false);
-  }
-};
 
   const handleDeleteSelected = () => {
-    console.log("Delete contacts:", Array.from(selectedContacts));
-    setSelectedContacts(new Set());
+    console.log("Delete companies:", Array.from(selectedCompanies));
+    setSelectedCompanies(new Set());
     setMoreDropdownOpen(false);
   };
 
   const handleEditSelected = () => {
-    console.log("Edit contacts:", Array.from(selectedContacts));
+    console.log("Edit companies:", Array.from(selectedCompanies));
     setMoreDropdownOpen(false);
   };
 
-const handleFilterChange = (key: keyof ContactFilters, value: string) => {
-  setFilters((prev) => ({ ...prev, [key]: value }));
-};
+  const handleFilterChange = (key: keyof CompanyFilters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
 
-const handleResetFilters = () => {
-  setFilters(defaultFilters);
-};
+  const handleResetFilters = () => {
+    setFilters(defaultFilters);
+  };
 
-const toggleFilterPanel = (panel: FilterPanel) => {
-  setActiveFilterPanel((prev) => (prev === panel ? null : panel));
-};
+  const toggleFilterPanel = (panel: FilterPanel) => {
+    setActiveFilterPanel((prev) => (prev === panel ? null : panel));
+  };
 
-const renderFilterButton = (
-  panel: FilterPanel,
-  label: string,
-  icon: ReactNode,
-  content: ReactNode,
-  isActive: boolean,
-  onClose: () => void,
-) => (
-  <div key={panel} className="relative">
-    <button
-      type="button"
-      onClick={() => toggleFilterPanel(panel)}
-      className={`inline-flex items-center gap-1.5 rounded-[20px] border px-3 py-1.5 text-xs transition-colors ${
-        isActive || activeFilterPanel === panel
-          ? "border-[#2b9bff] bg-[#142044] text-white"
-          : "border-[#1a2446] bg-[#0e1629] text-blue-200 hover:bg-[#121c3d] hover:text-white"
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
-    {activeFilterPanel === panel && (
-      <div className="absolute left-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[24px] border border-[#1a2446] bg-[#050a1b] p-4 text-blue-100 shadow-2xl">
-        {content}
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            className="rounded-[16px] border border-[#1a2446] px-3 py-1 text-xs text-blue-200 hover:bg-[#121c3d]"
-            onClick={onClose}
-          >
-            Close
-          </button>
+  const renderFilterButton = (
+    panel: FilterPanel,
+    label: string,
+    icon: ReactNode,
+    content: ReactNode,
+    isActive: boolean,
+    onClose: () => void,
+  ) => (
+    <div key={panel} className="relative">
+      <button
+        type="button"
+        onClick={() => toggleFilterPanel(panel)}
+        className={`inline-flex items-center gap-1.5 rounded-[20px] border px-3 py-1.5 text-xs transition-colors ${
+          isActive || activeFilterPanel === panel
+            ? "border-[#2b9bff] bg-[#142044] text-white"
+            : "border-[#1a2446] bg-[#0e1629] text-blue-200 hover:bg-[#121c3d] hover:text-white"
+        }`}
+      >
+        {icon}
+        {label}
+      </button>
+      {activeFilterPanel === panel && (
+        <div className="absolute left-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[24px] border border-[#1a2446] bg-[#050a1b] p-4 text-blue-100 shadow-2xl">
+          {content}
+          <div className="mt-4 flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-[16px] border border-[#1a2446] px-3 py-1 text-xs text-blue-200 hover:bg-[#121c3d]"
+              onClick={onClose}
+            >
+              Close
+            </button>
+          </div>
         </div>
-      </div>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
 
   const formatDate = (value?: string) => {
     if (!value) return "--";
@@ -321,13 +319,13 @@ const renderFilterButton = (
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
-        <h2 className="text-2xl font-bold text-white">Contacts</h2>
+        <h2 className="text-2xl font-bold text-white">Companies</h2>
         <PrimaryButton
           onClick={() => setIsModalOpen(true)}
           icon={<PlusIcon className="h-4 w-4" />}
           className="rounded-2xl px-5 py-2 text-xs font-semibold uppercase tracking-wide"
         >
-          Add Contact
+          Add Company
         </PrimaryButton>
       </div>
 
@@ -338,15 +336,15 @@ const renderFilterButton = (
       )}
 
       <div className="space-y-3 flex justify-between">
-        {hasSelectedContacts ? (
+        {hasSelectedCompanies ? (
           <div className="flex w-full flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-[6px]">
             <div className="flex flex-wrap items-center gap-4">
               <span className="text-sm text-blue-200">
-                {selectedContacts.size} contact{selectedContacts.size !== 1 ? "s" : ""} selected
+                {selectedCompanies.size} company{selectedCompanies.size !== 1 ? "ies" : ""} selected
               </span>
-              {selectedContacts.size < filteredContacts.length && (
+              {selectedCompanies.size < filteredCompanies.length && (
                 <button onClick={handleSelectAll} className="text-sm text-[#7ed0ff] transition-colors hover:text-white">
-                  Select all {filteredContacts.length} contacts
+                  Select all {filteredCompanies.length} companies
                 </button>
               )}
             </div>
@@ -394,7 +392,7 @@ const renderFilterButton = (
               <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-300/60" />
               <input
                 type="text"
-                placeholder="Search contacts"
+                placeholder="Search companies"
                 className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 pl-12 pr-12 text-sm text-blue-200 placeholder-blue-300/60 focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff]"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
@@ -404,7 +402,7 @@ const renderFilterButton = (
             <div className="flex w-full max-w-4xl flex-wrap items-center gap-2" ref={inlineFiltersRef}>
               {renderFilterButton(
                 "owner",
-                "Contact Owner",
+                "Account Owner",
                 <UserCircleIcon className="h-4 w-4" />,
                 <select
                   className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
@@ -494,7 +492,7 @@ const renderFilterButton = (
                   >
                     All
                   </button>
-                  {contactStatusOptions.map((status) => (
+                  {companyStatusOptions.map((status) => (
                     <button
                       type="button"
                       key={status}
@@ -537,7 +535,7 @@ const renderFilterButton = (
                   ref={selectAllCheckboxRef}
                   checked={allSelected}
                   onChange={handleSelectAll}
-                  className="h-4 w-4 border-[#1a2446] bg-[#0e1629] text-[#2b9bff] focus:ring-[#2b9bff] min1370:ml-[-20px]"
+                  className="h-4 w-4 rounded border-[#1a2446] bg-[#0e1629] text-[#2b9bff] focus:ring-[#2b9bff]"
                 />
               </th>
               <th scope="col" className="px-6 py-3 text-left">
@@ -551,7 +549,7 @@ const renderFilterButton = (
               </th>
               <th scope="col" className="px-6 py-3 text-left">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Email</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Domain</span>
                   <SortIcon className="h-4 w-4 text-blue-300/60" />
                   <button className="text-blue-300/60 transition hover:text-blue-300">
                     <EllipsisVerticalIcon className="h-4 w-4" />
@@ -560,7 +558,7 @@ const renderFilterButton = (
               </th>
               <th scope="col" className="px-6 py-3 text-left">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Phone</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Industry</span>
                   <SortIcon className="h-4 w-4 text-blue-300/60" />
                   <button className="text-blue-300/60 transition hover:text-blue-300">
                     <EllipsisVerticalIcon className="h-4 w-4" />
@@ -583,23 +581,23 @@ const renderFilterButton = (
                 <td colSpan={5} className="px-6 py-8 text-center text-sm text-blue-300">
                   <span className="inline-flex items-center justify-center gap-2 text-blue-200">
                     <SpinnerIcon className="h-5 w-5 text-blue-300" />
-                    Loading contacts…
+                    Loading companies…
                   </span>
                 </td>
               </tr>
-            ) : filteredContacts.length ? (
-              filteredContacts.map((contact) => {
-                const isSelected = selectedContacts.has(contact.id);
+            ) : filteredCompanies.length ? (
+              filteredCompanies.map((company) => {
+                const isSelected = selectedCompanies.has(company.id);
                 return (
                   <tr
-                    key={contact.id}
+                    key={company.id}
                     className={`transition-colors hover:bg-[#121c3d] ${isSelected ? "bg-[#121c3d]/50" : ""}`}
                   >
                     <td className="px-6 py-4">
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => handleSelectContact(contact.id)}
+                        onChange={() => handleSelectCompany(company.id)}
                         className="h-4 w-4 rounded border-[#1a2446] bg-[#0e1629] text-[#2b9bff] focus:ring-[#2b9bff]"
                       />
                     </td>
@@ -607,28 +605,28 @@ const renderFilterButton = (
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 flex-shrink-0">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#5468ff] to-[#2bb9ff] text-xs font-semibold text-white">
-                            {contact.name?.charAt(0).toUpperCase() || "?"}
+                            {company.name?.charAt(0).toUpperCase() || "?"}
                           </div>
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-white">{contact.name || "--"}</div>
-                          <div className="text-xs text-blue-300">{contact.company || "No company"}</div>
+                          <div className="text-sm font-medium text-white">{company.name || "--"}</div>
+                          <div className="text-xs text-blue-300">{company.domain || "No domain"}</div>
                         </div>
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <div className="text-sm text-blue-200">{contact.email || "--"}</div>
+                      <div className="text-sm text-blue-200">{company.industry || "--"}</div>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <div className="text-sm text-blue-200">{contact.phone || "--"}</div>
+                      <div className="text-sm text-blue-200">{company.size || "--"}</div>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
                       <span
                         className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
-                          statusColors[contact.status] ?? "border-[#1a2446] text-blue-100"
+                          statusColors[company.status] ?? "border-[#1a2446] text-blue-100"
                         }`}
                       >
-                        {contact.status}
+                        {company.status}
                       </span>
                     </td>
                   </tr>
@@ -637,7 +635,7 @@ const renderFilterButton = (
             ) : (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center text-sm text-blue-300">
-                  {searchTerm ? `No contacts found for "${searchTerm}".` : "No contacts yet. Add one to get started."}
+                  {searchTerm ? `No companies found for "${searchTerm}".` : "No companies yet. Add one to get started."}
                 </td>
               </tr>
             )}
@@ -646,27 +644,27 @@ const renderFilterButton = (
       </div>
 
       {isModalOpen && (
-        <div className="fixed mt-[-50px] inset-0 z-50 mt-[-50px] flex items-center justify-center bg-[#020617]/80 px-4 py-10 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 mt-[-50px] flex items-center justify-center bg-[#020617]/80 px-4 py-10 backdrop-blur-sm">
           <div className="w-full max-w-3xl rounded-[32px] border border-[#1a2446] bg-[#050a1b] p-6 shadow-2xl">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-semibold text-white">Add Contact</h3>
-                <p className="text-sm text-blue-300">Capture the basics, ownership, and lifecycle metadata.</p>
+                <h3 className="text-xl font-semibold text-white">Add Company</h3>
+                <p className="text-sm text-blue-300">Capture core account details for your company database.</p>
               </div>
               <button
                 type="button"
                 className="rounded-full p-2 text-blue-200 transition hover:bg-white/5 hover:text-white"
                 onClick={() => {
                   setIsModalOpen(false);
-                  setNewContact(createInitialContact());
+                  setNewCompany(createInitialCompany());
                 }}
-                aria-label="Close add contact modal"
+                aria-label="Close add company modal"
               >
                 <XMarkIcon className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddContact} className="space-y-6">
+            <form onSubmit={handleAddCompany} className="space-y-6">
               {formError && (
                 <div className="rounded-[20px] border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
                   {formError}
@@ -674,70 +672,69 @@ const renderFilterButton = (
               )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="contact-name" className="block text-sm font-medium text-blue-200">
-                    Full Name
+                  <label htmlFor="company-name" className="block text-sm font-medium text-blue-200">
+                    Company Name
                   </label>
                   <input
-                    id="contact-name"
+                    id="company-name"
                     type="text"
                     required
                     className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
-                    value={newContact.name}
-                    onChange={(event) => setNewContact((prev) => ({ ...prev, name: event.target.value }))}
+                    value={newCompany.name}
+                    onChange={(event) => setNewCompany((prev) => ({ ...prev, name: event.target.value }))}
                   />
                 </div>
                 <div>
-                  <label htmlFor="contact-email" className="block text-sm font-medium text-blue-200">
-                    Email
+                  <label htmlFor="company-domain" className="block text-sm font-medium text-blue-200">
+                    Domain
                   </label>
                   <input
-                    id="contact-email"
-                    type="email"
-                    required
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
-                    value={newContact.email}
-                    onChange={(event) => setNewContact((prev) => ({ ...prev, email: event.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="contact-phone" className="block text-sm font-medium text-blue-200">
-                    Phone
-                  </label>
-                  <input
-                    id="contact-phone"
-                    type="tel"
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
-                    value={newContact.phone}
-                    onChange={(event) => setNewContact((prev) => ({ ...prev, phone: event.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="contact-company" className="block text-sm font-medium text-blue-200">
-                    Company
-                  </label>
-                  <input
-                    id="contact-company"
+                    id="company-domain"
                     type="text"
                     className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
-                    value={newContact.company}
-                    onChange={(event) => setNewContact((prev) => ({ ...prev, company: event.target.value }))}
+                    value={newCompany.domain}
+                    onChange={(event) => setNewCompany((prev) => ({ ...prev, domain: event.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="company-industry" className="block text-sm font-medium text-blue-200">
+                    Industry
+                  </label>
+                  <input
+                    id="company-industry"
+                    type="text"
+                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
+                    value={newCompany.industry}
+                    onChange={(event) => setNewCompany((prev) => ({ ...prev, industry: event.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="company-size" className="block text-sm font-medium text-blue-200">
+                    Company Size
+                  </label>
+                  <input
+                    id="company-size"
+                    type="text"
+                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
+                    value={newCompany.size}
+                    onChange={(event) => setNewCompany((prev) => ({ ...prev, size: event.target.value }))}
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="contact-status" className="block text-sm font-medium text-blue-200">
+                <label htmlFor="company-status" className="block text-sm font-medium text-blue-200">
                   Status
                 </label>
                 <select
-                  id="contact-status"
+                  id="company-status"
                   className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 focus:border-[#2b9bff] focus:outline-none"
-                  value={newContact.status}
+                  value={newCompany.status}
                   onChange={(event) =>
-                    setNewContact((prev) => ({ ...prev, status: event.target.value as Contact["status"] }))
+                    setNewCompany((prev) => ({ ...prev, status: event.target.value as Company["status"] }))
                   }
                 >
-                  {contactStatusOptions.map((status) => (
+                  {companyStatusOptions.map((status) => (
                     <option key={status} value={status}>
                       {status}
                     </option>
@@ -750,20 +747,20 @@ const renderFilterButton = (
                   type="button"
                   onClick={() => {
                     setIsModalOpen(false);
-                    setNewContact(createInitialContact());
+                    setNewCompany(createInitialCompany());
                   }}
                   className="rounded-[8px] border border-[#1a2446] px-5 py-2 text-sm font-medium text-blue-200 transition hover:bg-[#121c3d]"
                 >
                   Cancel
                 </button>
-                <PrimaryButton type="submit" className="rounded-2xl px-6 py-2" disabled={isSubmittingContact}>
-                  {isSubmittingContact ? (
+                <PrimaryButton type="submit" className="rounded-2xl px-6 py-2" disabled={isSubmittingCompany}>
+                  {isSubmittingCompany ? (
                     <span className="flex items-center gap-2">
                       <SpinnerIcon className="h-4 w-4 text-[#031226]" />
                       Saving…
                     </span>
                   ) : (
-                    "Save Contact"
+                    "Save Company"
                   )}
                 </PrimaryButton>
               </div>
@@ -774,5 +771,5 @@ const renderFilterButton = (
     </div>
   );
 }
- 
- 
+
+

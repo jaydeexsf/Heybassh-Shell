@@ -10,11 +10,15 @@ import Link from "next/link";
 import { 
   NavItem, 
   Contact, 
+  Company,
+  Deal,
   Product, 
   Task, 
   Employee, 
   LeaveRequest,
   defaultContacts,
+  defaultCompanies,
+  defaultDeals,
   defaultProducts,
   defaultEmployees,
   defaultLeaveRequests,
@@ -54,6 +58,7 @@ import {
 // Components
 import { Overview } from "./components/Overview";
 import { Contacts } from "./components/Contacts";
+import { Companies } from "./components/Companies";
 import { Products } from "./components/Products";
 import { Tasks } from "./components/Tasks";
 import { HRPeople } from "./components/HRPeople";
@@ -123,6 +128,8 @@ export default function AccountDashboard({
   
   // State for different modules
   const [contacts, setContacts] = useState<Contact[]>(defaultContacts);
+  const [companies, setCompanies] = useState<Company[]>(defaultCompanies);
+  const [deals, setDeals] = useState<Deal[]>(defaultDeals);
   const [products, setProducts] = useState<Product[]>(defaultProducts);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [employees, setEmployees] = useState<Employee[]>(defaultEmployees);
@@ -189,6 +196,15 @@ export default function AccountDashboard({
     setContacts([...contacts, newContact]);
   };
 
+  // Handle adding a new company
+  const handleAddCompany = (company: Omit<Company, 'id'>) => {
+    const newCompany: Company = {
+      ...company,
+      id: `CO-${Date.now()}`,
+    };
+    setCompanies([...companies, newCompany]);
+  };
+
   // Handle adding a new product
   const handleAddProduct = (product: Omit<Product, 'sku'>) => {
     const newProduct: Product = {
@@ -243,6 +259,152 @@ export default function AccountDashboard({
         return <Overview companyName={companyName} />;
       case 'customers_contacts':
         return <Contacts contacts={contacts} onAddContact={handleAddContact} />;
+      case 'customers_companies':
+        return <Companies companies={companies} onAddCompany={handleAddCompany} />;
+      case 'customers_marketing': {
+        const marketingModules = [
+          {
+            id: "forms_live_chat",
+            title: "Forms & Live Chat",
+            description: "Capture new leads and manage live conversations from your website and apps in one place.",
+          },
+          {
+            id: "call_to_action",
+            title: "Call-To-Action",
+            description: "Design, test, and track call-to-action blocks that turn visitors into pipeline.",
+          },
+          {
+            id: "social",
+            title: "Social",
+            description: "Plan, publish, and measure social posts across your primary channels.",
+          },
+          {
+            id: "ads",
+            title: "Ads",
+            description: "Run and review paid campaigns with clear checklists and performance snapshots.",
+          },
+          {
+            id: "events",
+            title: "Events",
+            description: "Organise webinars, meetups, and launches with simple tracking for attendees and follow‑ups.",
+          },
+          {
+            id: "campaigns",
+            title: "Campaigns",
+            description: "Group email, ads, and content into campaigns to see what actually moves revenue.",
+          },
+          {
+            id: "lead_scoring",
+            title: "Lead Scoring",
+            description: "Score leads automatically based on fit and engagement so sales knows who to call first.",
+          },
+          {
+            id: "seo_analytics",
+            title: "SEO & Analytics",
+            description: "Monitor search performance and key web metrics to spot what’s working and what’s not.",
+          },
+          {
+            id: "reviews",
+            title: "Reviews",
+            description: "Collect, respond to, and showcase customer reviews from a single workspace.",
+          },
+          {
+            id: "referral_system",
+            title: "Referral System",
+            description: "Track referrals, rewards, and partner-sourced deals to grow revenue efficiently.",
+          },
+        ];
+
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">Marketing</h2>
+              <p className="mt-1 text-sm text-blue-200">
+                Jump into the marketing modules your team uses to turn traffic into qualified pipeline.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {marketingModules.map((module) => (
+                <div
+                  key={module.id}
+                  className="card flex h-full flex-col justify-between rounded-[28px] border border-[#141f3b] bg-[#060c20] p-5 shadow-[0_18px_40px_-28px_rgba(39,172,255,0.7)]"
+                >
+                  <div>
+                    <h3 className="text-base font-semibold text-white">{module.title}</h3>
+                    <p className="mt-2 text-sm text-blue-200">{module.description}</p>
+                  </div>
+                  <button className="mt-4 inline-flex items-center text-sm font-medium text-[#5dd4ff] hover:text-white">
+                    Open ↗
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case 'customers_sales': {
+        const salesModules = [
+          {
+            id: "appointment_scheduling",
+            title: "Appointment Scheduling",
+            description: "Let prospects pick time slots that work for them while keeping reps’ calendars under control.",
+          },
+          {
+            id: "ai_sales_assistants",
+            title: "AI Sales Assistants",
+            description: "Use AI copilots to prep calls, summarize meetings, and surface next‑best actions for every deal.",
+          },
+          {
+            id: "video_selling",
+            title: "Video Selling",
+            description: "Record and send personal video explainers that help deals move forward asynchronously.",
+          },
+          {
+            id: "sales_automation",
+            title: "Sales Automation",
+            description: "Build simple sequences and workflows so follow‑ups, tasks, and handoffs never slip through.",
+          },
+          {
+            id: "sales_analytics",
+            title: "Sales Analytics",
+            description: "Track pipeline health, win rates, and rep performance with dashboards built for sales leaders.",
+          },
+          {
+            id: "documents",
+            title: "Documents",
+            description: "Send, track, and version proposals and contracts so the latest copy is always the one in play.",
+          },
+        ];
+
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">Sales</h2>
+              <p className="mt-1 text-sm text-blue-200">
+                Give your sales team focused tools to schedule, automate, and close more revenue.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {salesModules.map((module) => (
+                <div
+                  key={module.id}
+                  className="card flex h-full flex-col justify-between rounded-[28px] border border-[#141f3b] bg-[#060c20] p-5 shadow-[0_18px_40px_-28px_rgba(39,172,255,0.7)]"
+                >
+                  <div>
+                    <h3 className="text-base font-semibold text-white">{module.title}</h3>
+                    <p className="mt-2 text-sm text-blue-200">{module.description}</p>
+                  </div>
+                  <button className="mt-4 inline-flex items-center text-sm font-medium text-[#5dd4ff] hover:text-white">
+                    Open ↗
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
       case 'products_listing':
         return <Products products={products} onAddProduct={handleAddProduct} />;
       case 'tasks':
