@@ -5,7 +5,7 @@ import { Contact } from "../../types";
 
 interface ContactsViewProps {
   contacts: Contact[];
-  onAddContact: (contact: Omit<Contact, 'id'>) => void;
+  onAddContact: (contact: Omit<Contact, 'id'>) => Promise<void> | void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onSearchResultClick?: (id: string) => void;
@@ -32,10 +32,10 @@ export function ContactsView({
     contact.company.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddContact = (e: React.FormEvent) => {
+  const handleAddContact = async (e: React.FormEvent) => {
     e.preventDefault();
     const timestamp = new Date().toISOString();
-    onAddContact({
+    await onAddContact({
       name: newContact.name,
       email: newContact.email,
       phone: newContact.phone,

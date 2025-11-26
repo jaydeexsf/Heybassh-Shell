@@ -50,4 +50,22 @@ model Account {
   created_at     DateTime @default(now())
   /// Back relation to users under this account
   users          User[]
+  contacts       Contact[]
+}
+
+model Contact {
+  id           String   @id @default(cuid())
+  accountSeq   Int
+  account      Account  @relation(fields: [accountSeq], references: [accountSeq])
+  name         String
+  email        String
+  phone        String?
+  company      String?
+  owner        String?  @default("Unassigned")
+  status       String   @default("New")
+  createdAt    DateTime @default(now())
+  lastActivity DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([accountSeq])
 }

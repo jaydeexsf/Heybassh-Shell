@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect, ReactNode } from "react";
 import {
   MagnifyingGlassIcon,
   EllipsisVerticalIcon,
@@ -8,7 +8,6 @@ import {
   CalendarDaysIcon,
   ChartBarIcon,
   CheckCircleIcon,
-  FunnelIcon,
   PlusIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -30,9 +29,6 @@ type NewContactFormState = {
   email: string;
   phone: string;
   company: string;
-  owner: string;
-  createdAt: string;
-  lastActivity: string;
   status: Contact["status"];
 };
 
@@ -42,6 +38,16 @@ const activityFilters: { label: string; value: ActivityFilterValue }[] = [
   { label: "Last 30 days", value: "30" },
   { label: "No activity 30+ days", value: "stale30" },
 ];
+
+const defaultFilters: ContactFilters = {
+  owner: "all",
+  status: "all",
+  createdFrom: "",
+  createdTo: "",
+  activity: "all",
+};
+
+type FilterPanel = "owner" | "created" | "activity" | "status";
 
 const statusColors: Record<Contact["status"], string> = {
   New: "border-blue-500/40 bg-blue-500/10 text-blue-200",
@@ -58,39 +64,46 @@ const SortIcon = ({ className }: { className?: string }) => (
 
 interface ContactsProps {
   contacts: Contact[];
-  onAddContact: (contact: Omit<Contact, "id">) => void;
+  onAddContact: (contact: Omit<Contact, "id">) => Promise<void> | void;
+  isLoading?: boolean;
+  errorMessage?: string;
+  defaultOwner?: string;
 }
-
-const getTodayInputValue = () => new Date().toISOString().split("T")[0];
 
 const createInitialContact = (): NewContactFormState => ({
   name: "",
   email: "",
   phone: "",
   company: "",
-  owner: "",
-  createdAt: getTodayInputValue(),
-  lastActivity: getTodayInputValue(),
   status: contactStatusOptions[0] ?? "New",
 });
 
-export function Contacts({ contacts, onAddContact }: ContactsProps) {
+const SpinnerIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
+  <svg className={`${className} animate-spin`} viewBox="0 0 24 24" fill="none">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+  </svg>
+);
+
+export function Contacts({
+  contacts,
+  onAddContact,
+  isLoading = false,
+  errorMessage,
+  defaultOwner = "Unassigned",
+}: ContactsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [newContact, setNewContact] = useState<NewContactFormState>(createInitialContact);
-  const [filters, setFilters] = useState<ContactFilters>({
-    owner: "all",
-    status: "all",
-    createdFrom: "",
-    createdTo: "",
-    activity: "all",
-  });
+  const [filters, setFilters] = useState<ContactFilters>(defaultFilters);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [activeFilterPanel, setActiveFilterPanel] = useState<FilterPanel | null>(null);
+  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
   const moreDropdownRef = useRef<HTMLDivElement>(null);
-  const filtersDropdownRef = useRef<HTMLDivElement>(null);
+  const inlineFiltersRef = useRef<HTMLDivElement>(null);
 
   const ownerOptions = useMemo(() => {
     const owners = new Set<string>();
@@ -109,16 +122,18 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
   };
 
   const filteredContacts = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
     const now = Date.now();
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
 
     return contacts.filter((contact) => {
       const matchesSearch =
-        contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contact.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contact.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contact.owner.toLowerCase().includes(searchTerm.toLowerCase());
+        !normalizedSearch ||
+        contact.name.toLowerCase().includes(normalizedSearch) ||
+        contact.email.toLowerCase().includes(normalizedSearch) ||
+        (contact.company ?? "").toLowerCase().includes(normalizedSearch) ||
+        (contact.owner ?? "Unassigned").toLowerCase().includes(normalizedSearch);
 
       const ownerValue = contact.owner?.trim() || "Unassigned";
       const matchesOwner =
@@ -171,21 +186,21 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
     });
   }, [contacts]);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (moreDropdownRef.current && !moreDropdownRef.current.contains(event.target as Node)) {
-        setMoreDropdownOpen(false);
-      }
-      if (filtersDropdownRef.current && !filtersDropdownRef.current.contains(event.target as Node)) {
-        setFiltersOpen(false);
-      }
+useEffect(() => {
+  function handleClickOutside(event: MouseEvent) {
+    if (moreDropdownRef.current && !moreDropdownRef.current.contains(event.target as Node)) {
+      setMoreDropdownOpen(false);
     }
+    if (inlineFiltersRef.current && !inlineFiltersRef.current.contains(event.target as Node)) {
+      setActiveFilterPanel(null);
+    }
+  }
 
-    if (moreDropdownOpen || filtersOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [moreDropdownOpen, filtersOpen]);
+  if (moreDropdownOpen || activeFilterPanel) {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }
+}, [moreDropdownOpen, activeFilterPanel]);
 
   const handleSelectAll = () => {
     if (allSelected) {
@@ -205,25 +220,35 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
     setSelectedContacts(newSelected);
   };
 
-  const handleAddContact = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!newContact.name.trim() || !newContact.email.trim()) return;
+const handleAddContact = async (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  if (!newContact.name.trim() || !newContact.email.trim()) return;
 
-    const payload: Omit<Contact, "id"> = {
-      name: newContact.name.trim(),
-      email: newContact.email.trim(),
-      phone: newContact.phone.trim(),
-      company: newContact.company.trim(),
-      owner: newContact.owner.trim() || "Unassigned",
-      createdAt: new Date(newContact.createdAt || getTodayInputValue()).toISOString(),
-      lastActivity: new Date(newContact.lastActivity || newContact.createdAt || getTodayInputValue()).toISOString(),
-      status: newContact.status,
-    };
+  const timestamp = new Date().toISOString();
+  const payload: Omit<Contact, "id"> = {
+    name: newContact.name.trim(),
+    email: newContact.email.trim(),
+    phone: newContact.phone.trim(),
+    company: newContact.company.trim(),
+    owner: defaultOwner?.trim() || "Unassigned",
+    createdAt: timestamp,
+    lastActivity: timestamp,
+    status: newContact.status,
+  };
 
-    onAddContact(payload);
+  try {
+    setIsSubmittingContact(true);
+    setFormError(null);
+    await onAddContact(payload);
     setNewContact(createInitialContact());
     setIsModalOpen(false);
-  };
+  } catch (error) {
+    console.error("Failed to add contact", error);
+    setFormError("Failed to save contact. Please try again.");
+  } finally {
+    setIsSubmittingContact(false);
+  }
+};
 
   const handleDeleteSelected = () => {
     console.log("Delete contacts:", Array.from(selectedContacts));
@@ -236,19 +261,55 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
     setMoreDropdownOpen(false);
   };
 
-  const handleFilterChange = (key: keyof ContactFilters, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
+const handleFilterChange = (key: keyof ContactFilters, value: string) => {
+  setFilters((prev) => ({ ...prev, [key]: value }));
+};
 
-  const handleResetFilters = () => {
-    setFilters({
-      owner: "all",
-      status: "all",
-      createdFrom: "",
-      createdTo: "",
-      activity: "all",
-    });
-  };
+const handleResetFilters = () => {
+  setFilters(defaultFilters);
+};
+
+const toggleFilterPanel = (panel: FilterPanel) => {
+  setActiveFilterPanel((prev) => (prev === panel ? null : panel));
+};
+
+const renderFilterButton = (
+  panel: FilterPanel,
+  label: string,
+  icon: ReactNode,
+  content: ReactNode,
+  isActive: boolean,
+  onClose: () => void,
+) => (
+  <div key={panel} className="relative">
+    <button
+      type="button"
+      onClick={() => toggleFilterPanel(panel)}
+      className={`inline-flex items-center gap-1.5 rounded-[20px] border px-3 py-1.5 text-xs transition-colors ${
+        isActive || activeFilterPanel === panel
+          ? "border-[#2b9bff] bg-[#142044] text-white"
+          : "border-[#1a2446] bg-[#0e1629] text-blue-200 hover:bg-[#121c3d] hover:text-white"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+    {activeFilterPanel === panel && (
+      <div className="absolute left-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[24px] border border-[#1a2446] bg-[#050a1b] p-4 text-blue-100 shadow-2xl">
+        {content}
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            type="button"
+            className="rounded-[16px] border border-[#1a2446] px-3 py-1 text-xs text-blue-200 hover:bg-[#121c3d]"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+);
 
   const formatDate = (value?: string) => {
     if (!value) return "--";
@@ -271,7 +332,7 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
       </div>
 
       {hasSelectedContacts && (
-        <div className="flex flex-col gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-[6px] lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-4">
             <span className="text-sm text-blue-200">
               {selectedContacts.size} contact{selectedContacts.size !== 1 ? "s" : ""} selected
@@ -283,22 +344,6 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button className="inline-flex items-center gap-1.5 rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1.5 text-xs text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white">
-              <UserCircleIcon className="h-4 w-4" />
-              Contact Owner
-            </button>
-            <button className="inline-flex items-center gap-1.5 rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1.5 text-xs text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white">
-              <CalendarDaysIcon className="h-4 w-4" />
-              Created Date
-            </button>
-            <button className="inline-flex items-center gap-1.5 rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1.5 text-xs text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white">
-              <ChartBarIcon className="h-4 w-4" />
-              Activity
-            </button>
-            <button className="inline-flex items-center gap-1.5 rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1.5 text-xs text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white">
-              <CheckCircleIcon className="h-4 w-4" />
-              Status
-            </button>
             <div className="relative" ref={moreDropdownRef}>
               <button
                 onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
@@ -338,167 +383,147 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
         </div>
       )}
 
-      {!hasSelectedContacts && (
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-xl" ref={filtersDropdownRef}>
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-300/60" />
-            <input
-              type="text"
-              placeholder="Search contacts, owners, or companies"
-              className="w-full rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 pl-12 pr-12 text-sm text-blue-200 placeholder-blue-300/60 focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff]"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
-            <button
-              type="button"
-              onClick={() => setFiltersOpen((prev) => !prev)}
-              className={`absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-blue-300/70 transition-colors hover:text-blue-100 ${
-                filtersOpen ? "bg-[#142044]" : ""
-              }`}
-            >
-              <FunnelIcon className="h-5 w-5" />
-            </button>
-            {filtersOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-full max-w-xl rounded-[28px] border border-[#1a2446] bg-[#050a1b] p-5 text-sm text-blue-100 shadow-2xl">
-                <div className="mb-4 flex items-center justify-between">
-                  <p className="text-xs uppercase tracking-wide text-blue-300/80">Filter contacts</p>
-                  <button
-                    type="button"
-                    className="rounded-full p-1 text-blue-300/70 transition hover:text-white"
-                    onClick={() => setFiltersOpen(false)}
-                    aria-label="Close filters"
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-300/70">Contact Owner</p>
-                    <select
-                      className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
-                      value={filters.owner}
-                      onChange={(event) => handleFilterChange("owner", event.target.value)}
-                    >
-                      <option value="all">All owners</option>
-                      <option value="unassigned">Unassigned</option>
-                      {ownerOptions.map((owner) => (
-                        <option key={owner} value={owner}>
-                          {owner}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-blue-300/70">Created From</p>
-                      <input
-                        type="date"
-                        className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
-                        value={filters.createdFrom}
-                        onChange={(event) => handleFilterChange("createdFrom", event.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-blue-300/70">Created To</p>
-                      <input
-                        type="date"
-                        className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
-                        value={filters.createdTo}
-                        onChange={(event) => handleFilterChange("createdTo", event.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-300/70">Activity</p>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                      {activityFilters.map((activity) => (
-                        <label
-                          key={activity.value}
-                          className={`cursor-pointer rounded-[18px] border px-3 py-2 text-xs font-medium transition ${
-                            filters.activity === activity.value
-                              ? "border-[#2b9bff] bg-[#142044] text-white"
-                              : "border-[#1a2446] bg-[#0e1629] text-blue-100"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="activity-filter"
-                            value={activity.value}
-                            className="sr-only"
-                            checked={filters.activity === activity.value}
-                            onChange={(event) => handleFilterChange("activity", event.target.value)}
-                          />
-                          {activity.label}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-300/70">Status</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleFilterChange("status", "all")}
-                        className={`rounded-[18px] border px-3 py-1.5 text-xs font-medium transition ${
-                          filters.status === "all"
-                            ? "border-[#2b9bff] bg-[#142044] text-white"
-                            : "border-[#1a2446] bg-[#0e1629] text-blue-100"
-                        }`}
-                      >
-                        All
-                      </button>
-                      {contactStatusOptions.map((status) => (
-                        <button
-                          type="button"
-                          key={status}
-                          onClick={() => handleFilterChange("status", status)}
-                          className={`rounded-[18px] border px-3 py-1.5 text-xs font-medium transition ${
-                            filters.status === status
-                              ? "border-[#2b9bff] bg-[#142044] text-white"
-                              : "border-[#1a2446] bg-[#0e1629] text-blue-100"
-                          }`}
-                        >
-                          {status}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-xs text-blue-300">
-                  <button
-                    type="button"
-                    className="text-[#7ed0ff] transition-colors hover:text-white"
-                    onClick={handleResetFilters}
-                  >
-                    Reset filters
-                  </button>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      className="rounded-[16px] border border-[#1a2446] px-4 py-1 text-blue-100 transition hover:bg-[#121c3d]"
-                      onClick={() => setFiltersOpen(false)}
-                    >
-                      Close
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-[16px] bg-[#2b9bff] px-4 py-1 text-sm font-semibold text-[#041226]"
-                      onClick={() => setFiltersOpen(false)}
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+      {errorMessage && (
+        <div className="rounded-[20px] border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          {errorMessage}
         </div>
       )}
+
+      <div className="space-y-3">
+        <div className="relative flex-1 max-w-xl">
+          <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-300/60" />
+          <input
+            type="text"
+            placeholder="Search contacts, owners, or companies"
+            className="w-full rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 pl-12 pr-12 text-sm text-blue-200 placeholder-blue-300/60 focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff]"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2" ref={inlineFiltersRef}>
+          {renderFilterButton(
+            "owner",
+            "Contact Owner",
+            <UserCircleIcon className="h-4 w-4" />,
+            <select
+              className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
+              value={filters.owner}
+              onChange={(event) => handleFilterChange("owner", event.target.value)}
+            >
+              <option value="all">All owners</option>
+              <option value="unassigned">Unassigned</option>
+              {ownerOptions.map((owner) => (
+                <option key={owner} value={owner}>
+                  {owner}
+                </option>
+              ))}
+            </select>,
+            filters.owner !== "all",
+            () => setActiveFilterPanel(null),
+          )}
+          {renderFilterButton(
+            "created",
+            "Created Date",
+            <CalendarDaysIcon className="h-4 w-4" />,
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-300/70">From</p>
+                <input
+                  type="date"
+                  className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
+                  value={filters.createdFrom}
+                  onChange={(event) => handleFilterChange("createdFrom", event.target.value)}
+                />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-300/70">To</p>
+                <input
+                  type="date"
+                  className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
+                  value={filters.createdTo}
+                  onChange={(event) => handleFilterChange("createdTo", event.target.value)}
+                />
+              </div>
+            </div>,
+            Boolean(filters.createdFrom || filters.createdTo),
+            () => setActiveFilterPanel(null),
+          )}
+          {renderFilterButton(
+            "activity",
+            "Activity",
+            <ChartBarIcon className="h-4 w-4" />,
+            <div className="grid gap-2 sm:grid-cols-2">
+              {activityFilters.map((activity) => (
+                <label
+                  key={activity.value}
+                  className={`cursor-pointer rounded-[18px] border px-3 py-2 text-xs font-medium transition ${
+                    filters.activity === activity.value
+                      ? "border-[#2b9bff] bg-[#142044] text-white"
+                      : "border-[#1a2446] bg-[#0e1629] text-blue-100"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="activity-filter"
+                    value={activity.value}
+                    className="sr-only"
+                    checked={filters.activity === activity.value}
+                    onChange={(event) => handleFilterChange("activity", event.target.value)}
+                  />
+                  {activity.label}
+                </label>
+              ))}
+            </div>,
+            filters.activity !== "all",
+            () => setActiveFilterPanel(null),
+          )}
+          {renderFilterButton(
+            "status",
+            "Status",
+            <CheckCircleIcon className="h-4 w-4" />,
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => handleFilterChange("status", "all")}
+                className={`rounded-[18px] border px-3 py-1.5 text-xs font-medium transition ${
+                  filters.status === "all"
+                    ? "border-[#2b9bff] bg-[#142044] text-white"
+                    : "border-[#1a2446] bg-[#0e1629] text-blue-100"
+                }`}
+              >
+                All
+              </button>
+              {contactStatusOptions.map((status) => (
+                <button
+                  type="button"
+                  key={status}
+                  onClick={() => handleFilterChange("status", status)}
+                  className={`rounded-[18px] border px-3 py-1.5 text-xs font-medium transition ${
+                    filters.status === status
+                      ? "border-[#2b9bff] bg-[#142044] text-white"
+                      : "border-[#1a2446] bg-[#0e1629] text-blue-100"
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>,
+            filters.status !== "all",
+            () => setActiveFilterPanel(null),
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              handleResetFilters();
+              setActiveFilterPanel(null);
+            }}
+            className="ml-auto inline-flex items-center gap-1 rounded-[20px] border border-transparent px-3 py-1.5 text-xs text-[#7ed0ff] transition hover:text-white"
+          >
+            Clear filters
+          </button>
+        </div>
+      </div>
 
       <div className="overflow-hidden rounded-[28px] border border-[#1a2446] bg-[#0c142a]">
         <table className="min-w-full divide-y divide-[#1a2446]">
@@ -510,7 +535,7 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
                   ref={selectAllCheckboxRef}
                   checked={allSelected}
                   onChange={handleSelectAll}
-                  className="h-4 w-4 rounded border-[#1a2446] bg-[#0e1629] text-[#2b9bff] focus:ring-[#2b9bff] min1370:-ml-5"
+                  className="h-4 w-4 rounded border-[#1a2446] bg-[#0e1629] text-[#2b9bff] focus:ring-[#2b9bff] min1370"
                 />
               </th>
               <th scope="col" className="px-6 py-3 text-left">
@@ -570,58 +595,68 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#1a2446] bg-[#0c142a]">
-            {filteredContacts.map((contact) => {
-              const isSelected = selectedContacts.has(contact.id);
-              return (
-                <tr
-                  key={contact.id}
-                  className={`transition-colors hover:bg-[#121c3d] ${isSelected ? "bg-[#121c3d]/50" : ""}`}
-                >
-                  <td className="px-6 py-4">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => handleSelectContact(contact.id)}
-                      className="h-4 w-4 rounded border-[#1a2446] bg-[#0e1629] text-[#2b9bff] focus:ring-[#2b9bff]"
-                    />
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 flex-shrink-0">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#5468ff] to-[#2bb9ff] text-xs font-semibold text-white">
-                          {contact.name?.charAt(0).toUpperCase() || "?"}
+            {isLoading ? (
+              <tr>
+                <td colSpan={8} className="px-6 py-8 text-center text-sm text-blue-300">
+                  <span className="inline-flex items-center justify-center gap-2 text-blue-200">
+                    <SpinnerIcon className="h-5 w-5 text-blue-300" />
+                    Loading contacts…
+                  </span>
+                </td>
+              </tr>
+            ) : filteredContacts.length ? (
+              filteredContacts.map((contact) => {
+                const isSelected = selectedContacts.has(contact.id);
+                return (
+                  <tr
+                    key={contact.id}
+                    className={`transition-colors hover:bg-[#121c3d] ${isSelected ? "bg-[#121c3d]/50" : ""}`}
+                  >
+                    <td className="px-6 py-4">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleSelectContact(contact.id)}
+                        className="h-4 w-4 rounded border-[#1a2446] bg-[#0e1629] text-[#2b9bff] focus:ring-[#2b9bff]"
+                      />
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 flex-shrink-0">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#5468ff] to-[#2bb9ff] text-xs font-semibold text-white">
+                            {contact.name?.charAt(0).toUpperCase() || "?"}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-white">{contact.name || "--"}</div>
+                          <div className="text-xs text-blue-300">{contact.company || "No company"}</div>
                         </div>
                       </div>
-                      <div>
-                        <div className="text-sm font-medium text-white">{contact.name || "--"}</div>
-                        <div className="text-xs text-blue-300">{contact.company || "No company"}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="text-sm text-blue-200">{contact.email || "--"}</div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="text-sm text-blue-200">{contact.phone || "--"}</div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <div className="text-sm text-blue-200">{contact.owner || "Unassigned"}</div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-blue-200">{formatDate(contact.createdAt)}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-blue-200">{formatDate(contact.lastActivity)}</td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <span
-                      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
-                        statusColors[contact.status] ?? "border-[#1a2446] text-blue-100"
-                      }`}
-                    >
-                      {contact.status}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-            {!filteredContacts.length && (
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="text-sm text-blue-200">{contact.email || "--"}</div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="text-sm text-blue-200">{contact.phone || "--"}</div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="text-sm text-blue-200">{contact.owner || "Unassigned"}</div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-blue-200">{formatDate(contact.createdAt)}</td>
+                    <td className="whitespace-nowrap px-6 py-4 text-sm text-blue-200">{formatDate(contact.lastActivity)}</td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <span
+                        className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
+                          statusColors[contact.status] ?? "border-[#1a2446] text-blue-100"
+                        }`}
+                      >
+                        {contact.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
               <tr>
                 <td colSpan={8} className="px-6 py-8 text-center text-sm text-blue-300">
                   {searchTerm ? `No contacts found for "${searchTerm}".` : "No contacts yet. Add one to get started."}
@@ -633,7 +668,7 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#020617]/80 px-4 py-10 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 mt-[-50px] flex items-center justify-center bg-[#020617]/80 px-4 py-10 backdrop-blur-sm">
           <div className="w-full max-w-3xl rounded-[32px] border border-[#1a2446] bg-[#050a1b] p-6 shadow-2xl">
             <div className="mb-6 flex items-center justify-between">
               <div>
@@ -654,6 +689,11 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
             </div>
 
             <form onSubmit={handleAddContact} className="space-y-6">
+              {formError && (
+                <div className="rounded-[20px] border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+                  {formError}
+                </div>
+              )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="contact-name" className="block text-sm font-medium text-blue-200">
@@ -707,64 +747,24 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="contact-owner" className="block text-sm font-medium text-blue-200">
-                    Contact Owner
-                  </label>
-                  <input
-                    id="contact-owner"
-                    type="text"
-                    placeholder="Unassigned"
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
-                    value={newContact.owner}
-                    onChange={(event) => setNewContact((prev) => ({ ...prev, owner: event.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="contact-status" className="block text-sm font-medium text-blue-200">
-                    Status
-                  </label>
-                  <select
-                    id="contact-status"
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 focus:border-[#2b9bff] focus:outline-none"
-                    value={newContact.status}
-                    onChange={(event) =>
-                      setNewContact((prev) => ({ ...prev, status: event.target.value as Contact["status"] }))
-                    }
-                  >
-                    {contactStatusOptions.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="contact-created" className="block text-sm font-medium text-blue-200">
-                    Created Date
-                  </label>
-                  <input
-                    id="contact-created"
-                    type="date"
-                    required
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 focus:border-[#2b9bff] focus:outline-none"
-                    value={newContact.createdAt}
-                    onChange={(event) => setNewContact((prev) => ({ ...prev, createdAt: event.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="contact-activity" className="block text-sm font-medium text-blue-200">
-                    Last Activity
-                  </label>
-                  <input
-                    id="contact-activity"
-                    type="date"
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 focus:border-[#2b9bff] focus:outline-none"
-                    value={newContact.lastActivity}
-                    onChange={(event) => setNewContact((prev) => ({ ...prev, lastActivity: event.target.value }))}
-                  />
-                </div>
+              <div>
+                <label htmlFor="contact-status" className="block text-sm font-medium text-blue-200">
+                  Status
+                </label>
+                <select
+                  id="contact-status"
+                  className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 focus:border-[#2b9bff] focus:outline-none"
+                  value={newContact.status}
+                  onChange={(event) =>
+                    setNewContact((prev) => ({ ...prev, status: event.target.value as Contact["status"] }))
+                  }
+                >
+                  {contactStatusOptions.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex flex-wrap justify-end gap-3">
@@ -774,12 +774,19 @@ export function Contacts({ contacts, onAddContact }: ContactsProps) {
                     setIsModalOpen(false);
                     setNewContact(createInitialContact());
                   }}
-                  className="rounded-[20px] border border-[#1a2446] px-5 py-2 text-sm font-medium text-blue-200 transition hover:bg-[#121c3d]"
+                  className="rounded-[8px] border border-[#1a2446] px-5 py-2 text-sm font-medium text-blue-200 transition hover:bg-[#121c3d]"
                 >
                   Cancel
                 </button>
-                <PrimaryButton type="submit" className="rounded-2xl px-6 py-2">
-                  Save Contact
+                <PrimaryButton type="submit" className="rounded-2xl px-6 py-2" disabled={isSubmittingContact}>
+                  {isSubmittingContact ? (
+                    <span className="flex items-center gap-2">
+                      <SpinnerIcon className="h-4 w-4 text-[#031226]" />
+                      Saving…
+                    </span>
+                  ) : (
+                    "Save Contact"
+                  )}
                 </PrimaryButton>
               </div>
             </form>

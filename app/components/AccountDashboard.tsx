@@ -322,7 +322,6 @@ const defaultEmployees: Employee[] = [
 
 const defaultLeaveRequests: LeaveRequest[] = []
 const SEARCH_SELECTION_KEY = "heybassh_search_selection"
-const CONTACTS_STORAGE_KEY = "heybassh_contacts"
 
 const priorityOptions: Task["priority"][] = ["Low", "Normal", "High"]
 const statusOptions: Task["status"][] = ["Todo", "In Progress", "Done"]
@@ -375,37 +374,44 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const [sidebarProfileMenuOpen, setSidebarProfileMenuOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [contacts, setContacts] = useState<Contact[]>(defaultContacts)
+  const [contactsLoading, setContactsLoading] = useState(true)
+  const [contactsError, setContactsError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchPreviewOpen, setSearchPreviewOpen] = useState(false)
   const [searchPreviewSelection, setSearchPreviewSelection] = useState<string | null>(null)
   const [searchTransitioning, setSearchTransitioning] = useState(false)
   const searchLoaderTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const contactsHydratedRef = useRef(false)
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    try {
-      const persisted = window.localStorage.getItem(CONTACTS_STORAGE_KEY)
-      if (persisted) {
-        const parsed = JSON.parse(persisted)
-        if (Array.isArray(parsed)) {
-          setContacts(parsed)
-        }
-      }
-    } catch (error) {
-      console.error("[AccountDashboard] Failed to load contacts from storage:", error)
-    } finally {
-      contactsHydratedRef.current = true
-    }
-  }, [])
 
   useEffect(() => {
-    if (typeof window === "undefined" || !contactsHydratedRef.current) return
-    try {
-      window.localStorage.setItem(CONTACTS_STORAGE_KEY, JSON.stringify(contacts))
-    } catch (error) {
-      console.error("[AccountDashboard] Failed to persist contacts:", error)
+    let ignore = false
+    async function loadContacts() {
+      setContactsLoading(true)
+      setContactsError(null)
+      try {
+        const response = await fetch(`/api/accounts/${accountId}/contacts`)
+        const payload = await response.json().catch(() => [])
+        if (!response.ok) {
+          throw new Error((payload as { error?: string })?.error ?? "Failed to load contacts")
+        }
+        if (!ignore) {
+          setContacts(Array.isArray(payload) ? payload : [])
+        }
+      } catch (error) {
+        console.error("[AccountDashboard] Failed to fetch contacts", error)
+        if (!ignore) {
+          setContactsError("Unable to load contacts right now. Please try refreshing.")
+        }
+      } finally {
+        if (!ignore) {
+          setContactsLoading(false)
+        }
+      }
     }
-  }, [contacts])
+    loadContacts()
+    return () => {
+      ignore = true
+    }
+  }, [accountId])
 
   const [products, setProducts] = useState<Product[]>(defaultProducts)
   const [productCategory, setProductCategory] = useState("All")
@@ -437,6 +443,12 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const userName = session?.user?.name || session?.user?.email || "User"
   const userImage = typeof session?.user?.image === "string" ? session.user.image : null
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U"
+  const contactOwnerLabel = useMemo(() => {
+    const name = session?.user?.name?.trim()
+    const email = session?.user?.email?.trim()
+    if (name && email) return `${name} (${email})`
+    return name || email || "Unassigned"
+  }, [session?.user?.name, session?.user?.email])
 
 
   // Sync view when initialViewKey changes
@@ -570,24 +582,23 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   // ... (rest of the code remains the same)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ customers: true, products: true, front_office: false })
 
-  function handleAddContact(contact: Omit<Contact, "id">) {
+  async function handleAddContact(contact: Omit<Contact, "id">) {
     if (!contact.name || !contact.email) return
-    const now = new Date().toISOString()
-    setContacts((prev) => {
-      const lastId = prev[prev.length - 1]?.id
-      const numericPart = lastId ? parseInt(lastId.split("-")[1] ?? "1000", 10) : 1000
-      const safeNumeric = Number.isNaN(numericPart) ? 1000 : numericPart
-      const nextId = `C-${String(safeNumeric + 1).padStart(4, "0")}`
-      const nextContact: Contact = {
-        id: nextId,
-        ...contact,
-        owner: contact.owner || "Unassigned",
-        createdAt: contact.createdAt || now,
-        lastActivity: contact.lastActivity || contact.createdAt || now,
-        status: contact.status ?? "New",
+    try {
+      const response = await fetch(`/api/accounts/${accountId}/contacts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(contact),
+      })
+      const payload = await response.json().catch(() => null)
+      if (!response.ok || !payload) {
+        throw new Error((payload as { error?: string })?.error ?? "Failed to create contact")
       }
-      return [...prev, nextContact]
-    })
+      setContacts((prev) => [payload as Contact, ...prev])
+    } catch (error) {
+      console.error("[AccountDashboard] Failed to create contact", error)
+      throw error
+    }
   }
 
   function handleAddProduct(event: React.FormEvent<HTMLFormElement>) {
@@ -1098,7 +1109,13 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
             </div>
           ) : view === "customers_contacts" ? (
             <div className="space-y-6">
-              <Contacts contacts={contacts} onAddContact={handleAddContact} />
+              <Contacts
+                contacts={contacts}
+                onAddContact={handleAddContact}
+                isLoading={contactsLoading}
+                errorMessage={contactsError ?? undefined}
+                defaultOwner={contactOwnerLabel}
+              />
             </div>
           ) : view === "customers_companies" ? (
             <div className="card rounded-[32px] bg-[#0e1629]">
