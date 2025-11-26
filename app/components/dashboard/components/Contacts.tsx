@@ -337,7 +337,7 @@ const renderFilterButton = (
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-3 flex justify-between">
         {hasSelectedContacts ? (
           <div className="flex w-full max-w-4xl flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-[6px]">
             <div className="flex flex-wrap items-center gap-4">
