@@ -9,12 +9,18 @@ export type NavItem = {
   children?: NavChild[];
 };
 
+export type ContactStatus = "New" | "In Progress" | "Customer" | "Churned";
+
 export type Contact = {
   id: string;
   name: string;
   email: string;
   phone: string;
   company: string;
+  owner: string;
+  createdAt: string;
+  lastActivity: string;
+  status: ContactStatus;
 };
 
 export type Product = {
@@ -183,11 +189,8 @@ export const statusOptions: Task["status"][] = ["Todo", "In Progress", "Done"];
 
 export const SEARCH_SELECTION_KEY = "heybassh_search_selection";
 
-export const defaultContacts: Contact[] = [
-  { id: "C-1001", name: "Jane Cooper", email: "jane@acme.com", phone: "+1 202-555-0101", company: "Acme Inc" },
-  { id: "C-1002", name: "Wade Warren", email: "wade@globex.com", phone: "+1 202-555-0199", company: "Globex" },
-  { id: "C-1003", name: "Cody Fisher", email: "cody@umbrella.com", phone: "+1 202-555-0144", company: "Umbrella" },
-];
+export const defaultContacts: Contact[] = [];
+export const contactStatusOptions: ContactStatus[] = ["New", "In Progress", "Customer", "Churned"];
 
 export const defaultProducts: Product[] = [
   { sku: "P-1001", name: "Heybassh T-Shirt", category: "Merch", price: 25, stock: 120 },

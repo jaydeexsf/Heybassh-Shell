@@ -24,12 +24,18 @@ type NavItem = {
   children?: NavChild[]
 }
 
+type ContactStatus = "New" | "In Progress" | "Customer" | "Churned"
+
 type Contact = {
   id: string
   name: string
   email: string
   phone: string
   company: string
+  owner: string
+  createdAt: string
+  lastActivity: string
+  status: ContactStatus
 }
 
 type Product = {
@@ -301,11 +307,7 @@ const navigation: NavItem[] = [
   { id: "executive", label: "Executive", icon: <BuildingIcon /> },
 ]
 
-const defaultContacts: Contact[] = [
-  { id: "C-1001", name: "Jane Cooper", email: "jane@acme.com", phone: "+1 202-555-0101", company: "Acme Inc" },
-  { id: "C-1002", name: "Wade Warren", email: "wade@globex.com", phone: "+1 202-555-0199", company: "Globex" },
-  { id: "C-1003", name: "Cody Fisher", email: "cody@umbrella.com", phone: "+1 202-555-0144", company: "Umbrella" },
-]
+const defaultContacts: Contact[] = []
 
 const defaultProducts: Product[] = [
   { sku: "P-1001", name: "Heybassh T-Shirt", category: "Merch", price: 25, stock: 120 },
@@ -320,6 +322,7 @@ const defaultEmployees: Employee[] = [
 
 const defaultLeaveRequests: LeaveRequest[] = []
 const SEARCH_SELECTION_KEY = "heybassh_search_selection"
+const CONTACTS_STORAGE_KEY = "heybassh_contacts"
 
 const priorityOptions: Task["priority"][] = ["Low", "Normal", "High"]
 const statusOptions: Task["status"][] = ["Todo", "In Progress", "Done"]
@@ -377,6 +380,33 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const [searchPreviewSelection, setSearchPreviewSelection] = useState<string | null>(null)
   const [searchTransitioning, setSearchTransitioning] = useState(false)
   const searchLoaderTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const contactsHydratedRef = useRef(false)
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    try {
+      const persisted = window.localStorage.getItem(CONTACTS_STORAGE_KEY)
+      if (persisted) {
+        const parsed = JSON.parse(persisted)
+        if (Array.isArray(parsed)) {
+          setContacts(parsed)
+        }
+      }
+    } catch (error) {
+      console.error("[AccountDashboard] Failed to load contacts from storage:", error)
+    } finally {
+      contactsHydratedRef.current = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !contactsHydratedRef.current) return
+    try {
+      window.localStorage.setItem(CONTACTS_STORAGE_KEY, JSON.stringify(contacts))
+    } catch (error) {
+      console.error("[AccountDashboard] Failed to persist contacts:", error)
+    }
+  }, [contacts])
+
   const [products, setProducts] = useState<Product[]>(defaultProducts)
   const [productCategory, setProductCategory] = useState("All")
   const [productSearch, setProductSearch] = useState("")
@@ -540,11 +570,24 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   // ... (rest of the code remains the same)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({ customers: true, products: true, front_office: false })
 
-  function handleAddContact(contact: Omit<Contact, 'id'>) {
+  function handleAddContact(contact: Omit<Contact, "id">) {
     if (!contact.name || !contact.email) return
-    const numericPart = contacts.length ? parseInt(contacts[contacts.length - 1].id.split("-")[1] ?? "1000", 10) : 1000
-    const nextId = `C-${String(numericPart + 1).padStart(4, "0")}`
-    setContacts([...contacts, { id: nextId, ...contact }])
+    const now = new Date().toISOString()
+    setContacts((prev) => {
+      const lastId = prev[prev.length - 1]?.id
+      const numericPart = lastId ? parseInt(lastId.split("-")[1] ?? "1000", 10) : 1000
+      const safeNumeric = Number.isNaN(numericPart) ? 1000 : numericPart
+      const nextId = `C-${String(safeNumeric + 1).padStart(4, "0")}`
+      const nextContact: Contact = {
+        id: nextId,
+        ...contact,
+        owner: contact.owner || "Unassigned",
+        createdAt: contact.createdAt || now,
+        lastActivity: contact.lastActivity || contact.createdAt || now,
+        status: contact.status ?? "New",
+      }
+      return [...prev, nextContact]
+    })
   }
 
   function handleAddProduct(event: React.FormEvent<HTMLFormElement>) {
@@ -939,7 +982,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                           ? "border-[#1a2446] bg-[#111936] text-white shadow-[0_15px_35px_-25px_rgba(39,172,255,0.65)]"
                           : "border-transparent text-blue-100 hover:bg-[#101733]"
                       }`}
-                      style={{ paddingTop: "calc(0.25rem - 2px)", paddingBottom: "calc(0.25rem - 2px)" }}
+                      style={{ paddingTop: "4px", paddingBottom: "4px" }}
                     >
                       <span className="flex items-center gap-3">
                         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#121c3d] text-[#7ed0ff]">

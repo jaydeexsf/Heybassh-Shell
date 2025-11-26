@@ -19,7 +19,7 @@ export function ContactsView({
   onSearchResultClick
 }: ContactsViewProps) {
   const [isAdding, setIsAdding] = useState(false);
-  const [newContact, setNewContact] = useState<Omit<Contact, 'id'>>({ 
+  const [newContact, setNewContact] = useState({ 
     name: "", 
     email: "", 
     phone: "", 
@@ -34,7 +34,17 @@ export function ContactsView({
 
   const handleAddContact = (e: React.FormEvent) => {
     e.preventDefault();
-    onAddContact(newContact);
+    const timestamp = new Date().toISOString();
+    onAddContact({
+      name: newContact.name,
+      email: newContact.email,
+      phone: newContact.phone,
+      company: newContact.company,
+      owner: "Unassigned",
+      createdAt: timestamp,
+      lastActivity: timestamp,
+      status: "New" as Contact["status"],
+    });
     setNewContact({ name: "", email: "", phone: "", company: "" });
     setIsAdding(false);
   };
