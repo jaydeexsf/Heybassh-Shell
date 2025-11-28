@@ -1,11 +1,12 @@
 import { forwardRef } from "react"
 import { Input, InputProps } from "antd"
+import type { InputRef } from "antd"
 
 type PrimaryInputProps = Omit<InputProps, "size"> & {
   size?: "sm" | "lg" | "md"
 }
 
-export const PrimaryInput = forwardRef<HTMLInputElement, PrimaryInputProps>(function PrimaryInput(
+export const PrimaryInput = forwardRef<InputRef, PrimaryInputProps>(function PrimaryInput(
   { className = "", size = "sm", ...props },
   ref,
 ) {

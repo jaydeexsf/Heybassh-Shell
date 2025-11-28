@@ -747,7 +747,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   ]
 
   const desktopGrid = "md:grid-cols-[64px_minmax(0,1fr)]"
-  const contentGrid = sidebarCollapsed ? "md:grid-cols-[minmax(0,1fr)]" : "md:grid-cols-[260px_minmax(0,1fr)]"
+  const contentGrid = sidebarCollapsed ? "md:grid-cols-[0px_minmax(0,1fr)]" : "md:grid-cols-[260px_minmax(0,1fr)]"
 
   return (
     <div className="min-h-screen bg-[#020617]">
@@ -975,10 +975,14 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
           </div>
         </header>
         <div className="h-px bg-[#1a2446]/50"></div>
-        <div className={`grid flex-1 grid-cols-1 ${contentGrid}`}>
+        <div className={`grid flex-1 grid-cols-1 ${contentGrid} transition-[grid-template-columns] duration-500 ease-in-out`}>
         {/* Main sidebar */}
-          {!sidebarCollapsed && (
-            <aside className="border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#0e1629] md:sticky md:top-0 md:h-screen transition-[transform,opacity] duration-300 ease-in-out md:translate-x-0 md:opacity-100">
+          <aside
+            className={`border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#0e1629] md:sticky md:top-0 md:h-screen transition-all duration-500 ease-in-out ${
+              sidebarCollapsed ? "md:-translate-x-full md:opacity-0 pointer-events-none" : "md:translate-x-0 md:opacity-100"
+            }`}
+            aria-hidden={sidebarCollapsed}
+          >
             <div className="flex h-full flex-col">
             <nav className="flex-1 overflow-y-auto pr-1 flex flex-col gap-1 pt-2 pb-24">
               {navigation.map((item) => {
@@ -1043,8 +1047,8 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
               })}
             </nav>
             </div>
+            </div>
           </aside>
-          )}
 
           <div className="bg-[#020617]">
         <div className="mx-auto grid max-w-[1140px] gap-4 p-4">
