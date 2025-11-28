@@ -57,3 +57,47 @@ body { @apply min-h-screen bg-[#020617] text-[#eef3ff]; font-family: system-ui, 
 .spinner { @apply inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white; }
 .th { @apply px-4 py-3 text-left text-xs uppercase tracking-wide text-blue-300; }
 .td { @apply px-4 py-3; }
+
+/* Ant Design modal + inputs dark theme override */
+.primary-modal .ant-modal-content {
+  background-color: #050a1b;
+  border-radius: 24px;
+  border: 1px solid #1a2446;
+  padding: 18px 20px 20px;
+}
+.primary-modal .ant-modal-header {
+  background-color: transparent;
+  border-bottom: 1px solid #111936;
+  margin: 0 -20px 12px;
+  padding: 0 20px 10px;
+}
+.primary-modal .ant-modal-title {
+  color: #eef3ff;
+  font-size: 14px;
+  font-weight: 600;
+}
+.primary-modal .ant-modal-body {
+  color: #c7d2ff;
+  padding: 0;
+}
+.primary-modal .ant-modal-close-x {
+  color: #9ca3ff;
+}
+.primary-modal .ant-modal-close-x:hover {
+  color: #ffffff;
+  background-color: rgba(255,255,255,0.05);
+}
+.primary-modal .ant-input,
+.primary-modal .ant-input-affix-wrapper {
+  background-color: #0e1629;
+  border-color: #1a2446;
+  color: #e5edff;
+}
+.primary-modal .ant-input::placeholder {
+  color: rgba(148, 163, 255, 0.6);
+}
+.primary-modal .ant-input-affix-wrapper-focused,
+.primary-modal .ant-input:focus {
+  border-color: #3ab0ff;
+  box-shadow: 0 0 0 2px rgba(58, 176, 255, 0.35);
+}
