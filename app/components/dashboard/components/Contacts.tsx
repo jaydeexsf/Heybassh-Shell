@@ -12,6 +12,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { PrimaryButton } from "../../PrimaryButton";
+import { PrimaryInput } from "../../PrimaryInput";
 import { PrimaryModal } from "../../PrimaryModal";
 import { Contact, contactStatusOptions } from "../types";
 
@@ -667,11 +668,10 @@ const renderFilterButton = (
                   <label htmlFor="contact-name" className="block text-sm font-medium text-blue-200">
                     Full Name
                   </label>
-                  <input
+                  <PrimaryInput
                     id="contact-name"
                     type="text"
                     required
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
                     value={newContact.name}
                     onChange={(event) => setNewContact((prev) => ({ ...prev, name: event.target.value }))}
                   />
@@ -680,11 +680,10 @@ const renderFilterButton = (
                   <label htmlFor="contact-email" className="block text-sm font-medium text-blue-200">
                     Email
                   </label>
-                  <input
+                  <PrimaryInput
                     id="contact-email"
                     type="email"
                     required
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
                     value={newContact.email}
                     onChange={(event) => setNewContact((prev) => ({ ...prev, email: event.target.value }))}
                   />
@@ -693,10 +692,9 @@ const renderFilterButton = (
                   <label htmlFor="contact-phone" className="block text-sm font-medium text-blue-200">
                     Phone
                   </label>
-                  <input
+                  <PrimaryInput
                     id="contact-phone"
                     type="tel"
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
                     value={newContact.phone}
                     onChange={(event) => setNewContact((prev) => ({ ...prev, phone: event.target.value }))}
                   />
@@ -705,10 +703,9 @@ const renderFilterButton = (
                   <label htmlFor="contact-company" className="block text-sm font-medium text-blue-200">
                     Company
                   </label>
-                  <input
+                  <PrimaryInput
                     id="contact-company"
                     type="text"
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
                     value={newContact.company}
                     onChange={(event) => setNewContact((prev) => ({ ...prev, company: event.target.value }))}
                   />

@@ -12,6 +12,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { PrimaryButton } from "../../PrimaryButton";
+import { PrimaryInput } from "../../PrimaryInput";
 import { PrimaryModal } from "../../PrimaryModal";
 import { Deal, dealStageOptions, dealStatusOptions } from "../types";
 
@@ -728,11 +729,10 @@ export function Deals({
                   <label htmlFor="deal-name" className="block text-sm font-medium text-blue-200">
                     Deal name
                   </label>
-                  <input
+                  <PrimaryInput
                     id="deal-name"
                     type="text"
                     required
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
                     value={newDeal.name}
                     onChange={(event) => setNewDeal((prev) => ({ ...prev, name: event.target.value }))}
                   />
@@ -741,11 +741,10 @@ export function Deals({
                   <label htmlFor="deal-company" className="block text-sm font-medium text-blue-200">
                     Company
                   </label>
-                  <input
+                  <PrimaryInput
                     id="deal-company"
                     type="text"
                     required
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
                     value={newDeal.company}
                     onChange={(event) => setNewDeal((prev) => ({ ...prev, company: event.target.value }))}
                   />
@@ -754,12 +753,11 @@ export function Deals({
                   <label htmlFor="deal-amount" className="block text-sm font-medium text-blue-200">
                     Amount
                   </label>
-                  <input
+                  <PrimaryInput
                     id="deal-amount"
                     type="number"
                     min="0"
                     step="0.01"
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
                     value={newDeal.amount}
                     onChange={(event) => setNewDeal((prev) => ({ ...prev, amount: event.target.value }))}
                   />

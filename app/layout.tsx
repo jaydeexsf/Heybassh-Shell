@@ -1,4 +1,5 @@
 
+import "antd/dist/reset.css"
 import "./globals.css"
 import { ReactNode } from "react"
 import Providers from "./providers"

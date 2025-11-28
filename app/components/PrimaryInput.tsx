@@ -1,19 +1,22 @@
-import { forwardRef, InputHTMLAttributes } from "react"
+import { forwardRef } from "react"
+import { Input, InputProps } from "antd"
 
-type PrimaryInputProps = InputHTMLAttributes<HTMLInputElement> & {
-  size?: "sm" | "lg"
+type PrimaryInputProps = Omit<InputProps, "size"> & {
+  size?: "sm" | "lg" | "md"
 }
 
 export const PrimaryInput = forwardRef<HTMLInputElement, PrimaryInputProps>(function PrimaryInput(
   { className = "", size = "sm", ...props },
   ref,
 ) {
-  const sizeClasses = size === "lg" ? "px-4 py-2 text-sm" : "px-3 py-2 text-sm"
+  const resolvedSize = size === "lg" ? "large" : size === "sm" ? "small" : "middle"
+  const combinedClassName = ["w-full", className].filter(Boolean).join(" ")
 
   return (
-    <input
+    <Input
       ref={ref}
-      className={`radius-6 input ${sizeClasses} ${className}`.trim()}
+      size={resolvedSize}
+      className={combinedClassName}
       {...props}
     />
   )

@@ -12,6 +12,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { PrimaryButton } from "../../PrimaryButton";
+import { PrimaryInput } from "../../PrimaryInput";
 import { PrimaryModal } from "../../PrimaryModal";
 import { Company, companyStatusOptions } from "../types";
 
@@ -665,11 +666,10 @@ export function Companies({
                   <label htmlFor="company-name" className="block text-sm font-medium text-blue-200">
                     Company Name
                   </label>
-                  <input
+                  <PrimaryInput
                     id="company-name"
                     type="text"
                     required
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
                     value={newCompany.name}
                     onChange={(event) => setNewCompany((prev) => ({ ...prev, name: event.target.value }))}
                   />
@@ -678,10 +678,9 @@ export function Companies({
                   <label htmlFor="company-domain" className="block text-sm font-medium text-blue-200">
                     Domain
                   </label>
-                  <input
+                  <PrimaryInput
                     id="company-domain"
                     type="text"
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
                     value={newCompany.domain}
                     onChange={(event) => setNewCompany((prev) => ({ ...prev, domain: event.target.value }))}
                   />
@@ -690,10 +689,9 @@ export function Companies({
                   <label htmlFor="company-industry" className="block text-sm font-medium text-blue-200">
                     Industry
                   </label>
-                  <input
+                  <PrimaryInput
                     id="company-industry"
                     type="text"
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
                     value={newCompany.industry}
                     onChange={(event) => setNewCompany((prev) => ({ ...prev, industry: event.target.value }))}
                   />
@@ -702,10 +700,9 @@ export function Companies({
                   <label htmlFor="company-size" className="block text-sm font-medium text-blue-200">
                     Company Size
                   </label>
-                  <input
+                  <PrimaryInput
                     id="company-size"
                     type="text"
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
                     value={newCompany.size}
                     onChange={(event) => setNewCompany((prev) => ({ ...prev, size: event.target.value }))}
                   />
