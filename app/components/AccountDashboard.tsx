@@ -978,58 +978,58 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
         <div className={`grid flex-1 grid-cols-1 ${contentGrid} transition-[grid-template-columns] duration-500 ease-in-out`}>
         {/* Main sidebar */}
           <aside
-            className={`border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#0e1629] md:sticky md:top-0 md:h-screen transition-all duration-500 ease-in-out ${
+            className={`border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#020816] md:sticky md:top-0 md:h-screen transition-all duration-500 ease-in-out ${
               sidebarCollapsed ? "md:-translate-x-full md:opacity-0 pointer-events-none" : "md:translate-x-0 md:opacity-100"
             }`}
             aria-hidden={sidebarCollapsed}
           >
             <div className="flex h-full flex-col">
-            <nav className="flex-1 overflow-y-auto pr-1 flex flex-col gap-1 pt-2 pb-24">
+            <nav className="flex-1 overflow-y-auto pr-1 pt-2 pb-24">
+              <div className="rounded-2xl bg-[#020b1f] border border-[#111936] px-2 py-2 flex flex-col gap-1">
               {navigation.map((item) => {
                 const hasChildren = Boolean(item.children?.length)
                 const open = openSections[item.id] ?? false
                 const active = isParentActive(item)
 
                 return (
-                  <div key={item.id} className="grid gap-1">
+                  <div key={item.id} className="grid gap-0.5">
                     <button
                       onClick={() => (hasChildren ? setOpenSections((c) => toggleSectionState(c, item.id)) : navigate(item.id))}
-                      className={`flex items-center justify-between rounded-[26px] border px-3 text-sm transition ${
+                      className={`flex items-center justify-between rounded-lg px-3 py-2 text-[13px] transition-all ${
                         active
-                          ? "border-[#1a2446] bg-[#111936] text-white shadow-[0_15px_35px_-25px_rgba(39,172,255,0.65)]"
-                          : "border-transparent text-blue-100 hover:bg-[#101733]"
+                          ? "bg-[#165dff] text-white shadow-sm"
+                          : "bg-transparent text-blue-100 hover:bg-[#111936]"
                       }`}
-                      style={{ paddingTop: "4px", paddingBottom: "4px" }}
                     >
                       <span className="flex items-center gap-3">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#121c3d] text-[#7ed0ff]">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#101933] text-[#7ed0ff] text-[15px]">
                           {item.icon}
                         </span>
                         <span className="font-medium">{item.label}</span>
                       </span>
                       {hasChildren && (
-                        <span className={`text-xs transition-transform ${open ? "rotate-180 text-blue-200" : "text-blue-300"}`}>
+                        <span className={`text-[10px] transition-transform ${open ? "rotate-180 text-blue-100" : "text-blue-300"}`}>
                           ▾
                         </span>
                       )}
                     </button>
                     {hasChildren && (
                       <div
-                        className={`overflow-hidden rounded-[26px] border border-[#111936] bg-[#0d142a] transition-all ${
+                        className={`overflow-hidden rounded-lg bg-[#020816] transition-all ml-9 ${
                           open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                         }`}
                       >
-                        <div className="flex flex-col gap-1 p-2">
+                        <div className="flex flex-col gap-0.5 py-1">
                           {item.children?.map((child) => {
                             const childActive = child.id === view
                             return (
                               <button
                                 key={child.id}
                                 onClick={() => navigate(child.id)}
-                                className={`rounded-[24px] px-3 py-2 text-left text-xs font-medium transition ${
+                                className={`rounded-md px-3 py-1.5 text-left text-[12px] font-medium transition ${
                                   childActive
-                                    ? "bg-[#152044] text-white shadow-[0_12px_28px_-25px_rgba(39,172,255,0.65)]"
-                                    : "text-blue-200 hover:bg-[#121c3d] hover:text-white"
+                                    ? "bg-[#165dff]/90 text-white"
+                                    : "text-blue-200 hover:bg-[#111936] hover:text-white"
                                 }`}
                               >
                                 {child.label}
@@ -1039,12 +1039,10 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                         </div>
                       </div>
                     )}
-                    {navSeparators.has(item.id) && (
-                      <div className="mx-1 mt-2 h-px bg-[#1a2446]/60" aria-hidden="true"></div>
-                    )}
                   </div>
                 )
               })}
+              </div>
             </nav>
             </div>
           </aside>
