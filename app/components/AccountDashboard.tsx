@@ -1047,7 +1047,6 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
               })}
             </nav>
             </div>
-            </div>
           </aside>
 
           <div className="bg-[#020617]">
