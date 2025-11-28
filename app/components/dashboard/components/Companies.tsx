@@ -12,6 +12,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { PrimaryButton } from "../../PrimaryButton";
+import { PrimaryModal } from "../../PrimaryModal";
 import { Company, companyStatusOptions } from "../types";
 
 type ActivityFilterValue = "all" | "7" | "30" | "stale30";
@@ -323,7 +324,7 @@ export function Companies({
         <PrimaryButton
           onClick={() => setIsModalOpen(true)}
           icon={<PlusIcon className="h-4 w-4" />}
-          className="rounded-2xl px-5 py-2 text-xs font-semibold uppercase tracking-wide"
+          className="uppercase tracking-wide"
         >
           Add Company
         </PrimaryButton>
@@ -643,28 +644,17 @@ export function Companies({
         </table>
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 mt-[-50px] flex items-center justify-center bg-[#020617]/80 px-4 py-10 backdrop-blur-sm">
-          <div className="w-full max-w-3xl rounded-[32px] border border-[#1a2446] bg-[#050a1b] p-6 shadow-2xl">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-semibold text-white">Add Company</h3>
-                <p className="text-sm text-blue-300">Capture core account details for your company database.</p>
-              </div>
-              <button
-                type="button"
-                className="rounded-full p-2 text-blue-200 transition hover:bg-white/5 hover:text-white"
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setNewCompany(createInitialCompany());
-                }}
-                aria-label="Close add company modal"
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddCompany} className="space-y-6">
+      <PrimaryModal
+        open={isModalOpen}
+        title="Add Company"
+        description="Capture core account details for your company database."
+        onClose={() => {
+          setIsModalOpen(false);
+          setNewCompany(createInitialCompany());
+        }}
+        widthClassName="max-w-3xl"
+      >
+        <form onSubmit={handleAddCompany} className="space-y-6">
               {formError && (
                 <div className="rounded-[20px] border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
                   {formError}
@@ -742,18 +732,18 @@ export function Companies({
                 </select>
               </div>
 
-              <div className="flex flex-wrap justify-end gap-3">
+              <div className="mt-6 flex flex-wrap justify-end gap-3 border-t border-white/5 pt-4">
                 <button
                   type="button"
                   onClick={() => {
                     setIsModalOpen(false);
                     setNewCompany(createInitialCompany());
                   }}
-                  className="rounded-[8px] border border-[#1a2446] px-5 py-2 text-sm font-medium text-blue-200 transition hover:bg-[#121c3d]"
+                  className="rounded-[4px] border border-[#1a2446] px-4 py-2 text-xs font-medium text-blue-200 transition hover:bg-[#121c3d]"
                 >
                   Cancel
                 </button>
-                <PrimaryButton type="submit" className="rounded-2xl px-6 py-2" disabled={isSubmittingCompany}>
+                <PrimaryButton type="submit" disabled={isSubmittingCompany}>
                   {isSubmittingCompany ? (
                     <span className="flex items-center gap-2">
                       <SpinnerIcon className="h-4 w-4 text-[#031226]" />
@@ -765,9 +755,7 @@ export function Companies({
                 </PrimaryButton>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </PrimaryModal>
     </div>
   );
 }

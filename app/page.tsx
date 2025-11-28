@@ -7,6 +7,7 @@ import Image from "next/image"
 import Link from "next/link"
 import logo from "../Images/heybasshlogo.png"
 import { PrimaryButton } from "./components/PrimaryButton"
+import { PrimaryInput } from "./components/PrimaryInput"
 
 type AuthMode = "login" | "register"
 type Feedback = { type: "success" | "error" | "info"; message: string }
@@ -387,9 +388,9 @@ function HomeInner() {
                   Email address
                 </label>
                 <div className="flex gap-2">
-                  <input
+                  <PrimaryInput
                     id="email"
-                    className={`radius-6 input placeholder:text-blue-200/50 flex-1 ${formErrors.email ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    className={`placeholder:text-blue-200/50 flex-1 ${formErrors.email ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder="name@company.com"
                     type="email"
                     value={email}
@@ -406,9 +407,9 @@ function HomeInner() {
                   <label className="text-sm font-medium text-blue-100" htmlFor="name">
                     Full name
                   </label>
-                  <input
+                  <PrimaryInput
                     id="name"
-                    className={`radius-6 input placeholder:text-blue-300/50 ${formErrors.name ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    className={`placeholder:text-blue-300/50 ${formErrors.name ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder="Jane Developer"
                     type="text"
                     value={name}
@@ -424,9 +425,9 @@ function HomeInner() {
                   <label className="text-sm font-medium text-blue-100" htmlFor="company">
                     Company name
                   </label>
-                  <input
+                  <PrimaryInput
                     id="company"
-                    className={`radius-6 input placeholder:text-blue-300/50 ${formErrors.companyName ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    className={`placeholder:text-blue-300/50 ${formErrors.companyName ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder="Acme Inc."
                     type="text"
                     value={companyName}
@@ -453,9 +454,9 @@ function HomeInner() {
                   )}
                 </div>
                 <div className="relative w-full">
-                  <input
+                  <PrimaryInput
                     id="password"
-                    className={`radius-6 input w-full placeholder:text-blue-200/50 pr-12 ${formErrors.password ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    className={`w-full placeholder:text-blue-200/50 pr-12 ${formErrors.password ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder={mode === "login" ? "Your password" : "At least 6 characters"}
                     type={showPassword ? "text" : "password"}
                     value={password}
@@ -517,11 +518,11 @@ function HomeInner() {
               )}
 
               {mode === "login" ? (
-                <PrimaryButton type="submit" disabled={loading} aria-busy={loading} className="w-full">
+              <PrimaryButton type="submit" disabled={loading} aria-busy={loading} className="w-full" size="lg">
                   {loading ? <span className="spinner" role="status" aria-label="Processing request" /> : <span>Sign in</span>}
                 </PrimaryButton>
               ) : (
-                <PrimaryButton type="submit" disabled={loading} aria-busy={loading} className="w-full">
+                <PrimaryButton type="submit" disabled={loading} aria-busy={loading} className="w-full" size="lg">
                   {loading ? <span className="spinner" role="status" aria-label="Processing request" /> : <span>Create account</span>}
                 </PrimaryButton>
               )}

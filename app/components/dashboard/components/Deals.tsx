@@ -13,24 +13,25 @@ import {
 } from "@heroicons/react/24/outline";
 import { PrimaryButton } from "../../PrimaryButton";
 import { PrimaryModal } from "../../PrimaryModal";
-import { Contact, contactStatusOptions } from "../types";
+import { Deal, dealStageOptions, dealStatusOptions } from "../types";
 
 type ActivityFilterValue = "all" | "7" | "30" | "stale30";
 
-type ContactFilters = {
+type DealFilters = {
   owner: string;
   status: string;
+  stage: string;
   createdFrom: string;
   createdTo: string;
   activity: ActivityFilterValue;
 };
 
-type NewContactFormState = {
+type NewDealFormState = {
   name: string;
-  email: string;
-  phone: string;
   company: string;
-  status: Contact["status"];
+  amount: string;
+  stage: Deal["stage"];
+  status: Deal["status"];
 };
 
 const activityFilters: { label: string; value: ActivityFilterValue }[] = [
@@ -40,21 +41,30 @@ const activityFilters: { label: string; value: ActivityFilterValue }[] = [
   { label: "No activity 30+ days", value: "stale30" },
 ];
 
-const defaultFilters: ContactFilters = {
+const defaultFilters: DealFilters = {
   owner: "all",
   status: "all",
+  stage: "all",
   createdFrom: "",
   createdTo: "",
   activity: "all",
 };
 
-type FilterPanel = "owner" | "created" | "activity" | "status";
+type FilterPanel = "owner" | "created" | "activity" | "status" | "stage";
 
-const statusColors: Record<Contact["status"], string> = {
-  New: "border-blue-500/40 bg-blue-500/10 text-blue-200",
-  "In Progress": "border-amber-500/40 bg-amber-500/10 text-amber-200",
-  Customer: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
-  Churned: "border-rose-500/40 bg-rose-500/10 text-rose-200",
+const statusColors: Record<Deal["status"], string> = {
+  Open: "border-blue-500/40 bg-blue-500/10 text-blue-200",
+  Won: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
+  Lost: "border-rose-500/40 bg-rose-500/10 text-rose-200",
+};
+
+const stageColors: Record<Deal["stage"], string> = {
+  New: "bg-slate-500/15 text-slate-200 border-slate-500/40",
+  Qualified: "bg-sky-500/15 text-sky-200 border-sky-500/40",
+  Proposal: "bg-indigo-500/15 text-indigo-200 border-indigo-500/40",
+  Negotiation: "bg-amber-500/15 text-amber-200 border-amber-500/40",
+  Won: "bg-emerald-500/15 text-emerald-200 border-emerald-500/40",
+  Lost: "bg-rose-500/15 text-rose-200 border-rose-500/40",
 };
 
 const SortIcon = ({ className }: { className?: string }) => (
@@ -63,20 +73,20 @@ const SortIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-interface ContactsProps {
-  contacts: Contact[];
-  onAddContact: (contact: Omit<Contact, "id">) => Promise<void> | void;
+interface DealsProps {
+  deals: Deal[];
+  onAddDeal: (deal: Omit<Deal, "id">) => Promise<void> | void;
   isLoading?: boolean;
   errorMessage?: string;
   defaultOwner?: string;
 }
 
-const createInitialContact = (): NewContactFormState => ({
+const createInitialDeal = (): NewDealFormState => ({
   name: "",
-  email: "",
-  phone: "",
   company: "",
-  status: contactStatusOptions[0] ?? "New",
+  amount: "",
+  stage: dealStageOptions[0] ?? "New",
+  status: "Open",
 });
 
 const SpinnerIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
@@ -86,21 +96,21 @@ const SpinnerIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
   </svg>
 );
 
-export function Contacts({
-  contacts,
-  onAddContact,
+export function Deals({
+  deals,
+  onAddDeal,
   isLoading = false,
   errorMessage,
   defaultOwner = "Unassigned",
-}: ContactsProps) {
+}: DealsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
-  const [newContact, setNewContact] = useState<NewContactFormState>(createInitialContact);
-  const [filters, setFilters] = useState<ContactFilters>(defaultFilters);
+  const [selectedDeals, setSelectedDeals] = useState<Set<string>>(new Set());
+  const [newDeal, setNewDeal] = useState<NewDealFormState>(createInitialDeal);
+  const [filters, setFilters] = useState<DealFilters>(defaultFilters);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [activeFilterPanel, setActiveFilterPanel] = useState<FilterPanel | null>(null);
-  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
+  const [isSubmittingDeal, setIsSubmittingDeal] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
   const moreDropdownRef = useRef<HTMLDivElement>(null);
@@ -108,13 +118,13 @@ export function Contacts({
 
   const ownerOptions = useMemo(() => {
     const owners = new Set<string>();
-    contacts.forEach((contact) => {
-      if (contact.owner?.trim()) {
-        owners.add(contact.owner.trim());
+    deals.forEach((deal) => {
+      if (deal.owner?.trim()) {
+        owners.add(deal.owner.trim());
       }
     });
     return Array.from(owners).sort((a, b) => a.localeCompare(b));
-  }, [contacts]);
+  }, [deals]);
 
   const normalizeDate = (value: string) => {
     if (!value) return null;
@@ -122,35 +132,35 @@ export function Contacts({
     return Number.isNaN(date.getTime()) ? null : date;
   };
 
-  const filteredContacts = useMemo(() => {
+  const filteredDeals = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
     const now = Date.now();
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
 
-    return contacts.filter((contact) => {
+    return deals.filter((deal) => {
       const matchesSearch =
         !normalizedSearch ||
-        contact.name.toLowerCase().includes(normalizedSearch) ||
-        contact.email.toLowerCase().includes(normalizedSearch) ||
-        (contact.company ?? "").toLowerCase().includes(normalizedSearch) ||
-        (contact.owner ?? "Unassigned").toLowerCase().includes(normalizedSearch);
+        deal.name.toLowerCase().includes(normalizedSearch) ||
+        deal.company.toLowerCase().includes(normalizedSearch) ||
+        (deal.owner ?? "Unassigned").toLowerCase().includes(normalizedSearch);
 
-      const ownerValue = contact.owner?.trim() || "Unassigned";
+      const ownerValue = deal.owner?.trim() || "Unassigned";
       const matchesOwner =
         filters.owner === "all" ||
         (filters.owner === "unassigned" ? ownerValue === "Unassigned" : ownerValue === filters.owner);
 
-      const matchesStatus = filters.status === "all" || contact.status === filters.status;
+      const matchesStatus = filters.status === "all" || deal.status === filters.status;
+      const matchesStage = filters.stage === "all" || deal.stage === filters.stage;
 
-      const createdAtDate = normalizeDate(contact.createdAt);
+      const createdAtDate = normalizeDate(deal.createdAt);
       const createdFromDate = normalizeDate(filters.createdFrom);
       const createdToDate = normalizeDate(filters.createdTo);
 
       const matchesCreatedFrom = !createdFromDate || (createdAtDate && createdAtDate >= createdFromDate);
       const matchesCreatedTo = !createdToDate || (createdAtDate && createdAtDate <= createdToDate);
 
-      const lastActivityDate = normalizeDate(contact.lastActivity);
+      const lastActivityDate = normalizeDate(deal.lastActivity);
       const lastActivityTime = lastActivityDate?.getTime() ?? 0;
 
       const matchesActivity =
@@ -160,14 +170,20 @@ export function Contacts({
         (filters.activity === "stale30" && (!lastActivityDate || lastActivityTime < thirtyDaysAgo));
 
       return (
-        matchesSearch && matchesOwner && matchesStatus && matchesCreatedFrom && matchesCreatedTo && matchesActivity
+        matchesSearch &&
+        matchesOwner &&
+        matchesStatus &&
+        matchesStage &&
+        matchesCreatedFrom &&
+        matchesCreatedTo &&
+        matchesActivity
       );
     });
-  }, [contacts, filters, searchTerm]);
+  }, [deals, filters, searchTerm]);
 
-  const hasSelectedContacts = selectedContacts.size > 0;
-  const allSelected = filteredContacts.length > 0 && selectedContacts.size === filteredContacts.length;
-  const someSelected = selectedContacts.size > 0 && selectedContacts.size < filteredContacts.length;
+  const hasSelectedDeals = selectedDeals.size > 0;
+  const allSelected = filteredDeals.length > 0 && selectedDeals.size === filteredDeals.length;
+  const someSelected = selectedDeals.size > 0 && selectedDeals.size < filteredDeals.length;
 
   useEffect(() => {
     if (selectAllCheckboxRef.current) {
@@ -176,141 +192,143 @@ export function Contacts({
   }, [someSelected]);
 
   useEffect(() => {
-    setSelectedContacts((prev) => {
+    setSelectedDeals((prev) => {
       const next = new Set<string>();
-      contacts.forEach((contact) => {
-        if (prev.has(contact.id)) {
-          next.add(contact.id);
+      deals.forEach((deal) => {
+        if (prev.has(deal.id)) {
+          next.add(deal.id);
         }
       });
       return next;
     });
-  }, [contacts]);
+  }, [deals]);
 
-useEffect(() => {
-  function handleClickOutside(event: MouseEvent) {
-    if (moreDropdownRef.current && !moreDropdownRef.current.contains(event.target as Node)) {
-      setMoreDropdownOpen(false);
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (moreDropdownRef.current && !moreDropdownRef.current.contains(event.target as Node)) {
+        setMoreDropdownOpen(false);
+      }
+      if (inlineFiltersRef.current && !inlineFiltersRef.current.contains(event.target as Node)) {
+        setActiveFilterPanel(null);
+      }
     }
-    if (inlineFiltersRef.current && !inlineFiltersRef.current.contains(event.target as Node)) {
-      setActiveFilterPanel(null);
-    }
-  }
 
-  if (moreDropdownOpen || activeFilterPanel) {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }
-}, [moreDropdownOpen, activeFilterPanel]);
+    if (moreDropdownOpen || activeFilterPanel) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [moreDropdownOpen, activeFilterPanel]);
 
   const handleSelectAll = () => {
     if (allSelected) {
-      setSelectedContacts(new Set());
+      setSelectedDeals(new Set());
     } else {
-      setSelectedContacts(new Set(filteredContacts.map((c) => c.id)));
+      setSelectedDeals(new Set(filteredDeals.map((d) => d.id)));
     }
   };
 
-  const handleSelectContact = (contactId: string) => {
-    const newSelected = new Set(selectedContacts);
-    if (newSelected.has(contactId)) {
-      newSelected.delete(contactId);
+  const handleSelectDeal = (dealId: string) => {
+    const next = new Set(selectedDeals);
+    if (next.has(dealId)) {
+      next.delete(dealId);
     } else {
-      newSelected.add(contactId);
+      next.add(dealId);
     }
-    setSelectedContacts(newSelected);
+    setSelectedDeals(next);
   };
 
-const handleAddContact = async (event: React.FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
-  if (!newContact.name.trim() || !newContact.email.trim()) return;
+  const handleAddDeal = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!newDeal.name.trim() || !newDeal.company.trim()) return;
 
-  const timestamp = new Date().toISOString();
-  const payload: Omit<Contact, "id"> = {
-    name: newContact.name.trim(),
-    email: newContact.email.trim(),
-    phone: newContact.phone.trim(),
-    company: newContact.company.trim(),
-    owner: defaultOwner?.trim() || "Unassigned",
-    createdAt: timestamp,
-    lastActivity: timestamp,
-    status: newContact.status,
+    const timestamp = new Date().toISOString();
+    const parsedAmount = Number.parseFloat(newDeal.amount.replace(/,/g, ""));
+
+    const payload: Omit<Deal, "id"> = {
+      name: newDeal.name.trim(),
+      company: newDeal.company.trim(),
+      amount: Number.isFinite(parsedAmount) ? parsedAmount : 0,
+      owner: defaultOwner?.trim() || "Unassigned",
+      createdAt: timestamp,
+      lastActivity: timestamp,
+      stage: newDeal.stage,
+      status: newDeal.status,
+    };
+
+    try {
+      setIsSubmittingDeal(true);
+      setFormError(null);
+      await onAddDeal(payload);
+      setNewDeal(createInitialDeal());
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Failed to add deal", error);
+      setFormError("Failed to save deal. Please try again.");
+    } finally {
+      setIsSubmittingDeal(false);
+    }
   };
-
-  try {
-    setIsSubmittingContact(true);
-    setFormError(null);
-    await onAddContact(payload);
-    setNewContact(createInitialContact());
-    setIsModalOpen(false);
-  } catch (error) {
-    console.error("Failed to add contact", error);
-    setFormError("Failed to save contact. Please try again.");
-  } finally {
-    setIsSubmittingContact(false);
-  }
-};
 
   const handleDeleteSelected = () => {
-    console.log("Delete contacts:", Array.from(selectedContacts));
-    setSelectedContacts(new Set());
+    console.log("Delete deals:", Array.from(selectedDeals));
+    setSelectedDeals(new Set());
     setMoreDropdownOpen(false);
   };
 
   const handleEditSelected = () => {
-    console.log("Edit contacts:", Array.from(selectedContacts));
+    console.log("Edit deals:", Array.from(selectedDeals));
     setMoreDropdownOpen(false);
   };
 
-const handleFilterChange = (key: keyof ContactFilters, value: string) => {
-  setFilters((prev) => ({ ...prev, [key]: value }));
-};
+  const handleFilterChange = (key: keyof DealFilters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
 
-const handleResetFilters = () => {
-  setFilters(defaultFilters);
-};
+  const handleResetFilters = () => {
+    setFilters(defaultFilters);
+  };
 
-const toggleFilterPanel = (panel: FilterPanel) => {
-  setActiveFilterPanel((prev) => (prev === panel ? null : panel));
-};
+  const toggleFilterPanel = (panel: FilterPanel) => {
+    setActiveFilterPanel((prev) => (prev === panel ? null : panel));
+  };
 
-const renderFilterButton = (
-  panel: FilterPanel,
-  label: string,
-  icon: ReactNode,
-  content: ReactNode,
-  isActive: boolean,
-  onClose: () => void,
-) => (
-  <div key={panel} className="relative">
-    <button
-      type="button"
-      onClick={() => toggleFilterPanel(panel)}
-      className={`inline-flex items-center gap-1.5 rounded-[20px] border px-3 py-1.5 text-xs transition-colors ${
-        isActive || activeFilterPanel === panel
-          ? "border-[#2b9bff] bg-[#142044] text-white"
-          : "border-[#1a2446] bg-[#0e1629] text-blue-200 hover:bg-[#121c3d] hover:text-white"
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
-    {activeFilterPanel === panel && (
-      <div className="absolute left-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[24px] border border-[#1a2446] bg-[#050a1b] p-4 text-blue-100 shadow-2xl">
-        {content}
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            type="button"
-            className="rounded-[16px] border border-[#1a2446] px-3 py-1 text-xs text-blue-200 hover:bg-[#121c3d]"
-            onClick={onClose}
-          >
-            Close
-          </button>
+  const renderFilterButton = (
+    panel: FilterPanel,
+    label: string,
+    icon: ReactNode,
+    content: ReactNode,
+    isActive: boolean,
+    onClose: () => void,
+  ) => (
+    <div key={panel} className="relative">
+      <button
+        type="button"
+        onClick={() => toggleFilterPanel(panel)}
+        className={`inline-flex items-center gap-1.5 rounded-[20px] border px-3 py-1.5 text-xs transition-colors ${
+          isActive || activeFilterPanel === panel
+            ? "border-[#2b9bff] bg-[#142044] text-white"
+            : "border-[#1a2446] bg-[#0e1629] text-blue-200 hover:bg-[#121c3d] hover:text-white"
+        }`}
+      >
+        {icon}
+        {label}
+      </button>
+      {activeFilterPanel === panel && (
+        <div className="absolute left-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[24px] border border-[#1a2446] bg-[#050a1b] p-4 text-blue-100 shadow-2xl">
+          {content}
+          <div className="mt-4 flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-[16px] border border-[#1a2446] px-3 py-1 text-xs text-blue-200 hover:bg-[#121c3d]"
+              onClick={onClose}
+            >
+              Close
+            </button>
+          </div>
         </div>
-      </div>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
 
   const formatDate = (value?: string) => {
     if (!value) return "--";
@@ -319,16 +337,19 @@ const renderFilterButton = (
     return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   };
 
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
-        <h2 className="text-2xl font-bold text-white">Contacts</h2>
+        <h2 className="text-2xl font-bold text-white">Deals</h2>
         <PrimaryButton
           onClick={() => setIsModalOpen(true)}
           icon={<PlusIcon className="h-4 w-4" />}
           className="uppercase tracking-wide"
         >
-          Add Contact
+          Add Deal
         </PrimaryButton>
       </div>
 
@@ -339,15 +360,15 @@ const renderFilterButton = (
       )}
 
       <div className="space-y-3 flex justify-between">
-        {hasSelectedContacts ? (
+        {hasSelectedDeals ? (
           <div className="flex w-full flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-[6px]">
             <div className="flex flex-wrap items-center gap-4">
               <span className="text-sm text-blue-200">
-                {selectedContacts.size} contact{selectedContacts.size !== 1 ? "s" : ""} selected
+                {selectedDeals.size} deal{selectedDeals.size !== 1 ? "s" : ""} selected
               </span>
-              {selectedContacts.size < filteredContacts.length && (
+              {selectedDeals.size < filteredDeals.length && (
                 <button onClick={handleSelectAll} className="text-sm text-[#7ed0ff] transition-colors hover:text-white">
-                  Select all {filteredContacts.length} contacts
+                  Select all {filteredDeals.length} deals
                 </button>
               )}
             </div>
@@ -395,7 +416,7 @@ const renderFilterButton = (
               <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-300/60" />
               <input
                 type="text"
-                placeholder="Search contacts"
+                placeholder="Search deals"
                 className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 pl-12 pr-12 text-sm text-blue-200 placeholder-blue-300/60 focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff]"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
@@ -405,7 +426,7 @@ const renderFilterButton = (
             <div className="flex w-full max-w-4xl flex-wrap items-center gap-2" ref={inlineFiltersRef}>
               {renderFilterButton(
                 "owner",
-                "Contact Owner",
+                "Deal Owner",
                 <UserCircleIcon className="h-4 w-4" />,
                 <select
                   className="mt-2 w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-xs text-blue-100 focus:border-[#2b9bff] focus:outline-none"
@@ -480,6 +501,40 @@ const renderFilterButton = (
                 () => setActiveFilterPanel(null),
               )}
               {renderFilterButton(
+                "stage",
+                "Stage",
+                <ChartBarIcon className="h-4 w-4" />,
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleFilterChange("stage", "all")}
+                    className={`rounded-[18px] border px-3 py-1.5 text-xs font-medium transition ${
+                      filters.stage === "all"
+                        ? "border-[#2b9bff] bg-[#142044] text-white"
+                        : "border-[#1a2446] bg-[#0e1629] text-blue-100"
+                    }`}
+                  >
+                    All
+                  </button>
+                  {dealStageOptions.map((stage) => (
+                    <button
+                      type="button"
+                      key={stage}
+                      onClick={() => handleFilterChange("stage", stage)}
+                      className={`rounded-[18px] border px-3 py-1.5 text-xs font-medium transition ${
+                        filters.stage === stage
+                          ? "border-[#2b9bff] bg-[#142044] text-white"
+                          : "border-[#1a2446] bg-[#0e1629] text-blue-100"
+                      }`}
+                    >
+                      {stage}
+                    </button>
+                  ))}
+                </div>,
+                filters.stage !== "all",
+                () => setActiveFilterPanel(null),
+              )}
+              {renderFilterButton(
                 "status",
                 "Status",
                 <CheckCircleIcon className="h-4 w-4" />,
@@ -495,7 +550,7 @@ const renderFilterButton = (
                   >
                     All
                   </button>
-                  {contactStatusOptions.map((status) => (
+                  {dealStatusOptions.map((status) => (
                     <button
                       type="button"
                       key={status}
@@ -538,12 +593,12 @@ const renderFilterButton = (
                   ref={selectAllCheckboxRef}
                   checked={allSelected}
                   onChange={handleSelectAll}
-                  className="h-4 w-4 border-[#1a2446] bg-[#0e1629] text-[#2b9bff] focus:ring-[#2b9bff] min1370:ml-[-20px]"
+                  className="h-4 w-4 rounded border-[#1a2446] bg-[#0e1629] text-[#2b9bff] focus:ring-[#2b9bff]"
                 />
               </th>
               <th scope="col" className="px-6 py-3 text-left">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Name</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Deal</span>
                   <SortIcon className="h-4 w-4 text-blue-300/60" />
                   <button className="text-blue-300/60 transition hover:text-blue-300">
                     <EllipsisVerticalIcon className="h-4 w-4" />
@@ -552,7 +607,7 @@ const renderFilterButton = (
               </th>
               <th scope="col" className="px-6 py-3 text-left">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Email</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Company</span>
                   <SortIcon className="h-4 w-4 text-blue-300/60" />
                   <button className="text-blue-300/60 transition hover:text-blue-300">
                     <EllipsisVerticalIcon className="h-4 w-4" />
@@ -561,19 +616,18 @@ const renderFilterButton = (
               </th>
               <th scope="col" className="px-6 py-3 text-left">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Phone</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Amount</span>
                   <SortIcon className="h-4 w-4 text-blue-300/60" />
-                  <button className="text-blue-300/60 transition hover:text-blue-300">
-                    <EllipsisVerticalIcon className="h-4 w-4" />
-                  </button>
                 </div>
               </th>
-              {/* Owner, Created, and Activity columns are intentionally hidden from the table UI
-                  but are still available for filtering via the controls above. */}
+              <th scope="col" className="px-6 py-3 text-left">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Stage</span>
+                </div>
+              </th>
               <th scope="col" className="px-6 py-3 text-left">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Status</span>
-                  <SortIcon className="h-4 w-4 text-blue-300/60" />
                 </div>
               </th>
             </tr>
@@ -581,26 +635,26 @@ const renderFilterButton = (
           <tbody className="divide-y divide-[#1a2446] bg-[#0c142a]">
             {isLoading ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-sm text-blue-300">
+                <td colSpan={6} className="px-6 py-8 text-center text-sm text-blue-300">
                   <span className="inline-flex items-center justify-center gap-2 text-blue-200">
                     <SpinnerIcon className="h-5 w-5 text-blue-300" />
-                    Loading contacts…
+                    Loading deals…
                   </span>
                 </td>
               </tr>
-            ) : filteredContacts.length ? (
-              filteredContacts.map((contact) => {
-                const isSelected = selectedContacts.has(contact.id);
+            ) : filteredDeals.length ? (
+              filteredDeals.map((deal) => {
+                const isSelected = selectedDeals.has(deal.id);
                 return (
                   <tr
-                    key={contact.id}
+                    key={deal.id}
                     className={`transition-colors hover:bg-[#121c3d] ${isSelected ? "bg-[#121c3d]/50" : ""}`}
                   >
                     <td className="px-6 py-4">
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => handleSelectContact(contact.id)}
+                        onChange={() => handleSelectDeal(deal.id)}
                         className="h-4 w-4 rounded border-[#1a2446] bg-[#0e1629] text-[#2b9bff] focus:ring-[#2b9bff]"
                       />
                     </td>
@@ -608,28 +662,35 @@ const renderFilterButton = (
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 flex-shrink-0">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#5468ff] to-[#2bb9ff] text-xs font-semibold text-white">
-                            {contact.name?.charAt(0).toUpperCase() || "?"}
+                            {deal.name?.charAt(0).toUpperCase() || "?"}
                           </div>
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-white">{contact.name || "--"}</div>
-                          <div className="text-xs text-blue-300">{contact.company || "No company"}</div>
+                          <div className="text-sm font-medium text-white">{deal.name || "--"}</div>
+                          <div className="text-xs text-blue-300">{formatDate(deal.createdAt)}</div>
                         </div>
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <div className="text-sm text-blue-200">{contact.email || "--"}</div>
+                      <div className="text-sm text-blue-200">{deal.company || "--"}</div>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
-                      <div className="text-sm text-blue-200">{contact.phone || "--"}</div>
+                      <div className="text-sm text-blue-200">{formatCurrency(deal.amount ?? 0)}</div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <span
+                        className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${stageColors[deal.stage]}`}
+                      >
+                        {deal.stage}
+                      </span>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
                       <span
                         className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
-                          statusColors[contact.status] ?? "border-[#1a2446] text-blue-100"
+                          statusColors[deal.status] ?? "border-[#1a2446] text-blue-100"
                         }`}
                       >
-                        {contact.status}
+                        {deal.status}
                       </span>
                     </td>
                   </tr>
@@ -637,8 +698,8 @@ const renderFilterButton = (
               })
             ) : (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-sm text-blue-300">
-                  {searchTerm ? `No contacts found for "${searchTerm}".` : "No contacts yet. Add one to get started."}
+                <td colSpan={6} className="px-6 py-8 text-center text-sm text-blue-300">
+                  {searchTerm ? `No deals found for "${searchTerm}".` : "No deals yet. Add one to get started."}
                 </td>
               </tr>
             )}
@@ -648,15 +709,15 @@ const renderFilterButton = (
 
       <PrimaryModal
         open={isModalOpen}
-        title="Add Contact"
-        description="Capture the basics, ownership, and lifecycle metadata."
+        title="Add Deal"
+        description="Track pipeline value, stage, and outcomes across your deals."
         onClose={() => {
           setIsModalOpen(false);
-          setNewContact(createInitialContact());
+          setNewDeal(createInitialDeal());
         }}
         widthClassName="max-w-3xl"
       >
-        <form onSubmit={handleAddContact} className="space-y-6">
+        <form onSubmit={handleAddDeal} className="space-y-6">
               {formError && (
                 <div className="rounded-[20px] border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
                   {formError}
@@ -664,70 +725,79 @@ const renderFilterButton = (
               )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="contact-name" className="block text-sm font-medium text-blue-200">
-                    Full Name
+                  <label htmlFor="deal-name" className="block text-sm font-medium text-blue-200">
+                    Deal name
                   </label>
                   <input
-                    id="contact-name"
+                    id="deal-name"
                     type="text"
                     required
                     className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
-                    value={newContact.name}
-                    onChange={(event) => setNewContact((prev) => ({ ...prev, name: event.target.value }))}
+                    value={newDeal.name}
+                    onChange={(event) => setNewDeal((prev) => ({ ...prev, name: event.target.value }))}
                   />
                 </div>
                 <div>
-                  <label htmlFor="contact-email" className="block text-sm font-medium text-blue-200">
-                    Email
-                  </label>
-                  <input
-                    id="contact-email"
-                    type="email"
-                    required
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
-                    value={newContact.email}
-                    onChange={(event) => setNewContact((prev) => ({ ...prev, email: event.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="contact-phone" className="block text-sm font-medium text-blue-200">
-                    Phone
-                  </label>
-                  <input
-                    id="contact-phone"
-                    type="tel"
-                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
-                    value={newContact.phone}
-                    onChange={(event) => setNewContact((prev) => ({ ...prev, phone: event.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="contact-company" className="block text-sm font-medium text-blue-200">
+                  <label htmlFor="deal-company" className="block text-sm font-medium text-blue-200">
                     Company
                   </label>
                   <input
-                    id="contact-company"
+                    id="deal-company"
                     type="text"
+                    required
                     className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
-                    value={newContact.company}
-                    onChange={(event) => setNewContact((prev) => ({ ...prev, company: event.target.value }))}
+                    value={newDeal.company}
+                    onChange={(event) => setNewDeal((prev) => ({ ...prev, company: event.target.value }))}
                   />
+                </div>
+                <div>
+                  <label htmlFor="deal-amount" className="block text-sm font-medium text-blue-200">
+                    Amount
+                  </label>
+                  <input
+                    id="deal-amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 placeholder-blue-300/70 focus:border-[#2b9bff] focus:outline-none"
+                    value={newDeal.amount}
+                    onChange={(event) => setNewDeal((prev) => ({ ...prev, amount: event.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="deal-stage" className="block text-sm font-medium text-blue-200">
+                    Stage
+                  </label>
+                  <select
+                    id="deal-stage"
+                    className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 focus:border-[#2b9bff] focus:outline-none"
+                    value={newDeal.stage}
+                    onChange={(event) =>
+                      setNewDeal((prev) => ({ ...prev, stage: event.target.value as Deal["stage"] }))
+                    }
+                  >
+                    {dealStageOptions.map((stage) => (
+                      <option key={stage} value={stage}>
+                        {stage}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
               <div>
-                <label htmlFor="contact-status" className="block text-sm font-medium text-blue-200">
+                <label htmlFor="deal-status" className="block text-sm font-medium text-blue-200">
                   Status
                 </label>
                 <select
-                  id="contact-status"
+                  id="deal-status"
                   className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 focus:border-[#2b9bff] focus:outline-none"
-                  value={newContact.status}
+                  value={newDeal.status}
                   onChange={(event) =>
-                    setNewContact((prev) => ({ ...prev, status: event.target.value as Contact["status"] }))
+                    setNewDeal((prev) => ({ ...prev, status: event.target.value as Deal["status"] }))
                   }
                 >
-                  {contactStatusOptions.map((status) => (
+                  {dealStatusOptions.map((status) => (
                     <option key={status} value={status}>
                       {status}
                     </option>
@@ -740,20 +810,20 @@ const renderFilterButton = (
                   type="button"
                   onClick={() => {
                     setIsModalOpen(false);
-                    setNewContact(createInitialContact());
+                    setNewDeal(createInitialDeal());
                   }}
                   className="rounded-[4px] border border-[#1a2446] px-4 py-2 text-xs font-medium text-blue-200 transition hover:bg-[#121c3d]"
                 >
                   Cancel
                 </button>
-                <PrimaryButton type="submit" disabled={isSubmittingContact}>
-                  {isSubmittingContact ? (
+                <PrimaryButton type="submit" disabled={isSubmittingDeal}>
+                  {isSubmittingDeal ? (
                     <span className="flex items-center gap-2">
                       <SpinnerIcon className="h-4 w-4 text-[#031226]" />
                       Saving…
                     </span>
                   ) : (
-                    "Save Contact"
+                    "Save Deal"
                   )}
                 </PrimaryButton>
               </div>
@@ -762,5 +832,5 @@ const renderFilterButton = (
     </div>
   );
 }
- 
- 
+
+

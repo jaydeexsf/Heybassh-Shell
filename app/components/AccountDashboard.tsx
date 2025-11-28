@@ -15,6 +15,8 @@ import {
 } from "@heroicons/react/24/outline"
 import logo from "../../Images/heybasshlogo.png"
 import { Contacts } from "./dashboard/components/Contacts"
+import { Companies } from "./dashboard/components/Companies"
+import { Deals } from "./dashboard/components/Deals"
 
 type NavChild = { id: string; label: string }
 type NavItem = {
@@ -1118,11 +1120,18 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
               />
             </div>
           ) : view === "customers_companies" ? (
-            <div className="card rounded-[32px] bg-[#0e1629]">
-              <div className="mb-4">
-                <h2 className="text-xl font-semibold text-white">Companies</h2>
-                <p className="mt-1 text-sm text-blue-200">Manage your company database.</p>
-              </div>
+            <div className="space-y-6">
+              <Companies
+                companies={[]}
+                onAddCompany={() => {}}
+              />
+            </div>
+          ) : view === "customers_deals" ? (
+            <div className="space-y-6">
+              <Deals
+                deals={[]}
+                onAddDeal={() => {}}
+              />
             </div>
           ) : view === "products_listing" ? (
             <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">

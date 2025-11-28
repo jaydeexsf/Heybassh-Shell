@@ -59,6 +59,7 @@ import {
 import { Overview } from "./components/Overview";
 import { Contacts } from "./components/Contacts";
 import { Companies } from "./components/Companies";
+import { Deals } from "./components/Deals";
 import { Products } from "./components/Products";
 import { Tasks } from "./components/Tasks";
 import { HRPeople } from "./components/HRPeople";
@@ -261,6 +262,14 @@ export default function AccountDashboard({
         return <Contacts contacts={contacts} onAddContact={handleAddContact} />;
       case 'customers_companies':
         return <Companies companies={companies} onAddCompany={handleAddCompany} />;
+      case 'customers_deals':
+        return <Deals deals={deals} onAddDeal={(deal) => {
+          const newDeal: Deal = {
+            ...deal,
+            id: `D-${Date.now()}`,
+          };
+          setDeals([...deals, newDeal]);
+        }} />;
       case 'customers_marketing': {
         const marketingModules = [
           {
