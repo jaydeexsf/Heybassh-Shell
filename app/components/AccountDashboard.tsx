@@ -751,7 +751,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
 
   return (
     <div className="min-h-screen bg-[#020617]">
-      <div className={`grid min-h-screen grid-cols-1 ${desktopGrid} transition-[grid-template-columns] duration-300 ease-in-out`}>
+      <div className={`grid min-h-screen grid-cols-1 ${desktopGrid} transition-grid-cols duration-300 ease-in-out`}>
       {/* Left sidebar with profile */}
         <aside className="hidden md:flex md:sticky md:top-0 md:h-screen flex-col items-center justify-between border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur z-50">
         <div className="flex flex-col items-center gap-3">
@@ -975,7 +975,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
           </div>
         </header>
         <div className="h-px bg-[#1a2446]/50"></div>
-        <div className={`grid flex-1 grid-cols-1 ${contentGrid} transition-[grid-template-columns] duration-500 ease-in-out`}>
+        <div className={`grid flex-1 grid-cols-1 ${contentGrid} transition-grid-cols.duration-500 ease-in-out`}>
         {/* Main sidebar */}
           <aside
             className={`border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#0e1629] md:sticky md:top-0 md:h-screen transition-all duration-500 ease-in-out ${

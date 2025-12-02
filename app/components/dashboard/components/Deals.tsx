@@ -14,7 +14,8 @@ import {
 import { PrimaryButton } from "../../PrimaryButton";
 import { PrimaryInput } from "../../PrimaryInput";
 import { PrimaryModal } from "../../PrimaryModal";
-import { Deal, dealStageOptions, dealStatusOptions } from "../types";
+import type { Deal } from "../types";
+import { dealStageOptions, dealStatusOptions } from "../types";
 
 type ActivityFilterValue = "all" | "7" | "30" | "stale30";
 
@@ -214,10 +215,7 @@ export function Deals({
       }
     }
 
-    if (moreDropdownOpen || activeFilterPanel) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
+    // Moved to useEffect
   }, [moreDropdownOpen, activeFilterPanel]);
 
   const handleSelectAll = () => {
@@ -342,6 +340,23 @@ export function Deals({
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
+
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (moreDropdownRef.current && !moreDropdownRef.current.contains(target)) {
+      setMoreDropdownOpen(false);
+    }
+    if (activeFilterPanel) {
+      setActiveFilterPanel(null);
+    }
+  };
+
+  useEffect(() => {
+    if (moreDropdownOpen || activeFilterPanel) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [moreDropdownOpen, activeFilterPanel]);
 
   return (
     <div className="space-y-6">
@@ -558,8 +573,8 @@ export function Deals({
                   </button>
                   {dealStatusOptions.map((status) => (
                     <button
-                      type="button"
                       key={status}
+                      type="button"
                       onClick={() => handleFilterChange("status", status)}
                       className={`rounded-[18px] border px-3 py-1.5 text-xs font-medium transition ${
                         filters.status === status
@@ -572,7 +587,7 @@ export function Deals({
                   ))}
                 </div>,
                 filters.status !== "all",
-                () => setActiveFilterPanel(null),
+                () => setActiveFilterPanel(null)
               )}
               <button
                 type="button"
@@ -585,7 +600,7 @@ export function Deals({
                 Clear filters
               </button>
             </div>
-          </>
+            </div>
         )}
       </div>
 

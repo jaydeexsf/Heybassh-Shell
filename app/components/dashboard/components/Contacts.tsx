@@ -530,7 +530,7 @@ const toggleFilterPanel = (panel: FilterPanel) => {
                 Clear filters
               </button>
             </div>
-          </>
+          </div>
         )}
       </div>
 
