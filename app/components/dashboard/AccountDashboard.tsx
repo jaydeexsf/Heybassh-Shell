@@ -197,13 +197,23 @@ export default function AccountDashboard({
     setContacts([...contacts, newContact]);
   };
 
-  // Handle adding a new company
-  const handleAddCompany = (company: Omit<Company, 'id'>) => {
-    const newCompany: Company = {
-      ...company,
-      id: `CO-${Date.now()}`,
-    };
-    setCompanies([...companies, newCompany]);
+  // Handle adding a new company (persisted to the database)
+  const handleAddCompany = async (company: Omit<Company, "id">) => {
+    const response = await fetch(`/api/accounts/${accountId}/companies`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(company),
+    });
+
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(data?.error || "Failed to create company");
+    }
+
+    const saved = (await response.json()) as Company;
+    setCompanies((prev) => [...prev, saved]);
   };
 
   // Handle adding a new product
@@ -263,13 +273,28 @@ export default function AccountDashboard({
       case 'customers_companies':
         return <Companies companies={companies} onAddCompany={handleAddCompany} />;
       case 'customers_deals':
-        return <Deals deals={deals} onAddDeal={(deal) => {
-          const newDeal: Deal = {
-            ...deal,
-            id: `D-${Date.now()}`,
-          };
-          setDeals([...deals, newDeal]);
-        }} />;
+        return (
+          <Deals
+            deals={deals}
+            onAddDeal={async (deal) => {
+              const response = await fetch(`/api/accounts/${accountId}/deals`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(deal),
+              });
+
+              if (!response.ok) {
+                const data = (await response.json().catch(() => null)) as { error?: string } | null;
+                throw new Error(data?.error || "Failed to create deal");
+              }
+
+              const saved = (await response.json()) as Deal;
+              setDeals((prev) => [...prev, saved]);
+            }}
+          />
+        );
       case 'customers_marketing': {
         const marketingModules = [
           {

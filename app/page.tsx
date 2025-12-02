@@ -338,6 +338,49 @@ function HomeInner() {
         <div className="absolute bottom-0 right-0 h-80 w-80 translate-x-1/4 translate-y-1/4 rounded-full bg-[#5dd4ff]/20 blur-3xl" />
       </div>
 
+      {/* Top-right toast container for auth feedback */}
+      <div className="pointer-events-none fixed right-4 top-4 z-50 flex max-w-md flex-col gap-3">
+        {feedback && (
+          <div
+            className={`pointer-events-auto rounded-2xl border px-4 py-3 text-sm shadow-xl backdrop-blur-md ${
+              feedback.type === "success"
+                ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-100"
+                : feedback.type === "error"
+                ? "border-rose-500/60 bg-rose-500/15 text-rose-100"
+                : "border-blue-400/50 bg-blue-500/10 text-blue-100"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 h-2 w-2 flex-shrink-0 rounded-full bg-current" />
+              <div className="flex-1">
+                {feedback.message.includes("https://") ? (
+                  <span>
+                    {feedback.message.split("https://")[0]}
+                    <a
+                      href={feedback.message.match(/https:\/\/[^\s]+/)?.[0]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-200 underline underline-offset-2 break-all"
+                    >
+                      {feedback.message.match(/https:\/\/[^\s]+/)?.[0]}
+                    </a>
+                  </span>
+                ) : (
+                  feedback.message
+                )}
+              </div>
+              <button
+                type="button"
+                className="ml-2 text-xs text-blue-200/80 hover:text-white"
+                onClick={() => setFeedback(null)}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <section className="relative z-10 flex min-h-screen items-center justify-center px-6 py-12 lg:px-12">
         <div className="w-full max-w-5xl space-y-4">
           <div className="grid w-full gap-10 rounded-3xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-2xl lg:grid-cols-[1.05fr_0.95fr] lg:p-12">
@@ -390,7 +433,8 @@ function HomeInner() {
                 <div className="flex gap-2">
                   <PrimaryInput
                     id="email"
-                    className={`placeholder:text-blue-200/50 flex-1 ${formErrors.email ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    size="lg"
+                    className={`placeholder:text-blue-200/50 flex-1 h-[44px] ${formErrors.email ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder="name@company.com"
                     type="email"
                     value={email}
@@ -409,7 +453,8 @@ function HomeInner() {
                   </label>
                   <PrimaryInput
                     id="name"
-                    className={`placeholder:text-blue-300/50 ${formErrors.name ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    size="lg"
+                    className={`placeholder:text-blue-300/50 h-[44px] ${formErrors.name ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder="Jane Developer"
                     type="text"
                     value={name}
@@ -427,7 +472,8 @@ function HomeInner() {
                   </label>
                   <PrimaryInput
                     id="company"
-                    className={`placeholder:text-blue-300/50 ${formErrors.companyName ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    size="lg"
+                    className={`placeholder:text-blue-300/50 h-[44px] ${formErrors.companyName ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder="Acme Inc."
                     type="text"
                     value={companyName}
@@ -456,7 +502,8 @@ function HomeInner() {
                 <div className="relative w-full">
                   <PrimaryInput
                     id="password"
-                    className={`w-full placeholder:text-blue-200/50 pr-12 ${formErrors.password ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
+                    size="lg"
+                    className={`w-full placeholder:text-blue-200/50 pr-12 h-[44px] ${formErrors.password ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
                     placeholder={mode === "login" ? "Your password" : "At least 6 characters"}
                     type={showPassword ? "text" : "password"}
                     value={password}

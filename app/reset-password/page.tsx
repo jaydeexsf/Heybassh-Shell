@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
+import { PrimaryInput } from "../components/PrimaryInput"
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams()
@@ -91,9 +92,10 @@ function ResetPasswordForm() {
 
           <form onSubmit={handleSubmit} className="grid gap-4">
             <div>
-              <input
+              <PrimaryInput
                 type="password"
-                className="input w-full"
+                size="lg"
+                className="h-[44px]"
                 placeholder="New password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -102,9 +104,10 @@ function ResetPasswordForm() {
               />
             </div>
             <div>
-              <input
+              <PrimaryInput
                 type="password"
-                className="input w-full"
+                size="lg"
+                className="h-[44px]"
                 placeholder="Confirm new password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}

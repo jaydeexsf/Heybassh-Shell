@@ -51,6 +51,8 @@ model Account {
   /// Back relation to users under this account
   users          User[]
   contacts       Contact[]
+  companies      Company[]
+  deals          Deal[]
 }
 
 model Contact {
@@ -69,3 +71,38 @@ model Contact {
 
   @@index([accountSeq])
 }
+
+model Company {
+  id           String   @id @default(cuid())
+  accountSeq   Int
+  account      Account  @relation(fields: [accountSeq], references: [accountSeq])
+  name         String
+  domain       String?
+  industry     String?
+  size         String?
+  owner        String?  @default("Unassigned")
+  status       String   @default("New")
+  createdAt    DateTime @default(now())
+  lastActivity DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([accountSeq])
+}
+
+model Deal {
+  id           String   @id @default(cuid())
+  accountSeq   Int
+  account      Account  @relation(fields: [accountSeq], references: [accountSeq])
+  name         String
+  company      String?
+  amount       Float    @default(0)
+  owner        String?  @default("Unassigned")
+  stage        String   @default("New")
+  status       String   @default("Open")
+  createdAt    DateTime @default(now())
+  lastActivity DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([accountSeq])
+}
+

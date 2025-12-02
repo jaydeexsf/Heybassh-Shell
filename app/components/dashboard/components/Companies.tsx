@@ -729,7 +729,7 @@ export function Companies({
                 </select>
               </div>
 
-              <div className="mt-6 flex flex-wrap justify-end gap-3 border-t border-white/5 pt-4">
+              <div className="mt-6 flex flex-wrap justify-end gap-3 border-t border-white/5 pt-4 items-center">
                 <button
                   type="button"
                   onClick={() => {
@@ -740,10 +740,12 @@ export function Companies({
                 >
                   Cancel
                 </button>
+                {isSubmittingCompany && (
+                  <SpinnerIcon className="h-4 w-4 text-blue-300" />
+                )}
                 <PrimaryButton type="submit" disabled={isSubmittingCompany}>
                   {isSubmittingCompany ? (
                     <span className="flex items-center gap-2">
-                      <SpinnerIcon className="h-4 w-4 text-[#031226]" />
                       Saving…
                     </span>
                   ) : (
