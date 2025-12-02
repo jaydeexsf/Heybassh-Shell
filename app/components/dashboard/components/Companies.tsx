@@ -1,4 +1,5 @@
-import { useMemo, useState, useRef, useEffect, ReactNode } from "react";
+import { useMemo, useState, useRef, useEffect, ReactNode, useCallback } from "react";
+import { Company, getCompanies, addCompany as addCompanyToStorage } from "@/app/utils/storage";
 import {
   MagnifyingGlassIcon,
   EllipsisVerticalIcon,
@@ -88,14 +89,34 @@ const SpinnerIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
 );
 
 export function Companies({
-  companies,
-  onAddCompany,
-  isLoading = false,
-  errorMessage,
+  isLoading: propIsLoading = false,
+  errorMessage: propErrorMessage,
   defaultOwner = "Unassigned",
-}: CompaniesProps) {
+}: Partial<CompaniesProps> = {}) {
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [isLoading, setIsLoading] = useState(propIsLoading);
+  const [errorMessage, setErrorMessage] = useState(propErrorMessage);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Load companies from local storage on component mount
+  useEffect(() => {
+    const loadCompanies = () => {
+      try {
+        setIsLoading(true);
+        const storedCompanies = getCompanies();
+        setCompanies(storedCompanies);
+      } catch (error) {
+        console.error('Failed to load companies:', error);
+        setErrorMessage('Failed to load companies. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadCompanies();
+  }, []);
   const [selectedCompanies, setSelectedCompanies] = useState<Set<string>>(new Set());
   const [newCompany, setNewCompany] = useState<NewCompanyFormState>(createInitialCompany);
   const [filters, setFilters] = useState<CompanyFilters>(defaultFilters);
@@ -124,6 +145,8 @@ export function Companies({
   };
 
   const filteredCompanies = useMemo(() => {
+    if (!companies) return [];
+    
     const normalizedSearch = searchTerm.trim().toLowerCase();
     const now = Date.now();
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
@@ -165,6 +188,9 @@ export function Companies({
   }, [companies, filters, searchTerm]);
 
   const hasSelectedCompanies = selectedCompanies.size > 0;
+  
+  // Update the component's loading state based on both prop and local state
+  const isLoadingState = isLoading || isSubmitting;
   const allSelected = filteredCompanies.length > 0 && selectedCompanies.size === filteredCompanies.length;
   const someSelected = selectedCompanies.size > 0 && selectedCompanies.size < filteredCompanies.length;
 
@@ -224,29 +250,26 @@ export function Companies({
     event.preventDefault();
     if (!newCompany.name.trim()) return;
 
-    const timestamp = new Date().toISOString();
-    const payload: Omit<Company, "id"> = {
-      name: newCompany.name.trim(),
-      domain: newCompany.domain.trim() || "example.com",
-      industry: newCompany.industry.trim() || "General",
-      size: newCompany.size.trim() || "Small",
-      owner: defaultOwner?.trim() || "Unassigned",
-      createdAt: timestamp,
-      lastActivity: timestamp,
-      status: newCompany.status,
-    };
-
     try {
-      setIsSubmittingCompany(true);
-      setFormError(null);
-      await onAddCompany(payload);
+      setIsSubmitting(true);
+      const payload = {
+        name: newCompany.name.trim(),
+        domain: newCompany.domain.trim() || "example.com",
+        industry: newCompany.industry.trim() || "General",
+        size: newCompany.size || "1-10",
+        status: newCompany.status as Company['status'] || "New",
+        owner: defaultOwner,
+      };
+      
+      const addedCompany = addCompanyToStorage(payload);
+      setCompanies(prev => [...prev, addedCompany]);
       setNewCompany(createInitialCompany());
       setIsModalOpen(false);
     } catch (error) {
-      console.error("Failed to add company", error);
-      setFormError("Failed to save company. Please try again.");
+      console.error('Error adding company:', error);
+      setFormError('Failed to add company. Please try again.');
     } finally {
-      setIsSubmittingCompany(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -326,10 +349,11 @@ export function Companies({
         <h2 className="text-2xl font-bold text-white">Companies</h2>
         <PrimaryButton
           onClick={() => setIsModalOpen(true)}
-          icon={<PlusIcon className="h-4 w-4" />}
+          icon={isSubmitting ? <SpinnerIcon className="h-4 w-4" /> : <PlusIcon className="h-4 w-4" />}
           className="uppercase tracking-wide"
+          disabled={isSubmitting}
         >
-          Add Company
+          {isSubmitting ? 'Adding...' : 'Add Company'}
         </PrimaryButton>
       </div>
 
@@ -583,7 +607,7 @@ export function Companies({
             </tr>
           </thead>
           <tbody className="divide-y divide-[#1a2446] bg-[#0c142a]">
-            {isLoading ? (
+            {isLoadingState ? (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center text-sm text-blue-300">
                   <span className="inline-flex items-center justify-center gap-2 text-blue-200">

@@ -1,4 +1,5 @@
-import { useMemo, useState, useRef, useEffect, ReactNode } from "react";
+import { useMemo, useState, useRef, useEffect, ReactNode, useCallback } from "react";
+import { Deal, getDeals, addDeal as addDealToStorage, getCompanies } from "@/app/utils/storage";
 import {
   MagnifyingGlassIcon,
   EllipsisVerticalIcon,
@@ -99,14 +100,39 @@ const SpinnerIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
 );
 
 export function Deals({
-  deals,
-  onAddDeal,
-  isLoading = false,
-  errorMessage,
+  isLoading: propIsLoading = false,
+  errorMessage: propErrorMessage,
   defaultOwner = "Unassigned",
-}: DealsProps) {
+}: Partial<DealsProps> = {}) {
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [companies, setCompanies] = useState<{id: string, name: string}[]>([]);
+  const [isLoading, setIsLoading] = useState(propIsLoading);
+  const [errorMessage, setErrorMessage] = useState(propErrorMessage);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Load deals and companies from local storage on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const [storedDeals, storedCompanies] = await Promise.all([
+          getDeals(),
+          getCompanies()
+        ]);
+        setDeals(storedDeals);
+        setCompanies(storedCompanies.map(c => ({ id: c.id, name: c.name })));
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        setErrorMessage('Failed to load deals. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
   const [selectedDeals, setSelectedDeals] = useState<Set<string>>(new Set());
   const [newDeal, setNewDeal] = useState<NewDealFormState>(createInitialDeal);
   const [filters, setFilters] = useState<DealFilters>(defaultFilters);
@@ -135,6 +161,8 @@ export function Deals({
   };
 
   const filteredDeals = useMemo(() => {
+    if (!deals) return [];
+    
     const normalizedSearch = searchTerm.trim().toLowerCase();
     const now = Date.now();
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
@@ -184,6 +212,9 @@ export function Deals({
   }, [deals, filters, searchTerm]);
 
   const hasSelectedDeals = selectedDeals.size > 0;
+  
+  // Update the component's loading state based on both prop and local state
+  const isLoadingState = isLoading || isSubmitting;
   const allSelected = filteredDeals.length > 0 && selectedDeals.size === filteredDeals.length;
   const someSelected = selectedDeals.size > 0 && selectedDeals.size < filteredDeals.length;
 
@@ -238,33 +269,29 @@ export function Deals({
 
   const handleAddDeal = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!newDeal.name.trim() || !newDeal.company.trim()) return;
-
-    const timestamp = new Date().toISOString();
-    const parsedAmount = Number.parseFloat(newDeal.amount.replace(/,/g, ""));
-
-    const payload: Omit<Deal, "id"> = {
-      name: newDeal.name.trim(),
-      company: newDeal.company.trim(),
-      amount: Number.isFinite(parsedAmount) ? parsedAmount : 0,
-      owner: defaultOwner?.trim() || "Unassigned",
-      createdAt: timestamp,
-      lastActivity: timestamp,
-      stage: newDeal.stage,
-      status: newDeal.status,
-    };
+    if (!newDeal.name.trim()) return;
 
     try {
-      setIsSubmittingDeal(true);
-      setFormError(null);
-      await onAddDeal(payload);
+      setIsSubmitting(true);
+      const payload = {
+        name: newDeal.name.trim(),
+        company: newDeal.company || companies[0]?.name || "",
+        amount: newDeal.amount || "0",
+        stage: newDeal.stage || "prospect",
+        status: newDeal.status || "Open",
+        owner: defaultOwner,
+        closeDate: newDeal.closeDate || new Date().toISOString().split('T')[0],
+      };
+      
+      const addedDeal = await addDealToStorage(payload);
+      setDeals(prev => [...prev, addedDeal]);
       setNewDeal(createInitialDeal());
       setIsModalOpen(false);
     } catch (error) {
-      console.error("Failed to add deal", error);
-      setFormError("Failed to save deal. Please try again.");
+      console.error('Error adding deal:', error);
+      setFormError('Failed to add deal. Please try again.');
     } finally {
-      setIsSubmittingDeal(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -304,7 +331,7 @@ export function Deals({
         <button
           type="button"
           onClick={() => toggleFilterPanel(panel)}
-          className={`inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-1.5 text-xs transition-colors ${
+          className={`inline-flex items-center gap-2 rounded-[20px] border px-3 py-1.5 text-xs transition-colors ${
             isActive || activeFilterPanel === panel
               ? "border-[#2b9bff] bg-[#142044] text-white"
               : "border-[#1a2446] bg-[#0e1629] text-blue-200 hover:bg-[#121c3d] hover:text-white"
@@ -364,10 +391,11 @@ export function Deals({
         <h2 className="text-2xl font-bold text-white">Deals</h2>
         <PrimaryButton
           onClick={() => setIsModalOpen(true)}
-          icon={<PlusIcon className="h-4 w-4" />}
+          icon={isSubmitting ? <SpinnerIcon className="h-4 w-4" /> : <PlusIcon className="h-4 w-4" />}
           className="uppercase tracking-wide"
+          disabled={isSubmitting}
         >
-          Add Deal
+          {isSubmitting ? 'Adding...' : 'Add Deal'}
         </PrimaryButton>
       </div>
 
@@ -379,7 +407,7 @@ export function Deals({
 
       <div className="flex flex-col gap-3">
         {hasSelectedDeals ? (
-          <div className="flex w-full flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-[6px]">
+          <div className="flex w-full flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-[6px]">
             <div className="flex flex-wrap items-center gap-4">
               <span className="text-sm text-blue-200">
                 {selectedDeals.size} deal{selectedDeals.size !== 1 ? "s" : ""} selected
@@ -654,7 +682,7 @@ export function Deals({
             </tr>
           </thead>
           <tbody className="divide-y divide-[#1a2446] bg-[#0c142a]">
-            {isLoading ? (
+            {isLoadingState ? (
               <tr>
                 <td colSpan={6} className="px-6 py-8 text-center text-sm text-blue-300">
                   <span className="inline-flex items-center justify-center gap-2 text-blue-200">
@@ -761,13 +789,21 @@ export function Deals({
                   <label htmlFor="deal-company" className="block text-sm font-medium text-blue-200">
                     Company
                   </label>
-                  <PrimaryInput
-                    id="deal-company"
-                    type="text"
-                    required
+                  <select
+                    id="company"
+                    name="company"
                     value={newDeal.company}
-                    onChange={(event) => setNewDeal((prev) => ({ ...prev, company: event.target.value }))}
-                  />
+                    onChange={(e) => setNewDeal({ ...newDeal, company: e.target.value })}
+                    className="mt-1 block w-full rounded-[12px] border border-[#1a2446] bg-[#0e1629] px-3 py-2 text-sm text-white shadow-sm focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff]"
+                    required
+                  >
+                    <option value="">Select a company</option>
+                    {companies.map((company) => (
+                      <option key={company.id} value={company.name}>
+                        {company.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label htmlFor="deal-amount" className="block text-sm font-medium text-blue-200">
