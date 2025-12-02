@@ -53,6 +53,8 @@ export type Deal = {
   lastActivity: string;
   stage: DealStage;
   status: DealStatus;
+  closeDate: string;
+  updatedAt: string;
 };
 
 export type Product = {
