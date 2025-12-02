@@ -528,7 +528,7 @@ export function Companies({
                 Clear filters
               </button>
             </div>
-          </>
+          </div>
         )}
       </div>
 
