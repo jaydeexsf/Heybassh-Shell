@@ -32,9 +32,10 @@ type DealFilters = {
 type NewDealFormState = {
   name: string;
   company: string;
-  amount: string;
+  amount: number | string;
   stage: Deal["stage"];
   status: Deal["status"];
+  closeDate?: string;
 };
 
 const activityFilters: { label: string; value: ActivityFilterValue }[] = [
@@ -273,20 +274,23 @@ export function Deals({
 
     try {
       setIsSubmitting(true);
+      const now = new Date().toISOString();
       const payload = {
         name: newDeal.name.trim(),
         company: newDeal.company || companies[0]?.name || "",
-        amount: newDeal.amount || "0",
-        stage: newDeal.stage || "prospect",
-        status: newDeal.status || "Open",
+        amount: Number(newDeal.amount) || 0,
+        stage: (newDeal.stage as Deal['stage']) || "New",
+        status: (newDeal.status as Deal['status']) || "Open",
         owner: defaultOwner,
         closeDate: newDeal.closeDate || new Date().toISOString().split('T')[0],
+        lastActivity: now,
       };
       
       const addedDeal = await addDealToStorage(payload);
       setDeals(prev => [...prev, addedDeal]);
       setNewDeal(createInitialDeal());
       setIsModalOpen(false);
+      setFormError('');
     } catch (error) {
       console.error('Error adding deal:', error);
       setFormError('Failed to add deal. Please try again.');

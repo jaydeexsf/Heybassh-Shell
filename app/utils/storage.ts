@@ -1,5 +1,4 @@
 // Types
-// Define the status type
 export type CompanyStatus = 'New' | 'In Progress' | 'Customer' | 'Churned';
 
 export interface Company {
@@ -11,8 +10,7 @@ export interface Company {
   status: CompanyStatus;
   owner: string;
   createdAt: string;
-  updatedAt: string;
-  lastActivity?: string; // Added lastActivity as an optional field
+  lastActivity: string;
 }
 
 export type DealStage = 'New' | 'Qualified' | 'Proposal' | 'Negotiation' | 'Won' | 'Lost';
@@ -22,14 +20,14 @@ export interface Deal {
   id: string;
   name: string;
   company: string;
-  amount: string;
+  amount: number;
   stage: DealStage;
   status: DealStatus;
   owner: string;
   closeDate: string;
   createdAt: string;
   updatedAt: string;
-  lastActivity?: string;
+  lastActivity: string;
 }
 
 // Local storage keys
@@ -50,11 +48,11 @@ const initializeStorage = <T>(key: string, initialData: T[]): T[] => {
 
 // Generate dummy data
 const generateDummyCompanies = (): Company[] => {
-  const now = new Date();
-  const sevenDaysAgo = new Date(now);
-  sevenDaysAgo.setDate(now.getDate() - 7);
-  const thirtyDaysAgo = new Date(now);
-  thirtyDaysAgo.setDate(now.getDate() - 30);
+  const now = new Date().toISOString();
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   return [
     {
@@ -66,7 +64,6 @@ const generateDummyCompanies = (): Company[] => {
       status: 'Customer',
       owner: 'John Doe',
       createdAt: '2023-01-15T10:30:00Z',
-      updatedAt: '2023-03-20T14:45:00Z',
       lastActivity: '2023-03-20T14:45:00Z',
     },
     {
@@ -78,7 +75,6 @@ const generateDummyCompanies = (): Company[] => {
       status: 'In Progress',
       owner: 'Jane Smith',
       createdAt: '2023-02-10T09:15:00Z',
-      updatedAt: '2023-04-05T11:20:00Z',
       lastActivity: '2023-04-05T11:20:00Z',
     },
     {
@@ -90,7 +86,6 @@ const generateDummyCompanies = (): Company[] => {
       status: 'New',
       owner: 'Michael Scott',
       createdAt: '2023-03-05T13:45:00Z',
-      updatedAt: '2023-03-05T13:45:00Z',
       lastActivity: '2023-03-05T13:45:00Z',
     },
   ];
@@ -108,7 +103,7 @@ const generateDummyDeals = (): Deal[] => {
       id: '1',
       name: 'Enterprise Plan',
       company: 'Acme Inc',
-      amount: '50000',
+      amount: 50000,
       stage: 'Proposal',
       status: 'Open',
       owner: 'John Doe',
@@ -121,7 +116,7 @@ const generateDummyDeals = (): Deal[] => {
       id: '2',
       name: 'Premium Support',
       company: 'Globex Corp',
-      amount: '25000',
+      amount: 25000,
       stage: 'Negotiation',
       status: 'Open',
       owner: 'Jane Smith',
@@ -155,15 +150,16 @@ export const getCompanies = (): Company[] => {
   return stored ? JSON.parse(stored) : [];
 };
 
-export const addCompany = (company: Omit<Company, 'id' | 'createdAt' | 'updatedAt'>): Company => {
+export const addCompany = (company: Omit<Company, 'id' | 'createdAt' | 'lastActivity'> & { lastActivity?: string }): Company => {
   if (typeof window === 'undefined') throw new Error('Cannot access localStorage on server');
   
   const companies = getCompanies();
+  const now = new Date().toISOString();
   const newCompany: Company = {
     ...company,
     id: Date.now().toString(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: now,
+    lastActivity: company.lastActivity || now,
   };
   
   localStorage.setItem(COMPANIES_KEY, JSON.stringify([...companies, newCompany]));
@@ -177,15 +173,17 @@ export const getDeals = (): Deal[] => {
   return stored ? JSON.parse(stored) : [];
 };
 
-export const addDeal = (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>): Deal => {
+export const addDeal = (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'lastActivity'> & { lastActivity?: string }): Deal => {
   if (typeof window === 'undefined') throw new Error('Cannot access localStorage on server');
   
   const deals = getDeals();
+  const now = new Date().toISOString();
   const newDeal: Deal = {
     ...deal,
     id: Date.now().toString(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
+    lastActivity: deal.lastActivity || now,
   };
   
   localStorage.setItem(DEALS_KEY, JSON.stringify([...deals, newDeal]));

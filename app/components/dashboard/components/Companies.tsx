@@ -246,25 +246,28 @@ export function Companies({
     setSelectedCompanies(next);
   };
 
-  const handleAddCompany = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleAddCompany = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!newCompany.name.trim()) return;
 
     try {
       setIsSubmitting(true);
+      const now = new Date().toISOString();
       const payload = {
         name: newCompany.name.trim(),
         domain: newCompany.domain.trim() || "example.com",
         industry: newCompany.industry.trim() || "General",
         size: newCompany.size || "1-10",
-        status: newCompany.status as Company['status'] || "New",
+        status: (newCompany.status as Company['status']) || "New",
         owner: defaultOwner,
+        lastActivity: now,
       };
       
-      const addedCompany = addCompanyToStorage(payload);
+      const addedCompany = await addCompanyToStorage(payload);
       setCompanies(prev => [...prev, addedCompany]);
       setNewCompany(createInitialCompany());
       setIsModalOpen(false);
+      setFormError('');
     } catch (error) {
       console.error('Error adding company:', error);
       setFormError('Failed to add company. Please try again.');
