@@ -57,3 +57,59 @@ body { @apply min-h-screen bg-[#020617] text-[#eef3ff]; font-family: system-ui, 
 .spinner { @apply inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white; }
 .th { @apply px-4 py-3 text-left text-xs uppercase tracking-wide text-blue-300; }
 .td { @apply px-4 py-3; }
+
+/* Modal theming */
+.primary-modal .ant-modal-content {
+  background: linear-gradient(145deg, #0d162c 0%, #111a33 55%, #0b1224 100%);
+  border-radius: 32px;
+  border: 1px solid rgba(99, 123, 255, 0.15);
+  box-shadow: 0 25px 80px -40px rgba(9, 28, 75, 0.85);
+  padding: 32px;
+  color: #eef2ff;
+}
+
+.primary-modal .ant-modal-header {
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  margin-bottom: 12px;
+  padding-bottom: 18px;
+}
+
+.primary-modal .ant-modal-title {
+  color: #f4f6ff;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.primary-modal .ant-modal-close {
+  color: #9fb7ff;
+}
+
+.primary-modal .ant-modal-close:hover {
+  color: #ffffff;
+}
+
+.primary-modal .ant-modal-body {
+  padding-top: 0;
+}
+
+.primary-modal .ant-input,
+.primary-modal textarea,
+.primary-modal select {
+  background-color: rgba(14, 22, 41, 0.85);
+  border: 1px solid rgba(86, 110, 190, 0.3);
+  color: #f5f7ff;
+  border-radius: 18px;
+  min-height: 44px;
+}
+
+.primary-modal .ant-input:focus,
+.primary-modal textarea:focus,
+.primary-modal select:focus {
+  border-color: rgba(74, 144, 255, 0.65);
+  box-shadow: 0 0 0 2px rgba(74, 144, 255, 0.25);
+}
+
+.primary-modal label {
+  color: #c7d2ff;
+}

@@ -301,11 +301,11 @@ export function Deals({
     isActive: boolean,
     onClose: () => void,
   ) => (
-    <div key={panel} className="relative">
+  <div key={panel} className="relative">
       <button
         type="button"
         onClick={() => toggleFilterPanel(panel)}
-        className={`inline-flex items-center gap-1.5 rounded-[20px] border px-3 py-1.5 text-xs transition-colors ${
+      className={`inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-1.5 text-xs transition-colors ${
           isActive || activeFilterPanel === panel
             ? "border-[#2b9bff] bg-[#142044] text-white"
             : "border-[#1a2446] bg-[#0e1629] text-blue-200 hover:bg-[#121c3d] hover:text-white"
@@ -360,7 +360,7 @@ export function Deals({
         </div>
       )}
 
-      <div className="space-y-3 flex justify-between">
+      <div className="flex flex-col gap-3">
         {hasSelectedDeals ? (
           <div className="flex w-full flex-wrap items-center justify-between gap-3 rounded-[28px] border border-[#1a2446] bg-[#0c142a] px-4 py-[6px]">
             <div className="flex flex-wrap items-center gap-4">
@@ -412,19 +412,22 @@ export function Deals({
             </div>
           </div>
         ) : (
-          <>
-            <div className="relative w-full max-w-2xl">
-              <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-300/60" />
+          <div className="flex w-full flex-col gap-3 xl:flex-row xl:items-center">
+            <div className="relative flex w-full items-center rounded-[28px] border border-[#1a2446] bg-[#0e1629] pl-12 pr-4 text-sm shadow-sm transition-colors focus-within:border-[#2b9bff] focus-within:ring-1 focus-within:ring-[#2b9bff] xl:max-w-xl 2xl:max-w-2xl">
+              <MagnifyingGlassIcon className="pointer-events-none absolute left-4 h-5 w-5 text-blue-300/60" />
               <input
                 type="text"
                 placeholder="Search deals"
-                className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 pl-12 pr-12 text-sm text-blue-200 placeholder-blue-300/60 focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff]"
+                className="w-full bg-transparent py-3 text-blue-200 placeholder-blue-300/60 focus:outline-none"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
             </div>
 
-            <div className="flex w-full max-w-4xl flex-wrap items-center gap-2" ref={inlineFiltersRef}>
+            <div
+              className="flex w-full flex-wrap items-center gap-2.5 xl:justify-end"
+              ref={inlineFiltersRef}
+            >
               {renderFilterButton(
                 "owner",
                 "Deal Owner",

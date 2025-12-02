@@ -64,6 +64,12 @@ function HomeInner() {
     }
   }, [searchParams])
 
+  useEffect(() => {
+    if (!feedback) return
+    const timer = setTimeout(() => setFeedback(null), 5000)
+    return () => clearTimeout(timer)
+  }, [feedback])
+
   function resetUi() {
     setFormErrors({})
     setFeedback(null)
@@ -531,38 +537,6 @@ function HomeInner() {
                 </div>
                 {formErrors.password && <p className="text-xs font-medium text-rose-300">{formErrors.password}</p>}
               </div>
-
-              {feedback && (
-                <div
-                  className={`rounded-lg border px-4 py-3 text-sm ${
-                    feedback.type === "success"
-                      ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
-                      : feedback.type === "error"
-                      ? "border-rose-500/40 bg-rose-500/10 text-rose-200"
-                      : "border-yellow-400/40 bg-yellow-400/10 text-yellow-200"
-                  }`}
-                >
-                  <div className="flex items-start gap-2">
-                    <span className="flex-1">
-                      {feedback.message.includes('https://') ? (
-                        <span>
-                          {feedback.message.split('https://')[0]}
-                          <a 
-                            href={feedback.message.match(/https:\/\/[^\s]+/)?.[0]} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-400 hover:text-blue-300 underline break-all"
-                          >
-                            {feedback.message.match(/https:\/\/[^\s]+/)?.[0]}
-                          </a>
-                        </span>
-                      ) : (
-                        feedback.message
-                      )}
-                    </span>
-                  </div>
-                </div>
-              )}
 
               {mode === "login" ? (
               <PrimaryButton type="submit" disabled={loading} aria-busy={loading} className="w-full" size="lg">
