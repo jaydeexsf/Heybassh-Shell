@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef, useEffect, ReactNode, useCallback } from "react";
-import { Deal, getDeals, addDeal as addDealToStorage, getCompanies } from "../../../../app/utils/storage";
+import { getDeals, addDeal as addDealToStorage, getCompanies } from "../../../../app/utils/storage";
 import {
   MagnifyingGlassIcon,
   EllipsisVerticalIcon,
