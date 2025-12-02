@@ -1,5 +1,5 @@
 import { useMemo, useState, useRef, useEffect, ReactNode, useCallback } from "react";
-import { Company, getCompanies, addCompany as addCompanyToStorage } from "@/app/utils/storage";
+import { Company, getCompanies, addCompany as addCompanyToStorage } from "../../../../app/utils/storage";
 import {
   MagnifyingGlassIcon,
   EllipsisVerticalIcon,
