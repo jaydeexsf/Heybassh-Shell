@@ -273,43 +273,45 @@ export function Companies({
     setActiveFilterPanel((prev) => (prev === panel ? null : panel));
   };
 
-  const renderFilterButton = (
+  function renderFilterButton(
     panel: FilterPanel,
     label: string,
     icon: ReactNode,
     content: ReactNode,
     isActive: boolean,
     onClose: () => void,
-  ) => (
-  <div key={panel} className="relative">
-      <button
-        type="button"
-        onClick={() => toggleFilterPanel(panel)}
-      className={`inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-1.5 text-xs transition-colors ${
-          isActive || activeFilterPanel === panel
-            ? "border-[#2b9bff] bg-[#142044] text-white"
-            : "border-[#1a2446] bg-[#0e1629] text-blue-200 hover:bg-[#121c3d] hover:text-white"
-        }`}
-      >
-        {icon}
-        {label}
-      </button>
-      {activeFilterPanel === panel && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[24px] border border-[#1a2446] bg-[#050a1b] p-4 text-blue-100 shadow-2xl">
-          {content}
-          <div className="mt-4 flex justify-end gap-2">
-            <button
-              type="button"
-              className="rounded-[16px] border border-[#1a2446] px-3 py-1 text-xs text-blue-200 hover:bg-[#121c3d]"
-              onClick={onClose}
-            >
-              Close
-            </button>
+  ) {
+    return (
+      <div key={panel} className="relative">
+        <button
+          type="button"
+          onClick={() => toggleFilterPanel(panel)}
+          className={`inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-1.5 text-xs transition-colors ${
+            isActive || activeFilterPanel === panel
+              ? "border-[#2b9bff] bg-[#142044] text-white"
+              : "border-[#1a2446] bg-[#0e1629] text-blue-200 hover:bg-[#121c3d] hover:text-white"
+          }`}
+        >
+          {icon}
+          {label}
+        </button>
+        {activeFilterPanel === panel && (
+          <div className="absolute left-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[24px] border border-[#1a2446] bg-[#050a1b] p-4 text-blue-100 shadow-2xl">
+            {content}
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-[16px] border border-[#1a2446] px-3 py-1 text-xs text-blue-200 hover:bg-[#121c3d]"
+                onClick={onClose}
+              >
+                Close
+              </button>
+            </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
+        )}
+      </div>
+    );
+  }
 
   const formatDate = (value?: string) => {
     if (!value) return "--";
