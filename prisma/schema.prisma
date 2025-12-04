@@ -53,6 +53,7 @@ model Account {
   contacts       Contact[]
   companies      Company[]
   deals          Deal[]
+  passwordVault  PasswordVault?
 }
 
 model Contact {
@@ -109,7 +110,7 @@ model Deal {
 /// Encrypted password vault per account. Stores only encrypted data, never raw passwords.
 model PasswordVault {
   id           String   @id @default(cuid())
-  accountSeq   Int
+  accountSeq   Int      @unique
   account      Account  @relation(fields: [accountSeq], references: [accountSeq])
 
   /// Base64-encoded AES-GCM cipher text
