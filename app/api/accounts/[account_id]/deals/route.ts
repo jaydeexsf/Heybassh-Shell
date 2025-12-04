@@ -111,6 +111,3 @@ export async function POST(req: Request, { params }: { params: { account_id: str
     return NextResponse.json({ error: "Failed to create deal" }, { status: 500 })
   }
 }
-
-
-
