@@ -514,6 +514,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const { data: session } = useSession()
 
   const userName = session?.user?.name || session?.user?.email || "User"
+  const userEmail = typeof session?.user?.email === "string" ? session.user.email : null
   const userImage = typeof session?.user?.image === "string" ? session.user.image : null
   const userInitial = userName.trim().charAt(0).toUpperCase() || "U"
   const contactOwnerLabel = useMemo(() => {
@@ -1857,9 +1858,11 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                     <p className="mt-1">
                       Status: <span className="text-emerald-400">Active</span>
                     </p>
-                    <p className="mt-1">
-                      Email: <span className="text-[#7ed0ff]">will@agilebits.com</span>
-                    </p>
+                    {userEmail && (
+                      <p className="mt-1">
+                        Email: <span className="text-[#7ed0ff]">{userEmail}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
