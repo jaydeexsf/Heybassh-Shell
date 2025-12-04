@@ -32,6 +32,8 @@ type PasswordManagerProps = {
   headline?: string;
   description?: string;
   embedded?: boolean;
+  loadVault?: () => Promise<PersistedVault | null>;
+  saveVault?: (vault: PersistedVault | null) => Promise<void>;
 };
 
 type FormState = Omit<VaultEntry, "id" | "lastUpdated"> & { id?: string };
@@ -453,6 +455,8 @@ export default function PasswordManagerApp({
   headline = "Heybassh Password Manager",
   description = "Dedicated vault for CRM credentials, keys, and secrets. Everything stays local and encrypted with your master password.",
   embedded = false,
+  loadVault,
+  saveVault,
 }: PasswordManagerProps) {
   const [status, setStatus] = useState<"loading" | "setup" | "locked" | "unlocked">("loading");
   const [entries, setEntries] = useState<VaultEntry[]>([]);
@@ -466,6 +470,32 @@ export default function PasswordManagerApp({
   const [filters, setFilters] = useState({ search: "", tag: "All" });
 
   useEffect(() => {
+    let cancelled = false;
+
+    if (loadVault) {
+      setStatus("loading");
+      loadVault()
+        .then((data) => {
+          if (cancelled) return;
+          if (!data) {
+            setStatus("setup");
+            return;
+          }
+          setPersisted(data);
+          setStatus("locked");
+        })
+        .catch((err) => {
+          console.error("Vault load failed", err);
+          if (!cancelled) {
+            setStatus("setup");
+          }
+        });
+
+      return () => {
+        cancelled = true;
+      };
+    }
+
     if (typeof window === "undefined") return;
     const cached = window.localStorage.getItem(storageKey);
     if (!cached) {
@@ -481,17 +511,27 @@ export default function PasswordManagerApp({
       window.localStorage.removeItem(storageKey);
       setStatus("setup");
     }
-  }, [storageKey]);
+  }, [storageKey, loadVault]);
 
   useEffect(() => {
     if (status !== "unlocked" || !master) return;
     let cancelled = false;
     setSaving(true);
     encryptEntries(master, entries, persisted?.salt)
-      .then((payload) => {
-        if (cancelled || typeof window === "undefined") return;
-        window.localStorage.setItem(storageKey, JSON.stringify(payload));
-        setPersisted(payload);
+      .then(async (payload) => {
+        if (cancelled) return;
+        try {
+          if (saveVault) {
+            await saveVault(payload);
+          } else if (typeof window !== "undefined") {
+            window.localStorage.setItem(storageKey, JSON.stringify(payload));
+          }
+          if (!cancelled) {
+            setPersisted(payload);
+          }
+        } catch (err) {
+          console.error("Persist failed", err);
+        }
       })
       .catch((err) => {
         console.error("Persist failed", err);
@@ -501,7 +541,7 @@ export default function PasswordManagerApp({
     return () => {
       cancelled = true;
     };
-  }, [entries, master, status, storageKey, persisted?.salt]);
+  }, [entries, master, status, storageKey, persisted?.salt, saveVault]);
 
   const filteredEntries = useMemo(() => {
     return entries.filter((entry) => {
@@ -598,7 +638,13 @@ export default function PasswordManagerApp({
 
   const clearVault = () => {
     if (confirm("This removes the encrypted vault from this browser. You cannot undo it.")) {
-      window.localStorage.removeItem(storageKey);
+      if (saveVault) {
+        saveVault(null).catch((err) => {
+          console.error("Persist failed", err);
+        });
+      } else if (typeof window !== "undefined") {
+        window.localStorage.removeItem(storageKey);
+      }
       setPersisted(null);
       setEntries([]);
       setMaster("");
@@ -741,6 +787,6 @@ export default function PasswordManagerApp({
   );
 }
 
-export type { VaultEntry, PasswordManagerProps };
+export type { VaultEntry, PasswordManagerProps, PersistedVault };
 
 
