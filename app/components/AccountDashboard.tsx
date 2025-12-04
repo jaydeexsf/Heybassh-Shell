@@ -1108,7 +1108,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
           </aside>
 
           <div className="bg-[#020617]">
-        <div className="mx-auto grid max-w-[1140px] gap-4 p-4">
+        <div className="mx-auto grid max-w-[1800px] gap-4 p-4">
           {view === "overview" ? (
             <div className="grid gap-5">
               <div className="card rounded-[32px] border-[#1f2c56] bg-gradient-to-r from-[#101b38] via-[#0c142a] to-[#060b1a] p-6 md:p-8">
@@ -1694,7 +1694,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
               </div>
             </div>
           ) : view === "front_office_website" ? (
-            <div className="card rounded-[32px] bg-[#020617] border border-[#1a2446] p-0 overflow-hidden">
+            <div className="overflow-hidden">
               <div className="border-b border-[#1a2446] bg-gradient-to-r from-[#0b1225] via-[#050b1b] to-[#020617] px-6 py-4 flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-white">Website Builder</h2>
