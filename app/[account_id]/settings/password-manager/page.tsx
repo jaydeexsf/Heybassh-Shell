@@ -1,25 +1,7 @@
-import PasswordManagerApp, { PersistedVault } from "@/app/components/password-manager/PasswordManagerApp"
-
-async function loadVault(accountId: string): Promise<PersistedVault | null> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_BASE_URL ?? ""}/api/accounts/${encodeURIComponent(accountId)}/password-vault`, {
-    method: "GET",
-    cache: "no-store",
-  })
-  if (!res.ok) return null
-  const data = await res.json().catch(() => null)
-  return data?.vault ?? null
-}
-
-async function saveVault(accountId: string, vault: PersistedVault | null): Promise<void> {
-  await fetch(`${process.env.NEXT_PUBLIC_APP_BASE_URL ?? ""}/api/accounts/${encodeURIComponent(accountId)}/password-vault`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ vault }),
-  })
-}
+import PasswordManagerApp from "@/app/components/password-manager/PasswordManagerApp"
 
 export default function PasswordManagerSettingsPage({ params }: { params: { account_id: string } }) {
-  const accountId = params.account_id
+  const _accountId = params.account_id
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -146,8 +128,6 @@ export default function PasswordManagerSettingsPage({ params }: { params: { acco
               embedded
               headline="Heybassh Password Manager"
               description="Shared encrypted vault for this account. The Chrome extension and web app both read and write here."
-              loadVault={() => loadVault(accountId)}
-              saveVault={(vault) => saveVault(accountId, vault)}
             />
           </div>
         </div>
