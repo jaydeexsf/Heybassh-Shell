@@ -816,7 +816,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
           <button
             onClick={() => setSidebarCollapsed((prev) => !prev)}
             aria-pressed={sidebarCollapsed}
-            className={`flex h-10 w-10 items-center justify-center rounded-2xl border border-[#1a2446] transition-all ${
+            className={`flex h-10 w-10 items-center justify-center rounded-md border border-[#1a2446] transition-all ${
               sidebarCollapsed ? "bg-[#101733] text-[#7ed0ff]" : "bg-[rgba(20,26,52,0.85)] text-white/80"
             }`}
             title="Toggle navigation"
@@ -1052,7 +1052,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                   <div key={item.id} className="grid gap-1">
                     <button
                       onClick={() => (hasChildren ? setOpenSections((c) => toggleSectionState(c, item.id)) : navigate(item.id))}
-                      className={`flex items-center justify-between rounded-[26px] border px-3 text-sm transition ${
+                      className={`flex items-center justify-between rounded-[6px] border px-3 text-sm transition ${
                         active
                           ? "border-[#1a2446] bg-[#111936] text-white shadow-[0_15px_35px_-25px_rgba(39,172,255,0.65)]"
                           : "border-transparent text-blue-100 hover:bg-[#101733]"
@@ -1073,7 +1073,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                     </button>
                     {hasChildren && (
                       <div
-                        className={`overflow-hidden rounded-[26px] border border-[#111936] bg-[#0d142a] transition-all ${
+                        className={`overflow-hidden rounded-[7px] border border-[#111936] bg-[#0d142a] transition-all ${
                           open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                         }`}
                       >
@@ -1084,7 +1084,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                               <button
                                 key={child.id}
                                 onClick={() => navigate(child.id)}
-                                className={`rounded-[24px] px-3 py-2 text-left text-xs font-medium transition ${
+                                className={`rounded-[6px] px-3 py-2 text-left text-xs font-medium transition ${
                                   childActive
                                     ? "bg-[#152044] text-white shadow-[0_12px_28px_-25px_rgba(39,172,255,0.65)]"
                                     : "text-blue-200 hover:bg-[#121c3d] hover:text-white"
@@ -1238,7 +1238,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                 </div>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full rounded-[26px] border border-[#121a36] bg-[#09112a]">
+                  <table className="w-full rounded-[6px] border border-[#121a36] bg-[#09112a]">
                     <thead>
                       <tr className="border-b border-[#1a2446] text-left text-xs font-semibold uppercase tracking-wide text-blue-300">
                         <th className="px-4 py-3">SKU</th>

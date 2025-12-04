@@ -636,7 +636,7 @@ export function Deals({
         )}
       </div>
 
-      <div className="overflow-hidden rounded-[28px] border border-[#1a2446] bg-[#0c142a]">
+      <div className="overflow-hidden rounded-[0px] border border-[#1a2446] bg-[#0c142a]">
         <table className="min-w-full divide-y divide-[#1a2446]">
           <thead className="bg-[#0e1629]">
             <tr>
