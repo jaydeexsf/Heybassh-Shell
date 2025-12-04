@@ -21,6 +21,7 @@ import { Palette, createInstanceFromPalette } from "./builder/palette"
 import { BuilderCanvas, createInitialState, getComponentById } from "./builder/BuilderCanvas"
 import { ComponentEditor } from "./builder/component-editor"
 import type { BuilderState, ComponentInstance, PaletteComponentId } from "./builder/builderTypes"
+import PasswordManagerApp from "./password-manager/PasswordManagerApp"
 
 type NavChild = { id: string; label: string }
 type NavItem = {
@@ -308,7 +309,16 @@ const navigation: NavItem[] = [
   { id: "reports", label: "Reports & Data", icon: <ReportsIcon /> },
   { id: "automate", label: "Automate", icon: <AutomateIcon /> },
   { id: "hr", label: "HR / People", icon: <PeopleIcon /> },
-  { id: "admin", label: "IT / Admin", icon: <ShieldIcon /> },
+  {
+    id: "admin",
+    label: "IT / Admin",
+    icon: <ShieldIcon />,
+    children: [
+      { id: "admin_overview", label: "Admin" },
+      { id: "admin_it", label: "IT" },
+      { id: "admin_password_manager", label: "Password Manager" },
+    ],
+  },
   { id: "finance", label: "Finance", icon: <BriefcaseIcon /> },
   { id: "executive", label: "Executive", icon: <BuildingIcon /> },
 ]
@@ -357,6 +367,9 @@ function viewToPath(view: string): string | null {
   if (view === "customers_contacts") return "contacts"
   if (view === "customers_companies") return "companies"
   if (view === "products_listing") return "products"
+  if (view === "admin_overview") return "dashboard/admin"
+  if (view === "admin_it") return "dashboard/admin/it"
+  if (view === "admin_password_manager") return "dashboard/admin/password-manager"
   // For all other views, return null to just update state without routing
   return null
 }
@@ -640,7 +653,12 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   }
 
   // ... (rest of the code remains the same)
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({ customers: true, products: true, front_office: false })
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    customers: true,
+    products: true,
+    front_office: false,
+    admin: true,
+  })
 
   async function handleAddContact(contact: Omit<Contact, "id">) {
     if (!contact.name || !contact.email) return
@@ -1692,6 +1710,65 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                   </table>
                 </div>
               </div>
+            </div>
+          ) : view === "admin_overview" ? (
+            <div className="card rounded-[32px] bg-[#0e1629]">
+              <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold text-white">Admin Control Center</h2>
+                  <p className="mt-1 text-sm text-blue-200">
+                    Configure governance settings, review access, and keep your workspace compliant.
+                  </p>
+                </div>
+                <Pill>Compliance</Pill>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-[28px] border border-[#1a2446] bg-[#070d20] p-5">
+                  <p className="text-xs uppercase tracking-wide text-blue-300">Pending reviews</p>
+                  <p className="mt-2 text-3xl font-semibold text-white">4</p>
+                  <p className="mt-1 text-sm text-blue-200">Access requests awaiting approval</p>
+                </div>
+                <div className="rounded-[28px] border border-[#1a2446] bg-[#070d20] p-5">
+                  <p className="text-xs uppercase tracking-wide text-blue-300">Policies</p>
+                  <p className="mt-2 text-3xl font-semibold text-white">12</p>
+                  <p className="mt-1 text-sm text-blue-200">Active governance rules</p>
+                </div>
+              </div>
+            </div>
+          ) : view === "admin_it" ? (
+            <div className="card rounded-[32px] bg-[#0e1629]">
+              <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold text-white">IT Operations</h2>
+                  <p className="mt-1 text-sm text-blue-200">
+                    Track fleet health, resolve incidents, and power automations used by customer teams.
+                  </p>
+                </div>
+                <Pill>IT</Pill>
+              </div>
+              <div className="rounded-[28px] border border-dashed border-[#1a2446] bg-[#070d20] p-6 text-sm text-blue-200">
+                IT workspace coming soon. Connect device inventory, approval flows, and monitoring alerts here.
+              </div>
+            </div>
+          ) : view === "admin_password_manager" ? (
+            <div className="space-y-6">
+              <div className="card rounded-[32px] bg-gradient-to-br from-[#0b1225] via-[#050b1b] to-[#020617] p-6">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-2xl font-semibold text-white">Password Manager</h2>
+                      <Pill>Security</Pill>
+                    </div>
+                    <p className="mt-2 text-sm text-blue-200">
+                      Secure, local vault that stays in sync with the Heybassh Password Manager Chrome extension.
+                    </p>
+                  </div>
+                  <div className="rounded-[28px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100">
+                    2-way sync · Login required
+                  </div>
+                </div>
+              </div>
+              <PasswordManagerApp embedded />
             </div>
           ) : view === "front_office_website" ? (
             <div className="overflow-hidden">
