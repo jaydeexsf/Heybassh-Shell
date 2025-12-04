@@ -1,13 +1,45 @@
+'use client'
+
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import { useSession } from "next-auth/react"
-import PasswordManagerApp from "@/app/components/password-manager/PasswordManagerApp"
+import PasswordManagerApp, { PersistedVault } from "@/app/components/password-manager/PasswordManagerApp"
 
 export default function PasswordManagerSettingsPage({ params }: { params: { account_id: string } }) {
   const { data: session } = useSession()
+  const [vaultMeta, setVaultMeta] = useState<PersistedVault | null>(null)
+  const [loadingVault, setLoadingVault] = useState(false)
 
   const userName = session?.user?.name || session?.user?.email || "Member"
   const userEmail = typeof session?.user?.email === "string" ? session.user.email : undefined
   const userImage = typeof session?.user?.image === "string" ? session.user.image : null
+
+  useEffect(() => {
+    async function loadVaultMeta() {
+      try {
+        setLoadingVault(true)
+        const res = await fetch(`/api/accounts/${encodeURIComponent(params.account_id)}/password-vault`, {
+          method: "GET",
+          cache: "no-store",
+        })
+        if (!res.ok) return
+        const data = (await res.json().catch(() => null)) as { vault?: PersistedVault | null } | null
+        if (data && data.vault) {
+          setVaultMeta(data.vault)
+        } else {
+          setVaultMeta(null)
+        }
+      } catch {
+        // ignore, show empty state numbers
+      } finally {
+        setLoadingVault(false)
+      }
+    }
+
+    loadVaultMeta()
+  }, [params.account_id])
+
+  const itemsTotal = vaultMeta?.entryCount ?? 133
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -95,7 +127,9 @@ export default function PasswordManagerSettingsPage({ params }: { params: { acco
                   <p className="mt-1 text-xs text-slate-500">
                     <span className="font-semibold text-sky-600">33 used</span>
                     <span className="mx-1 text-slate-400">•</span>
-                    <span className="text-slate-500">133 total</span>
+                    <span className="text-slate-500">
+                      {loadingVault ? "…" : `${itemsTotal} total`}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -113,7 +147,9 @@ export default function PasswordManagerSettingsPage({ params }: { params: { acco
                   <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">Groups</p>
                 </div>
                 <div>
-                  <p className="text-3xl font-semibold text-slate-900">133</p>
+                  <p className="text-3xl font-semibold text-slate-900">
+                    {loadingVault ? "…" : itemsTotal}
+                  </p>
                   <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">Items</p>
                 </div>
               </div>
