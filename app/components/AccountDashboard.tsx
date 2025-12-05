@@ -985,7 +985,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
               <Image src={logo} alt="Heybassh" height={28} className="h-7 w-auto" />
             </Link>
             <div className="relative" ref={filterRef} data-dropdown>
-              <div className="flex items-center gap-2 border border-[#1a2446] rounded-[24px] px-3 py-1.5 bg-[#0e1629]">
+              <div className="flex items-center gap-2 border border-[#1a2446] rounded-[24px] px-4 py-1.2 bg-[#0e1629]">
                 <SearchIcon />
                 <input
                   type="text"
@@ -1005,7 +1005,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                     }
                   }}
                   placeholder="Search Heybassh"
-                  className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 px-4 py-2 w-80"
+                  className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 px-4 py-2 w-96"
                 />
                 <button
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
