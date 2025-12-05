@@ -12,6 +12,8 @@ import {
   CalendarDaysIcon,
   ChartBarIcon,
   CheckCircleIcon,
+  EllipsisVerticalIcon,
+  ArrowRightIcon,
 } from "@heroicons/react/24/outline"
 import logo from "../../Images/heybasshlogo.png"
 import { Contacts } from "./dashboard/components/Contacts"
