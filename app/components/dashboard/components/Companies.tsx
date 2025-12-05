@@ -322,12 +322,12 @@ export function Companies({
           {label}
         </button>
         {activeFilterPanel === panel && (
-          <div className="absolute left-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[24px] border border-[#1a2446] bg-[#050a1b] p-4 text-blue-100 shadow-2xl">
+          <div className="absolute left-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[12px] border border-[#1a2446] bg-[#050a1b] p-4 text-blue-100 shadow-2xl">
             {content}
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                className="rounded-[16px] border border-[#1a2446] px-3 py-1 text-xs text-blue-200 hover:bg-[#121c3d]"
+                className="rounded-[8px] border border-[#1a2446] px-3 py-1 text-xs text-blue-200 hover:bg-[#121c3d]"
                 onClick={onClose}
               >
                 Close
@@ -353,7 +353,6 @@ export function Companies({
         <PrimaryButton
           onClick={() => setIsModalOpen(true)}
           icon={isSubmitting ? <SpinnerIcon className="h-4 w-4" /> : <PlusIcon className="h-4 w-4" />}
-          className="uppercase tracking-wide"
           disabled={isSubmitting}
         >
           {isSubmitting ? 'Adding...' : 'Add Company'}

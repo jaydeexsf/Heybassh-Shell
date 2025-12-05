@@ -433,16 +433,15 @@ function HomeInner() {
 
             <form className="grid gap-5" onSubmit={handleSubmit}>
               <div className="grid gap-2">
-                <label className="text-sm font-medium text-blue-100" htmlFor="email">
+                <label className="block text-sm font-medium text-blue-200" htmlFor="email">
                   Email address
                 </label>
                 <div className="flex gap-2">
-                  <PrimaryInput
+                  <input
                     id="email"
-                    size="lg"
-                    className={`placeholder:text-blue-200/50 flex-1 h-[44px] ${formErrors.email ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
-                    placeholder="name@company.com"
                     type="email"
+                    className={`flex-1 rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-200 placeholder:text-xs placeholder:text-blue-300/60 focus:border-[#2b9bff] focus:outline-none ${formErrors.email ? "ring-2 ring-rose-400/70" : ""}`}
+                    placeholder="name@company.com"
                     value={email}
                     autoComplete="email"
                     onChange={(event) => setEmail(event.target.value)}
@@ -454,15 +453,14 @@ function HomeInner() {
 
               {mode === "register" && (
                 <div className="grid gap-2">
-                  <label className="text-sm font-medium text-blue-100" htmlFor="name">
+                  <label className="block text-sm font-medium text-blue-200" htmlFor="name">
                     Full name
                   </label>
-                  <PrimaryInput
+                  <input
                     id="name"
-                    size="lg"
-                    className={`placeholder:text-blue-300/50 h-[44px] ${formErrors.name ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
-                    placeholder="Jane Developer"
                     type="text"
+                    className={`w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-200 placeholder:text-xs placeholder:text-blue-300/60 focus:border-[#2b9bff] focus:outline-none ${formErrors.name ? "ring-2 ring-rose-400/70" : ""}`}
+                    placeholder="Jane Developer"
                     value={name}
                     autoComplete="name"
                     onChange={(event) => setName(event.target.value)}
@@ -473,15 +471,14 @@ function HomeInner() {
               )}
               {mode === "register" && (
                 <div className="grid gap-2">
-                  <label className="text-sm font-medium text-blue-100" htmlFor="company">
+                  <label className="block text-sm font-medium text-blue-200" htmlFor="company">
                     Company name
                   </label>
-                  <PrimaryInput
+                  <input
                     id="company"
-                    size="lg"
-                    className={`placeholder:text-blue-300/50 h-[44px] ${formErrors.companyName ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
-                    placeholder="Acme Inc."
                     type="text"
+                    className={`w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-200 placeholder:text-xs placeholder:text-blue-300/60 focus:border-[#2b9bff] focus:outline-none ${formErrors.companyName ? "ring-2 ring-rose-400/70" : ""}`}
+                    placeholder="Acme Inc."
                     value={companyName}
                     onChange={(event) => setCompanyName(event.target.value)}
                     aria-invalid={Boolean(formErrors.companyName)}
@@ -491,7 +488,7 @@ function HomeInner() {
               )}
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-blue-100" htmlFor="password">
+                  <label className="block text-sm font-medium text-blue-200" htmlFor="password">
                     Password
                   </label>
                   {mode === "login" && (
@@ -506,12 +503,11 @@ function HomeInner() {
                   )}
                 </div>
                 <div className="relative w-full">
-                  <PrimaryInput
+                  <input
                     id="password"
-                    size="lg"
-                    className={`w-full placeholder:text-blue-200/50 pr-12 h-[44px] ${formErrors.password ? "ring-2 ring-rose-400/70" : "focus:ring-2 focus:ring-[#3ab0ff]/60"}`}
-                    placeholder={mode === "login" ? "Your password" : "At least 6 characters"}
                     type={showPassword ? "text" : "password"}
+                    className={`w-full rounded-[18px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 pr-12 text-sm text-blue-200 placeholder:text-xs placeholder:text-blue-300/60 focus:border-[#2b9bff] focus:outline-none ${formErrors.password ? "ring-2 ring-rose-400/70" : ""}`}
+                    placeholder={mode === "login" ? "Your password" : "At least 6 characters"}
                     value={password}
                     autoComplete={mode === "login" ? "current-password" : "new-password"}
                     onChange={(event) => setPassword(event.target.value)}

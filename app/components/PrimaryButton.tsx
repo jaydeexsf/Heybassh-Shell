@@ -28,7 +28,7 @@ export const PrimaryButton = forwardRef<HTMLButtonElement, PrimaryButtonProps>(f
       htmlType={type}
       disabled={disabled}
       size={mappedSize}
-      className={`${className} !bg-[#06a2db] !border-[#06a2db] text-white hover:!bg-[#06a2db]/90 hover:!border-[#06a2db] active:!bg-[#06a2db]/80 active:!border-[#06a2db] focus:!bg-[#06a2db] focus:!border-[#06a2db]`}
+      className={`${className} !bg-[#06a2db] !border-[#06a2db] !rounded-[9999999999999999999px] text-white hover:!bg-[#06a2db]/90 hover:!border-[#06a2db] active:!bg-[#06a2db]/80 active:!border-[#06a2db] focus:!bg-[#06a2db] focus:!border-[#06a2db]`}
       icon={iconPosition === "left" ? icon : undefined}
       {...props}
     >

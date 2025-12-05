@@ -11,7 +11,7 @@ export const PrimaryInput = forwardRef<InputRef, PrimaryInputProps>(function Pri
   ref,
 ) {
   const resolvedSize = size === "lg" ? "large" : size === "sm" ? "small" : "middle"
-  const combinedClassName = ["w-full", className].filter(Boolean).join(" ")
+  const combinedClassName = ["w-full", "!pl-4", className].filter(Boolean).join(" ")
 
   return (
     <Input

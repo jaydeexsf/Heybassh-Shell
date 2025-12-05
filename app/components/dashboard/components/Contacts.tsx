@@ -376,12 +376,12 @@ const toggleFilterPanel = (panel: FilterPanel) => {
           {label}
         </button>
         {activeFilterPanel === panel && (
-          <div className="absolute left-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[24px] border border-[#1a2446] bg-[#050a1b] p-4 text-blue-100 shadow-2xl">
+          <div className="absolute left-0 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[12px] border border-[#1a2446] bg-[#050a1b] p-4 text-blue-100 shadow-2xl">
             {content}
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                className="rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1 text-xs font-medium text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white"
+                className="rounded-[10px] border border-[#1a2446] bg-[#0e1629] px-3 py-1 text-xs font-medium text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white"
                 onClick={onClose}
               >
                 Close
@@ -414,7 +414,6 @@ const toggleFilterPanel = (panel: FilterPanel) => {
           <PrimaryButton
             onClick={() => setIsModalOpen(true)}
             icon={<PlusIcon className="h-4 w-4" />}
-            className="uppercase tracking-wide"
           >
             Add Contact
           </PrimaryButton>
@@ -480,29 +479,15 @@ const toggleFilterPanel = (panel: FilterPanel) => {
           </div>
         ) : (
           <div className="flex w-full flex-col gap-3 xl:flex-row xl:items-center">
-            <div className="relative flex w-full flex-1 items-center rounded-[28px] border border-[#1a2446] bg-[#0e1629] pl-12 pr-12 text-sm shadow-sm transition-colors focus-within:border-[#2b9bff] focus-within:ring-1 focus-within:ring-[#2b9bff]">
+            <div className="relative flex w-full items-center rounded-[28px] border border-[#1a2446] bg-[#0e1629] pl-12 pr-4 text-sm shadow-sm transition-colors focus-within:border-[#2b9bff] focus-within:ring-1 focus-within:ring-[#2b9bff] xl:max-w-xl 2xl:max-w-2xl">
               <MagnifyingGlassIcon className="pointer-events-none absolute left-4 h-5 w-5 text-blue-300/60" />
               <input
                 type="text"
-                placeholder="Search name, email..."
+                placeholder="Search contacts"
                 className="w-full bg-transparent py-3 text-blue-200 placeholder-blue-300/60 focus:outline-none"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleFilterPanel("owner");
-                }}
-                className="absolute right-4 flex items-center justify-center"
-              >
-                <FunnelIcon className={`h-5 w-5 transition-colors ${
-                  filters.owner !== "all" || activeFilterPanel === "owner"
-                    ? "text-blue-300"
-                    : "text-blue-300/60 hover:text-blue-300"
-                }`} />
-              </button>
             </div>
 
             <div
@@ -760,7 +745,7 @@ const toggleFilterPanel = (panel: FilterPanel) => {
       >
         <form onSubmit={handleAddContact} className="space-y-6">
               {formError && (
-                <div className="rounded-[20px] border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+                <div className="rounded-[10px] border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
                   {formError}
                 </div>
               )}
@@ -819,7 +804,7 @@ const toggleFilterPanel = (panel: FilterPanel) => {
                 </label>
                 <select
                   id="contact-status"
-                  className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 focus:border-[#2b9bff] focus:outline-none"
+                  className="mt-2 w-full rounded-[10px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 focus:border-[#2b9bff] focus:outline-none"
                   value={newContact.status}
                   onChange={(event) =>
                     setNewContact((prev) => ({ ...prev, status: event.target.value as Contact["status"] }))
@@ -840,7 +825,7 @@ const toggleFilterPanel = (panel: FilterPanel) => {
                     setIsModalOpen(false);
                     setNewContact(createInitialContact());
                   }}
-                  className="rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-xs font-medium text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white"
+                  className="rounded-[10px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-xs font-medium text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white"
                 >
                   Cancel
                 </button>

@@ -394,14 +394,25 @@ export default function AccountDashboard({
               {marketingModules.map((module) => (
                 <div
                   key={module.id}
-                  className="card flex h-full flex-col justify-between rounded-[28px] border border-[#141f3b] bg-[#060c20] p-5 shadow-[0_18px_40px_-28px_rgba(39,172,255,0.7)]"
+                  className="card relative flex h-full flex-col justify-between rounded-[28px] border border-[#141f3b] bg-[#060c20] p-5 shadow-[0_18px_40px_-28px_rgba(39,172,255,0.7)]"
                 >
+                  <button
+                    type="button"
+                    className="absolute right-3 top-3 text-blue-300/60 hover:text-blue-300"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
+                    </svg>
+                  </button>
                   <div>
                     <h3 className="text-base font-semibold text-white">{module.title}</h3>
                     <p className="mt-2 text-sm text-blue-200">{module.description}</p>
                   </div>
-                  <button className="mt-4 inline-flex items-center text-sm font-medium text-[#5dd4ff] hover:text-white">
-                    Open ↗
+                  <button className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#5dd4ff] hover:text-white">
+                    Open
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
                   </button>
                 </div>
               ))}
@@ -456,14 +467,25 @@ export default function AccountDashboard({
               {salesModules.map((module) => (
                 <div
                   key={module.id}
-                  className="card flex h-full flex-col justify-between rounded-[28px] border border-[#141f3b] bg-[#060c20] p-5 shadow-[0_18px_40px_-28px_rgba(39,172,255,0.7)]"
+                  className="card relative flex h-full flex-col justify-between rounded-[28px] border border-[#141f3b] bg-[#060c20] p-5 shadow-[0_18px_40px_-28px_rgba(39,172,255,0.7)]"
                 >
+                  <button
+                    type="button"
+                    className="absolute right-3 top-3 text-blue-300/60 hover:text-blue-300"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
+                    </svg>
+                  </button>
                   <div>
                     <h3 className="text-base font-semibold text-white">{module.title}</h3>
                     <p className="mt-2 text-sm text-blue-200">{module.description}</p>
                   </div>
-                  <button className="mt-4 inline-flex items-center text-sm font-medium text-[#5dd4ff] hover:text-white">
-                    Open ↗
+                  <button className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[#5dd4ff] hover:text-white">
+                    Open
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
                   </button>
                 </div>
               ))}
@@ -522,7 +544,7 @@ export default function AccountDashboard({
           } ${level > 0 ? 'pl-8' : ''}`}
         >
           <div className="flex items-center">
-            <span className="mr-3">{item.icon}</span>
+            {item.icon && <span className="mr-3">{item.icon}</span>}
             {!sidebarCollapsed && <span>{item.label}</span>}
           </div>
           {item.children && !sidebarCollapsed && (
@@ -543,7 +565,7 @@ export default function AccountDashboard({
             {renderNavItems(
               item.children.map((child) => ({
                 ...child,
-                icon: <span className="h-5 w-5" />,
+                icon: null,
               })),
               level + 1
             )}
@@ -734,25 +756,35 @@ export default function AccountDashboard({
           )}
           <div className="flex flex-1 justify-between px-4">
             <div className="flex flex-1">
-              <div className="flex w-full max-w-2xl items-center justify-center md:ml-6 md:max-w-xs">
+              <div className="flex w-full max-w-4xl items-center justify-center md:ml-6">
                 <div className="relative w-full">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <SearchIcon />
+                  <div className="relative w-full flex items-center">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <SearchIcon />
+                    </div>
+                    <input
+                      id="search"
+                      name="search"
+                      className="block w-full rounded-[28px] border border-[#1a2446] bg-[#0e1629] py-2 pl-10 pr-12 text-blue-200 placeholder-blue-300/60 focus:border-[#2b9bff] focus:outline-none focus:ring-1 focus:ring-[#2b9bff] sm:text-sm"
+                      placeholder="Search name, email..."
+                      type="search"
+                      value={searchQuery}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      onFocus={() => searchQuery && setSearchPreviewOpen(true)}
+                      onBlur={() => {
+                        // Small delay to allow clicking on search results
+                        setTimeout(() => setSearchPreviewOpen(false), 200);
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-3 flex items-center justify-center"
+                    >
+                      <svg className="h-5 w-5 text-blue-300/60 transition-colors hover:text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+                      </svg>
+                    </button>
                   </div>
-                  <input
-                    id="search"
-                    name="search"
-                    className="block w-full rounded-md border border-gray-700 bg-[#1a2035] py-2 pl-10 pr-3 text-white placeholder-gray-400 focus:border-indigo-500 focus:bg-white focus:text-gray-900 focus:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="Search"
-                    type="search"
-                    value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    onFocus={() => searchQuery && setSearchPreviewOpen(true)}
-                    onBlur={() => {
-                      // Small delay to allow clicking on search results
-                      setTimeout(() => setSearchPreviewOpen(false), 200);
-                    }}
-                  />
                   {searchPreviewOpen && (
                     <div className="absolute left-0 right-0 z-10 mt-1 max-h-96 overflow-auto rounded-md bg-white py-1 shadow-lg">
                       {searchTransitioning ? (
