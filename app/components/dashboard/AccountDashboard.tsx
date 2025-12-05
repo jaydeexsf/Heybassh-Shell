@@ -629,64 +629,60 @@ export default function AccountDashboard({
       </div>
 
       {/* Static sidebar for desktop */}
-      <div className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
-        <div className="flex min-h-0 flex-1 flex-col bg-[#0f172a]">
-          <div className="flex h-16 flex-shrink-0 items-center px-4">
-            <div className="flex items-center">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-600 text-white">
-                <LogoIcon />
-              </div>
-              {!sidebarCollapsed && (
-                <span className="ml-3 text-xl font-bold text-white">Heybassh</span>
-              )}
-            </div>
-            <button
-              type="button"
-              className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            >
-              <span className="sr-only">Collapse sidebar</span>
-              <svg
-                className={`h-6 w-6 transform transition-transform ${
-                  sidebarCollapsed ? 'rotate-180' : ''
-                }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-          </div>
-          <div className="flex flex-1 flex-col overflow-y-auto pt-5">
-            <nav className="flex-1 space-y-1 px-2">
-              {renderNavItems(navigation)}
-            </nav>
-          </div>
-          <div className="flex flex-shrink-0 border-t border-gray-700 p-4">
-            <div className="group block w-full flex-shrink-0">
+      {!sidebarCollapsed && (
+        <div className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
+          <div className="flex min-h-0 flex-1 flex-col bg-[#0f172a]">
+            <div className="flex h-16 flex-shrink-0 items-center px-4">
               <div className="flex items-center">
-                <div>
-                  {userImage ? (
-                    <Image
-                      className="inline-block h-9 w-9 rounded-full"
-                      src={userImage}
-                      alt="User profile"
-                      width={36}
-                      height={36}
-                    />
-                  ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white">
-                      {userInitial}
-                    </div>
-                  )}
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-600 text-white">
+                  <LogoIcon />
                 </div>
-                {!sidebarCollapsed && (
+                <span className="ml-3 text-xl font-bold text-white">Heybassh</span>
+              </div>
+              <button
+                type="button"
+                className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              >
+                <span className="sr-only">Collapse sidebar</span>
+                <svg
+                  className="h-6 w-6 transform transition-transform rotate-180"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div className="flex flex-1 flex-col overflow-y-auto pt-5">
+              <nav className="flex-1 space-y-1 px-2">
+                {renderNavItems(navigation)}
+              </nav>
+            </div>
+            <div className="flex flex-shrink-0 border-t border-gray-700 p-4">
+              <div className="group block w-full flex-shrink-0">
+                <div className="flex items-center">
+                  <div>
+                    {userImage ? (
+                      <Image
+                        className="inline-block h-9 w-9 rounded-full"
+                        src={userImage}
+                        alt="User profile"
+                        width={36}
+                        height={36}
+                      />
+                    ) : (
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white">
+                        {userInitial}
+                      </div>
+                    )}
+                  </div>
                   <div className="ml-3">
                     <p className="text-sm font-medium text-white">{userName}</p>
                     <button
@@ -696,15 +692,15 @@ export default function AccountDashboard({
                       Sign out
                     </button>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main content */}
-      <div className="flex flex-1 flex-col md:pl-64">
+      <div className={`flex flex-1 flex-col ${sidebarCollapsed ? 'md:pl-0' : 'md:pl-64'}`}>
         <div className="sticky top-0 z-10 flex h-16 flex-shrink-0 bg-[#0f172a] shadow">
           <button
             type="button"
@@ -714,6 +710,28 @@ export default function AccountDashboard({
             <span className="sr-only">Open sidebar</span>
             <MenuIcon />
           </button>
+          {sidebarCollapsed && (
+            <button
+              type="button"
+              className="hidden md:flex border-r border-gray-700 px-4 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+              onClick={() => setSidebarCollapsed(false)}
+            >
+              <span className="sr-only">Expand sidebar</span>
+              <svg
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          )}
           <div className="flex flex-1 justify-between px-4">
             <div className="flex flex-1">
               <div className="flex w-full max-w-2xl items-center justify-center md:ml-6 md:max-w-xs">
