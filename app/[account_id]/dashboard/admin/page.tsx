@@ -4,3 +4,4 @@ export default function AdminOverviewPage({ params }: { params: { account_id: st
   return <AccountDashboard accountId={params.account_id} initialViewKey="admin_overview" />
 }
 
+

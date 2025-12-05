@@ -36,3 +36,4 @@ export interface BuilderState {
 export type PaletteComponentId = "hero" | "textBlock" | "imageLeftTextRight";
 
 
+

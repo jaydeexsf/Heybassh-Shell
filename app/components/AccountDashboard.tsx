@@ -861,7 +861,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
 
   return (
     <div className="min-h-screen bg-[#020617]">
-      <div className={`grid min-h-screen grid-cols-1 ${desktopGrid} transition-grid-cols duration-300 ease-in-out`}>
+      <div className={`grid min-h-screen grid-cols-1 ${desktopGrid} transition-[grid-template-columns] duration-250 ease-linear`}>
       {/* Left sidebar with profile */}
         <aside className="hidden md:flex md:sticky md:top-0 md:h-screen flex-col items-center justify-between border-r border-[#1a2446] bg-[#0e1629]/95 py-4 backdrop-blur z-50">
         <div className="flex flex-col items-center gap-3">
@@ -1085,11 +1085,11 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
           </div>
         </header>
         <div className="h-px bg-[#1a2446]/50"></div>
-        <div className={`grid flex-1 grid-cols-1 ${contentGrid} transition-grid-cols.duration-500 ease-in-out`}>
+        <div className={`grid flex-1 grid-cols-1 ${contentGrid} transition-[grid-template-columns] duration-250 ease-linear`}>
         {/* Main sidebar */}
           <aside
-            className={`border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#0e1629] md:sticky md:top-0 md:h-screen transition-all duration-500 ease-in-out ${
-              sidebarCollapsed ? "md:-translate-x-full md:opacity-0 pointer-events-none" : "md:translate-x-0 md:opacity-100"
+            className={`border-b border-[#1a2446] p-3 md:border-b-0 md:border-r bg-[#0e1629] md:sticky md:top-0 md:h-screen md:overflow-hidden ${
+              sidebarCollapsed ? "pointer-events-none" : "pointer-events-auto"
             }`}
             aria-hidden={sidebarCollapsed}
           >
@@ -1789,14 +1789,14 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
               {/* Filters */}
               <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex flex-wrap gap-3">
-                  <select className="rounded-[24px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-xs text-blue-100 shadow-sm focus:outline-none">
+                  <select className="rounded-[24px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-xs text-[#5dd4ff] shadow-sm focus:outline-none">
                     <option className="bg-[#0e1629]">All Vaults</option>
                   </select>
-                  <select className="rounded-[24px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-xs text-blue-100 shadow-sm focus:outline-none">
+                  <select className="rounded-[24px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-xs text-[#5dd4ff] shadow-sm focus:outline-none">
                     <option className="bg-[#0e1629]">Last Month</option>
                   </select>
                 </div>
-                <button className="rounded-[24px] border border-[#1a2446] bg-[#0b1225] px-4 py-1.5 text-xs font-medium text-blue-100 hover:bg-[#121c3d]">
+                <button className="rounded-[24px] border border-[#1a2446] bg-[#0b1225] px-4 py-1.5 text-xs font-medium text-[#5dd4ff] hover:bg-[#121c3d]">
                   Print
                 </button>
               </div>
@@ -1822,12 +1822,12 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                     </div>
                     <div>
                       <h1 className="text-2xl font-semibold text-white">{userName}</h1>
-                      <p className="text-sm text-[#7ed0ff]">
-                        Usage Report<span className="text-blue-200">: All vault usage for the last month</span>
+                      <p className="text-sm text-[#5dd4ff]">
+                        Usage Report<span className="text-[#5dd4ff]">: All vault usage for the last month</span>
                       </p>
                     </div>
                   </div>
-                  <button className="hidden rounded-[24px] border border-[#1a2446] bg-[#0b1225] px-4 py-1.5 text-xs font-medium text-blue-100 hover:bg-[#121c3d] md:inline-flex">
+                  <button className="hidden rounded-[24px] border border-[#1a2446] bg-[#0b1225] px-4 py-1.5 text-xs font-medium text-[#5dd4ff] hover:bg-[#121c3d] md:inline-flex">
                     Print
                   </button>
                 </div>
@@ -1837,56 +1837,56 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                   <div>
                     <div className="flex items-center gap-4">
                       <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#020617]">
-                        <div className="h-20 w-20 rounded-full border-[11px] border-[#31b0ff] border-r-[#1a2446] border-b-[#1a2446]" />
+                        <div className="h-20 w-20 rounded-full border-[11px] border-[#5dd4ff] border-r-[#1a2446] border-b-[#1a2446]" />
                       </div>
                       <div>
                         <p className="text-lg font-semibold text-white">Used 25% of their items</p>
-                        <p className="text-xs text-blue-200">33 Used · 133 Total</p>
+                        <p className="text-xs text-[#5dd4ff]">33 Used · 133 Total</p>
                       </div>
                     </div>
                   </div>
-                  <div className="text-xs text-blue-100">
+                  <div className="text-xs text-[#5dd4ff]">
                     <p>
-                      Report by <span className="text-[#7ed0ff]">Jeff Shiner</span> on 26th March 2018
+                      Report by <span className="text-[#5dd4ff]">Jeff Shiner</span> on 26th March 2018
                     </p>
                     <p className="mt-1">
-                      Last Sign In: <span className="text-[#7ed0ff]">23rd March 2018</span>
+                      Last Sign In: <span className="text-[#5dd4ff]">23rd March 2018</span>
                     </p>
                     <p className="mt-1">
-                      Member Since: <span className="text-[#7ed0ff]">28th November 2016</span>
+                      Member Since: <span className="text-[#5dd4ff]">28th November 2016</span>
                     </p>
                     <p className="mt-1">
                       Status: <span className="text-emerald-400">Active</span>
                     </p>
                     {userEmail && (
                       <p className="mt-1">
-                        Email: <span className="text-[#7ed0ff]">{userEmail}</span>
+                        Email: <span className="text-[#5dd4ff]">{userEmail}</span>
                       </p>
                     )}
                   </div>
                 </div>
 
                 {/* Stats */}
-                <div className="mt-6 grid grid-cols-3 gap-4 text-center text-sm text-blue-100">
+                <div className="mt-6 grid grid-cols-3 gap-4 text-center text-sm text-[#5dd4ff]">
                   <div className="rounded-[20px] border border-[#1a2446] bg-[#050b1c] py-3">
                     <p className="text-2xl font-semibold text-white">5</p>
-                    <p className="mt-1 text-[11px] uppercase tracking-wide text-blue-300">Vaults</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-wide text-[#5dd4ff]">Vaults</p>
                   </div>
                   <div className="rounded-[20px] border border-[#1a2446] bg-[#050b1c] py-3">
                     <p className="text-2xl font-semibold text-white">2</p>
-                    <p className="mt-1 text-[11px] uppercase tracking-wide text-blue-300">Groups</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-wide text-[#5dd4ff]">Groups</p>
                   </div>
                   <div className="rounded-[20px] border border-[#1a2446] bg-[#050b1c] py-3">
                     <p className="text-2xl font-semibold text-white">133</p>
-                    <p className="mt-1 text-[11px] uppercase tracking-wide text-blue-300">Items</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-wide text-[#5dd4ff]">Items</p>
                   </div>
                 </div>
 
                 {/* Table */}
                 <div className="mt-8 overflow-x-auto rounded-[20px] border border-[#1a2446] bg-[#050b1c]">
-                  <table className="min-w-full border-collapse text-sm text-blue-100">
+                  <table className="min-w-full border-collapse text-sm text-[#5dd4ff]">
                     <thead>
-                      <tr className="bg-[#0b1225] text-left text-xs font-semibold uppercase tracking-wide text-blue-300">
+                      <tr className="bg-[#0b1225] text-left text-xs font-semibold uppercase tracking-wide text-[#5dd4ff]">
                         <th className="border-b border-[#1a2446] px-3 py-2">Item Name</th>
                         <th className="border-b border-[#1a2446] px-3 py-2">Vault</th>
                         <th className="border-b border-[#1a2446] px-3 py-2">Item Type</th>
@@ -1897,9 +1897,9 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                       {passwordManagerItems.map((row) => (
                         <tr key={row.name} className="border-t border-[#1a2446]">
                           <td className="border-r border-[#1a2446] px-3 py-2">{row.name}</td>
-                          <td className="border-r border-[#1a2446] px-3 py-2 text-blue-200">{row.vault}</td>
-                          <td className="border-r border-[#1a2446] px-3 py-2 text-blue-200">{row.type}</td>
-                          <td className="px-3 py-2 text-blue-300">{row.used}</td>
+                          <td className="border-r border-[#1a2446] px-3 py-2 text-[#5dd4ff]">{row.vault}</td>
+                          <td className="border-r border-[#1a2446] px-3 py-2 text-[#5dd4ff]">{row.type}</td>
+                          <td className="px-3 py-2 text-[#5dd4ff]">{row.used}</td>
                         </tr>
                       ))}
                     </tbody>
