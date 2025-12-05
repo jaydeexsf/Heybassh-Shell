@@ -10,6 +10,8 @@ import {
   CheckCircleIcon,
   PlusIcon,
   XMarkIcon,
+  ChevronRightIcon,
+  FunnelIcon,
 } from "@heroicons/react/24/outline";
 import { PrimaryButton } from "../../PrimaryButton";
 import { PrimaryInput } from "../../PrimaryInput";
@@ -67,9 +69,11 @@ const SortIcon = ({ className }: { className?: string }) => (
 interface ContactsProps {
   contacts: Contact[];
   onAddContact: (contact: Omit<Contact, "id">) => Promise<void> | void;
+  onUpdateContact?: (contact: Contact) => Promise<void> | void;
   isLoading?: boolean;
   errorMessage?: string;
   defaultOwner?: string;
+  accountId?: string;
 }
 
 const createInitialContact = (): NewContactFormState => ({
@@ -90,18 +94,24 @@ const SpinnerIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
 export function Contacts({
   contacts,
   onAddContact,
+  onUpdateContact,
   isLoading = false,
   errorMessage,
   defaultOwner = "Unassigned",
+  accountId,
 }: ContactsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedContacts, setSelectedContacts] = useState<Set<string>>(new Set());
   const [newContact, setNewContact] = useState<NewContactFormState>(createInitialContact);
+  const [editContact, setEditContact] = useState<NewContactFormState>(createInitialContact);
   const [filters, setFilters] = useState<ContactFilters>(defaultFilters);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [activeFilterPanel, setActiveFilterPanel] = useState<FilterPanel | null>(null);
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
+  const [isUpdatingContact, setIsUpdatingContact] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const selectAllCheckboxRef = useRef<HTMLInputElement>(null);
   const moreDropdownRef = useRef<HTMLDivElement>(null);
@@ -252,6 +262,74 @@ const handleAddContact = async (event: React.FormEvent<HTMLFormElement>) => {
   }
 };
 
+const handleEditContact = (contact: Contact) => {
+  setEditingContact(contact);
+  setEditContact({
+    name: contact.name,
+    email: contact.email,
+    phone: contact.phone,
+    company: contact.company,
+    status: contact.status,
+  });
+  setIsEditModalOpen(true);
+};
+
+const handleUpdateContact = async (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  if (!editingContact || !editContact.name.trim() || !editContact.email.trim()) return;
+
+  const updatedContact: Contact = {
+    ...editingContact,
+    name: editContact.name.trim(),
+    email: editContact.email.trim(),
+    phone: editContact.phone.trim(),
+    company: editContact.company.trim(),
+    status: editContact.status,
+    lastActivity: new Date().toISOString(),
+  };
+
+  try {
+    setIsUpdatingContact(true);
+    setFormError(null);
+
+    if (onUpdateContact) {
+      await onUpdateContact(updatedContact);
+    } else if (accountId) {
+      // Fallback to direct API call if onUpdateContact is not provided
+      const response = await fetch(`/api/accounts/${accountId}/contacts`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: editingContact.id,
+          name: updatedContact.name,
+          email: updatedContact.email,
+          phone: updatedContact.phone,
+          company: updatedContact.company,
+          status: updatedContact.status,
+          owner: updatedContact.owner,
+          lastActivity: updatedContact.lastActivity,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(data?.error || "Failed to update contact");
+      }
+    }
+
+    setEditingContact(null);
+    setEditContact(createInitialContact());
+    setIsEditModalOpen(false);
+  } catch (error) {
+    console.error("Failed to update contact", error);
+    setFormError("Failed to save changes. Please try again.");
+  } finally {
+    setIsUpdatingContact(false);
+  }
+};
+
   const handleDeleteSelected = () => {
     console.log("Delete contacts:", Array.from(selectedContacts));
     setSelectedContacts(new Set());
@@ -288,7 +366,7 @@ const toggleFilterPanel = (panel: FilterPanel) => {
         <button
           type="button"
           onClick={() => toggleFilterPanel(panel)}
-          className={`inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-1.5 text-xs transition-colors ${
+          className={`inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-1.5 text-xs font-medium transition-colors ${
             isActive || activeFilterPanel === panel
               ? "border-[#2b9bff] bg-[#142044] text-white"
               : "border-[#1a2446] bg-[#0e1629] text-blue-200 hover:bg-[#121c3d] hover:text-white"
@@ -303,7 +381,7 @@ const toggleFilterPanel = (panel: FilterPanel) => {
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                className="rounded-[16px] border border-[#1a2446] px-3 py-1 text-xs text-blue-200 hover:bg-[#121c3d]"
+                className="rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-3 py-1 text-xs font-medium text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white"
                 onClick={onClose}
               >
                 Close
@@ -326,13 +404,21 @@ const toggleFilterPanel = (panel: FilterPanel) => {
     <div className="space-y-6">
       <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
         <h2 className="text-2xl font-bold text-white">Contacts</h2>
-        <PrimaryButton
-          onClick={() => setIsModalOpen(true)}
-          icon={<PlusIcon className="h-4 w-4" />}
-          className="uppercase tracking-wide"
-        >
-          Add Contact
-        </PrimaryButton>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-[20px] border border-[#1a2446] bg-[#0e1629] p-2 text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white"
+          >
+            <EllipsisVerticalIcon className="h-5 w-5" />
+          </button>
+          <PrimaryButton
+            onClick={() => setIsModalOpen(true)}
+            icon={<PlusIcon className="h-4 w-4" />}
+            className="uppercase tracking-wide"
+          >
+            Add Contact
+          </PrimaryButton>
+        </div>
       </div>
 
       {errorMessage && (
@@ -394,15 +480,29 @@ const toggleFilterPanel = (panel: FilterPanel) => {
           </div>
         ) : (
           <div className="flex w-full flex-col gap-3 xl:flex-row xl:items-center">
-            <div className="relative flex w-full items-center rounded-[28px] border border-[#1a2446] bg-[#0e1629] pl-12 pr-4 text-sm shadow-sm transition-colors focus-within:border-[#2b9bff] focus-within:ring-1 focus-within:ring-[#2b9bff] xl:max-w-xl 2xl:max-w-2xl">
+            <div className="relative flex w-full flex-1 items-center rounded-[28px] border border-[#1a2446] bg-[#0e1629] pl-12 pr-12 text-sm shadow-sm transition-colors focus-within:border-[#2b9bff] focus-within:ring-1 focus-within:ring-[#2b9bff]">
               <MagnifyingGlassIcon className="pointer-events-none absolute left-4 h-5 w-5 text-blue-300/60" />
               <input
                 type="text"
-                placeholder="Search contacts"
+                placeholder="Search name, email..."
                 className="w-full bg-transparent py-3 text-blue-200 placeholder-blue-300/60 focus:outline-none"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFilterPanel("owner");
+                }}
+                className="absolute right-4 flex items-center justify-center"
+              >
+                <FunnelIcon className={`h-5 w-5 transition-colors ${
+                  filters.owner !== "all" || activeFilterPanel === "owner"
+                    ? "text-blue-300"
+                    : "text-blue-300/60 hover:text-blue-300"
+                }`} />
+              </button>
             </div>
 
             <div
@@ -525,9 +625,9 @@ const toggleFilterPanel = (panel: FilterPanel) => {
                   handleResetFilters();
                   setActiveFilterPanel(null);
                 }}
-                className="ml-auto inline-flex items-center gap-1 rounded-[20px] border border-transparent px-3 py-1.5 text-xs text-[#7ed0ff] transition hover:text-white"
+                className="ml-auto inline-flex items-center gap-1 rounded-[20px] border border-transparent px-3 py-1.5 text-xs font-medium text-[#7ed0ff] transition-colors hover:text-white"
               >
-                Clear filters
+                Clear Filters
               </button>
             </div>
           </div>
@@ -551,27 +651,18 @@ const toggleFilterPanel = (panel: FilterPanel) => {
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Name</span>
                   <SortIcon className="h-4 w-4 text-blue-300/60" />
-                  <button className="text-blue-300/60 transition hover:text-blue-300">
-                    <EllipsisVerticalIcon className="h-4 w-4" />
-                  </button>
                 </div>
               </th>
               <th scope="col" className="px-6 py-3 text-left">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Email</span>
                   <SortIcon className="h-4 w-4 text-blue-300/60" />
-                  <button className="text-blue-300/60 transition hover:text-blue-300">
-                    <EllipsisVerticalIcon className="h-4 w-4" />
-                  </button>
                 </div>
               </th>
               <th scope="col" className="px-6 py-3 text-left">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold uppercase tracking-wide text-blue-300">Phone</span>
                   <SortIcon className="h-4 w-4 text-blue-300/60" />
-                  <button className="text-blue-300/60 transition hover:text-blue-300">
-                    <EllipsisVerticalIcon className="h-4 w-4" />
-                  </button>
                 </div>
               </th>
               {/* Owner, Created, and Activity columns are intentionally hidden from the table UI
@@ -582,12 +673,13 @@ const toggleFilterPanel = (panel: FilterPanel) => {
                   <SortIcon className="h-4 w-4 text-blue-300/60" />
                 </div>
               </th>
+              <th scope="col" className="px-6 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#1a2446] bg-[#0c142a]">
             {isLoading ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-sm text-blue-300">
+                <td colSpan={6} className="px-6 py-8 text-center text-sm text-blue-300">
                   <span className="inline-flex items-center justify-center gap-2 text-blue-200">
                     <SpinnerIcon className="h-5 w-5 text-blue-300" />
                     Loading contacts…
@@ -600,9 +692,10 @@ const toggleFilterPanel = (panel: FilterPanel) => {
                 return (
                   <tr
                     key={contact.id}
-                    className={`transition-colors hover:bg-[#121c3d] ${isSelected ? "bg-[#121c3d]/50" : ""}`}
+                    className={`cursor-pointer transition-colors hover:bg-[#121c3d] ${isSelected ? "bg-[#121c3d]/50" : ""}`}
+                    onClick={() => handleEditContact(contact)}
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -638,12 +731,15 @@ const toggleFilterPanel = (panel: FilterPanel) => {
                         {contact.status}
                       </span>
                     </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <ChevronRightIcon className="h-5 w-5 text-blue-300/60" />
+                    </td>
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-sm text-blue-300">
+                <td colSpan={6} className="px-6 py-8 text-center text-sm text-blue-300">
                   {searchTerm ? `No contacts found for "${searchTerm}".` : "No contacts yet. Add one to get started."}
                 </td>
               </tr>
@@ -744,7 +840,7 @@ const toggleFilterPanel = (panel: FilterPanel) => {
                     setIsModalOpen(false);
                     setNewContact(createInitialContact());
                   }}
-                  className="rounded-[4px] border border-[#1a2446] px-4 py-2 text-xs font-medium text-blue-200 transition hover:bg-[#121c3d]"
+                  className="rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-xs font-medium text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white"
                 >
                   Cancel
                 </button>
@@ -760,6 +856,120 @@ const toggleFilterPanel = (panel: FilterPanel) => {
                 </PrimaryButton>
               </div>
             </form>
+      </PrimaryModal>
+
+      <PrimaryModal
+        open={isEditModalOpen}
+        title="Edit Contact"
+        description="Update contact information."
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingContact(null);
+          setEditContact(createInitialContact());
+          setFormError(null);
+        }}
+        widthClassName="max-w-3xl"
+      >
+        <form onSubmit={handleUpdateContact} className="space-y-6">
+          {formError && (
+            <div className="rounded-[20px] border border-rose-500/40 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+              {formError}
+            </div>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="edit-contact-name" className="block text-sm font-medium text-blue-200">
+                Full Name
+              </label>
+              <PrimaryInput
+                id="edit-contact-name"
+                type="text"
+                required
+                value={editContact.name}
+                onChange={(event) => setEditContact((prev) => ({ ...prev, name: event.target.value }))}
+              />
+            </div>
+            <div>
+              <label htmlFor="edit-contact-email" className="block text-sm font-medium text-blue-200">
+                Email
+              </label>
+              <PrimaryInput
+                id="edit-contact-email"
+                type="email"
+                required
+                value={editContact.email}
+                onChange={(event) => setEditContact((prev) => ({ ...prev, email: event.target.value }))}
+              />
+            </div>
+            <div>
+              <label htmlFor="edit-contact-phone" className="block text-sm font-medium text-blue-200">
+                Phone
+              </label>
+              <PrimaryInput
+                id="edit-contact-phone"
+                type="tel"
+                value={editContact.phone}
+                onChange={(event) => setEditContact((prev) => ({ ...prev, phone: event.target.value }))}
+              />
+            </div>
+            <div>
+              <label htmlFor="edit-contact-company" className="block text-sm font-medium text-blue-200">
+                Company
+              </label>
+              <PrimaryInput
+                id="edit-contact-company"
+                type="text"
+                value={editContact.company}
+                onChange={(event) => setEditContact((prev) => ({ ...prev, company: event.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="edit-contact-status" className="block text-sm font-medium text-blue-200">
+              Status
+            </label>
+            <select
+              id="edit-contact-status"
+              className="mt-2 w-full rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-sm text-blue-100 focus:border-[#2b9bff] focus:outline-none"
+              value={editContact.status}
+              onChange={(event) =>
+                setEditContact((prev) => ({ ...prev, status: event.target.value as Contact["status"] }))
+              }
+            >
+              {contactStatusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mt-6 flex flex-wrap justify-end gap-3 border-t border-white/5 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditModalOpen(false);
+                setEditingContact(null);
+                setEditContact(createInitialContact());
+                setFormError(null);
+              }}
+              className="rounded-[20px] border border-[#1a2446] bg-[#0e1629] px-4 py-2 text-xs font-medium text-blue-200 transition-colors hover:bg-[#121c3d] hover:text-white"
+            >
+              Cancel
+            </button>
+            <PrimaryButton type="submit" disabled={isUpdatingContact}>
+              {isUpdatingContact ? (
+                <span className="flex items-center gap-2">
+                  <SpinnerIcon className="h-4 w-4 text-[#031226]" />
+                  Saving…
+                </span>
+              ) : (
+                "Save Changes"
+              )}
+            </PrimaryButton>
+          </div>
+        </form>
       </PrimaryModal>
     </div>
   );

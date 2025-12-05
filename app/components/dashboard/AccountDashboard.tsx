@@ -269,7 +269,39 @@ export default function AccountDashboard({
       case 'overview':
         return <Overview companyName={companyName} />;
       case 'customers_contacts':
-        return <Contacts contacts={contacts} onAddContact={handleAddContact} />;
+        return (
+          <Contacts
+            contacts={contacts}
+            onAddContact={handleAddContact}
+            onUpdateContact={async (contact) => {
+              const response = await fetch(`/api/accounts/${accountId}/contacts`, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  id: contact.id,
+                  name: contact.name,
+                  email: contact.email,
+                  phone: contact.phone,
+                  company: contact.company,
+                  status: contact.status,
+                  owner: contact.owner,
+                  lastActivity: contact.lastActivity,
+                }),
+              });
+
+              if (!response.ok) {
+                const data = (await response.json().catch(() => null)) as { error?: string } | null;
+                throw new Error(data?.error || "Failed to update contact");
+              }
+
+              const updated = (await response.json()) as Contact;
+              setContacts((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+            }}
+            accountId={accountId}
+          />
+        );
       case 'customers_companies':
         return <Companies companies={companies} onAddCompany={handleAddCompany} />;
       case 'customers_deals':

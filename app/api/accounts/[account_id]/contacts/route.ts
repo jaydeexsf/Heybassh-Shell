@@ -112,3 +112,58 @@ export async function POST(req: Request, { params }: { params: { account_id: str
   }
 }
 
+export async function PUT(req: Request, { params }: { params: { account_id: string } }) {
+  try {
+    const body = (await req.json()) as ContactPayload & { id: string }
+    if (!body?.id) {
+      return NextResponse.json({ error: "Contact ID is required" }, { status: 400 })
+    }
+    if (!body?.name?.trim() || !body?.email?.trim()) {
+      return NextResponse.json({ error: "Name and email are required" }, { status: 400 })
+    }
+
+    const account = await prisma.account.findUnique({
+      where: { account_id: params.account_id },
+      select: { accountSeq: true },
+    })
+    if (!account) {
+      return NextResponse.json({ error: "Account not found" }, { status: 404 })
+    }
+
+    const contactClient = (prisma as typeof prisma & { contact: any }).contact
+
+    // Check if contact exists and belongs to this account
+    const existingContact = await contactClient.findFirst({
+      where: {
+        id: body.id,
+        accountSeq: account.accountSeq,
+      },
+    })
+
+    if (!existingContact) {
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 })
+    }
+
+    const lastActivity = parseDate(body.lastActivity) ?? existingContact.lastActivity ?? new Date()
+
+    const contact = (await contactClient.update({
+      where: { id: body.id },
+      data: {
+        name: body.name.trim(),
+        email: body.email.trim(),
+        phone: body.phone?.trim() || null,
+        company: body.company?.trim() || null,
+        owner: body.owner?.trim() || "Unassigned",
+        status: CONTACT_STATUSES.has(body.status ?? "") ? body.status! : existingContact.status,
+        lastActivity,
+      },
+      select: contactSelect,
+    })) as ContactRow
+
+    return NextResponse.json(normalizeContact(contact))
+  } catch (error) {
+    console.error("[contacts][PUT]", error)
+    return NextResponse.json({ error: "Failed to update contact" }, { status: 500 })
+  }
+}
+
