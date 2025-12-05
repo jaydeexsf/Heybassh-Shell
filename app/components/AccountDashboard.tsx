@@ -399,6 +399,8 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const [searchPreviewOpen, setSearchPreviewOpen] = useState(false)
   const [searchPreviewSelection, setSearchPreviewSelection] = useState<string | null>(null)
   const [searchTransitioning, setSearchTransitioning] = useState(false)
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const filterRef = useRef<HTMLDivElement>(null)
   const searchLoaderTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -524,30 +526,47 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
     return name || email || "Unassigned"
   }, [session?.user?.name, session?.user?.email])
 
-
-  // Sync view when initialViewKey changes
   useEffect(() => {
-    if (initialViewKey && initialViewKey !== view) {
-      setView(initialViewKey)
-    }
-  }, [initialViewKey])
+    function handleKeyDown(event: KeyboardEvent) {
+      if (!searchPreviewOpen) return
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement
-      if (!target.closest('[data-dropdown]')) {
-        setCompanyMenuOpen(false)
-        setUserMenuOpen(false)
-        setSidebarProfileMenuOpen(false)
-        setSearchPreviewOpen(false)
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault()
+        const items = document.querySelectorAll('.search-preview-item')
+        if (!items.length) return
+
+        const currentIndex = Array.from(items).findIndex(item => item.getAttribute('data-selected') === 'true')
+        let nextIndex = 0
+
+        if (event.key === 'ArrowDown') {
+          nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0
+        } else {
+          nextIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1
+        }
+
+        setSearchPreviewSelection(items[nextIndex].getAttribute('data-id'))
+      } else if (event.key === 'Enter' && searchPreviewSelection) {
+        const selectedItem = document.querySelector(`[data-id="${searchPreviewSelection}"]`) as HTMLElement
+        if (selectedItem) selectedItem.click()
       }
     }
-    if (companyMenuOpen || userMenuOpen || sidebarProfileMenuOpen || searchPreviewOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [searchPreviewOpen, searchPreviewSelection])
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setIsFilterOpen(false)
+      }
     }
-  }, [companyMenuOpen, userMenuOpen, sidebarProfileMenuOpen, searchPreviewOpen])
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -955,7 +974,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
             <Link href={`/${accountId}/dashboard`} className="flex items-center">
               <Image src={logo} alt="Heybassh" height={28} className="h-7 w-auto" />
             </Link>
-            <div className="relative" data-dropdown>
+            <div className="relative" ref={filterRef} data-dropdown>
               <div className="flex items-center gap-2 border border-[#1a2446] rounded-[24px] px-3 py-1.5 bg-[#0e1629]">
                 <SearchIcon />
                 <input
@@ -967,18 +986,71 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                     if (!searchQuery.trim()) setSearchPreviewOpen(false)
                   }}
                   onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      setSearchPreviewOpen(false)
-                      ;(event.target as HTMLInputElement).blur()
-                    } else if (event.key === "Enter") {
-                      setSearchPreviewOpen(false)
-                      handleSearchResultNavigate()
+                    if (event.key === 'Escape') {
+                      setSearchPreviewOpen(false);
+                      (event.target as HTMLInputElement).blur();
+                    } else if (event.key === 'Enter') {
+                      setSearchPreviewOpen(false);
+                      handleSearchResultNavigate();
                     }
                   }}
-                  placeholder="Search name, email, phone, company"
-                  className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 w-40"
+                  placeholder="Search Heybassh"
+                  className="bg-transparent border-0 outline-0 text-sm text-blue-200 placeholder-blue-300/60 px-4 py-2 w-80"
                 />
+                <button
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className="p-1.5 rounded-full hover:bg-[#1a2446] transition-colors"
+                  aria-label="Open filters"
+                >
+                  <FunnelIcon className="w-4 h-4 text-blue-300" />
+                </button>
               </div>
+
+              {/* Filter Popup */}
+              {isFilterOpen && (
+                <div className="absolute right-0 mt-2 w-64 bg-[#0e1629] border border-[#1a2446] rounded-lg shadow-lg z-50 p-3">
+                  <h3 className="font-medium text-blue-100 mb-3">Filters</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="filter-option-1"
+                        className="h-4 w-4 rounded border-[#1a2446] text-blue-500 focus:ring-blue-500"
+                      />
+                      <label htmlFor="filter-option-1" className="ml-2 text-sm text-blue-200">
+                        Filter Option 1
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="filter-option-2"
+                        className="h-4 w-4 rounded border-[#1a2446] text-blue-500 focus:ring-blue-500"
+                      />
+                      <label htmlFor="filter-option-2" className="ml-2 text-sm text-blue-200">
+                        Filter Option 2
+                      </label>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex justify-end space-x-2">
+                    <button
+                      onClick={() => setIsFilterOpen(false)}
+                      className="px-3 py-1.5 text-sm text-blue-200 hover:bg-[#1a2446] rounded"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Handle apply filters
+                        setIsFilterOpen(false);
+                      }}
+                      className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              )}
               {searchTransitioning && (
                 <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2 text-[11px] text-blue-300">
                   <span className="h-3 w-3 animate-spin rounded-full border border-blue-300 border-r-transparent"></span>
@@ -1028,9 +1100,6 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                 </div>
               )}
             </div>
-            <button className="flex h-8 w-8 items-center justify-center rounded-[24px] border border-[#1a2446] bg-[#0e1629] text-[#7ed0ff] hover:bg-[#121c3d] transition-colors">
-              <SettingsIcon />
-            </button>
           </div>
           <div className="flex items-center gap-2">
             <Link href="#" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors border border-[#1a2446]">
@@ -1061,7 +1130,6 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                 className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-blue-200 hover:text-white hover:bg-[#0e1629] rounded-[20px] transition-colors"
               >
                 <span className="truncate max-w-[120px]">{companyName}</span>
-                <span className="text-[10px]">▾</span>
               </button>
               {companyMenuOpen && (
                 <div className="absolute right-0 top-full mt-1.5 w-44 rounded-[20px] border border-[#1a2446] bg-[#0e1629] text-xs shadow-lg z-50 py-1" data-dropdown>
@@ -1117,11 +1185,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                         </span>
                         <span className="font-medium">{item.label}</span>
                       </span>
-                      {hasChildren && (
-                        <span className={`text-xs transition-transform ${open ? "rotate-180 text-blue-200" : "text-blue-300"}`}>
-                          ▾
-                        </span>
-                      )}
+                     
                     </button>
                     {hasChildren && (
                       <div
