@@ -395,6 +395,7 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   const [contacts, setContacts] = useState<Contact[]>(defaultContacts)
   const [contactsLoading, setContactsLoading] = useState(true)
   const [contactsError, setContactsError] = useState<string | null>(null)
+  const [showModuleMenu, setShowModuleMenu] = useState<{ [key: string]: boolean }>({})
   const [searchQuery, setSearchQuery] = useState("")
   const [searchPreviewOpen, setSearchPreviewOpen] = useState(false)
   const [searchPreviewSelection, setSearchPreviewSelection] = useState<string | null>(null)
@@ -796,6 +797,13 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
   }
 
   const navSeparators = new Set(["billing", "automate"])
+
+  const handleModuleMenuToggle = (moduleId: string) => {
+    setShowModuleMenu(prev => ({
+      ...prev,
+      [moduleId]: !prev[moduleId]
+    }));
+  };
 
   const overviewModules = [
     {
@@ -1261,17 +1269,40 @@ export default function AccountDashboard({ accountId, initialViewKey = "overview
                     key={module.id}
                     className="card rounded-[28px] border-[#1a2446]/80 bg-[#0c142a] p-5 shadow-[0_25px_45px_-35px_rgba(39,172,255,0.65)]"
                   >
-                    <div className="flex items-center justify-between text-xs text-blue-200">
-                      <span className="font-semibold text-white/80">{module.title.split(" ")[0]}</span>
-                      <Pill>Module</Pill>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-white/80">{module.title.split(" ")[0]}</span>
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleModuleMenuToggle(module.id);
+                          }}
+                          className="text-blue-300 hover:text-white p-1 -mr-2"
+                        >
+                          <EllipsisVerticalIcon className="h-4 w-4" />
+                        </button>
+                        {showModuleMenu[module.id] && (
+                          <div className="absolute right-0 z-10 mt-1 w-40 rounded-md bg-[#0e1629] shadow-lg ring-1 ring-black ring-opacity-5">
+                            <div className="py-1">
+                              <button className="block w-full px-4 py-2 text-left text-sm text-blue-200 hover:bg-[#1a2446]">
+                                Settings
+                              </button>
+                              <button className="block w-full px-4 py-2 text-left text-sm text-blue-200 hover:bg-[#1a2446]">
+                                Customize
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <h4 className="mt-2 text-lg font-semibold text-white">{module.title}</h4>
                     <p className="mt-1 text-sm text-blue-200">{module.description}</p>
                     <button
                       onClick={module.action}
-                      className="mt-4 inline-flex w-full items-center justify-center rounded-[26px] bg-[#2b9bff] px-4 py-2 text-sm font-semibold text-[#041226] transition hover:brightness-110"
+                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[26px] bg-[#2b9bff] px-4 py-2 text-sm font-semibold text-[#041226] transition hover:brightness-110"
                     >
                       Open
+                      <ArrowRightIcon className="h-3.5 w-3.5" />
                     </button>
                 </div>
                 ))}
